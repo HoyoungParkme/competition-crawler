@@ -56,7 +56,10 @@ def export_main_state(repo_root: Path, dest: Path) -> Path:
     """
 
     def git(*args: str) -> subprocess.CompletedProcess[bytes]:
-        return subprocess.run(["git", "-C", str(repo_root), *args], capture_output=True, timeout=60, check=False)
+        try:
+            return subprocess.run(["git", "-C", str(repo_root), *args], capture_output=True, timeout=60, check=False)
+        except (OSError, subprocess.TimeoutExpired) as exc:  # git이 없거나 60초 안에 끝나지 않았다
+            raise HistoryReadFailed(f"git {args[0]}을 돌리지 못했다: {type(exc).__name__}") from exc
 
     # 얕게 받은 저장소(Actions의 브랜치 실행)만 얕게 받는다. 개발자 PC의 저장소를 얕게 만들지 않는다
     shallow = git("rev-parse", "--is-shallow-repository").stdout.strip() == b"true"

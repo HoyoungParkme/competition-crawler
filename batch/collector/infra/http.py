@@ -2,7 +2,8 @@
 
 모든 요청에 식별 가능한 User-Agent를 붙이고, 같은 소스 안에서 요청 사이 1초를 둔다.
 연결 오류 · 타임아웃 · 429 · 5xx · 틀이 다른 응답은 정해진 횟수만큼 다시 보낸다. 그 밖의 4xx와
-3xx는 다시 보내지 않는다. 소스마다 시간 예산이 있고, 기다림과 요청이 그 기한을 넘지 않는다
+3xx는 다시 보내지 않는다. 소스마다 시간 예산이 있고, 기다림과 요청이 그 기한을 넘지 않는다.
+httpx의 타임아웃은 단계마다 걸려 요청 전체를 묶지 못하므로, 본문을 받는 동안에도 기한을 본다
 (CCR-API-001 1.1 · 1.2 · 2.1 · CCR-INFRA-001 8.5).
 """
 
@@ -19,6 +20,8 @@ import httpx
 from collector.core.settings import SourceSettings
 
 USER_AGENT = "competition-crawler/0.1 (+https://github.com/HoyoungParkme/competition-crawler)"
+# 본문을 풀어서 받으므로 다시 만드는 응답에서는 전송 방식을 뜻하는 머리말을 뺀다
+_DECODED_HEADERS = {"content-encoding", "content-length", "transfer-encoding"}
 
 T = TypeVar("T")
 
@@ -117,6 +120,39 @@ class SourceHttp:
         steps = self._settings.backoff_seconds or (1.0,)
         self._wait(steps[min(attempt, len(steps) - 1)])
 
+    def _receive(
+        self,
+        method: str,
+        url: str,
+        *,
+        params: Mapping[str, Any] | None,
+        json: Any,
+        headers: Mapping[str, str] | None,
+        timeout: float,
+        follow_redirects: bool,
+    ) -> httpx.Response:
+        """요청하고 본문을 끝까지 받는다. 받는 동안에도 멈춤 표시와 시간 예산의 기한을 본다."""
+        request = self._client.build_request(method, url, params=params, json=json, headers=headers, timeout=timeout)
+        response = self._client.send(request, stream=True, follow_redirects=follow_redirects)
+        body = bytearray()
+        try:
+            for chunk in response.iter_bytes():
+                body.extend(chunk)
+                if self._stop.is_set():
+                    raise Stopped()
+                if self.remaining() <= 0:
+                    raise HttpFailure("budget", "응답을 받는 중에 소스의 시간 예산을 넘겼다")
+        finally:
+            response.close()
+        kept = [(k, v) for k, v in response.headers.multi_items() if k.lower() not in _DECODED_HEADERS]
+        return httpx.Response(
+            response.status_code,
+            headers=kept,
+            content=bytes(body),
+            request=response.request,
+            history=response.history,
+        )
+
     def fetch(
         self,
         method: str,
@@ -138,7 +174,7 @@ class SourceHttp:
             self._check()
             timeout = min(self._settings.timeout_seconds, self.remaining())
             try:
-                response = self._client.request(
+                response = self._receive(
                     method,
                     url,
                     params=params,

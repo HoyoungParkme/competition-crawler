@@ -15,7 +15,7 @@ from selectolax.parser import HTMLParser
 
 from collector.domains.collect.models import Collected, Competition, SourceName
 from collector.infra.http import FormatError, SourceHttp
-from collector.shared.text import clean_text
+from collector.shared.text import html_text
 
 URL = "https://www.contestkorea.com/sub/list.php"
 CODES = ("030310001", "031410001")  # 학문·과학·IT · 아이디어·건축·창업
@@ -67,7 +67,7 @@ def parse_list(response: httpx.Response) -> list[CkItem]:
             CkItem(
                 str_no=match.group(1) if match else None,
                 href=href,
-                title=clean_text(title_node.text()) if title_node is not None else "",
+                title=html_text(title_node.text()) if title_node is not None else "",
                 categories=[n.text(strip=True) for n in li.css("span.category") if n.text(strip=True)],
                 host=host,
                 target=target,

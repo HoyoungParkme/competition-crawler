@@ -17,7 +17,7 @@ from selectolax.parser import HTMLParser, Node
 
 from collector.domains.collect.models import Collected, Competition, SourceName
 from collector.infra.http import FormatError, HttpFailure, SourceHttp
-from collector.shared.text import clean_text
+from collector.shared.text import html_text
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def _title_without_badges(anchor: Node) -> str:
             continue  # SPECIAL · IDEA 같은 배지
         else:
             parts.append(node.text())
-    return clean_text("".join(parts))
+    return html_text("".join(parts))
 
 
 def parse_list(response: httpx.Response) -> list[WevityItem]:

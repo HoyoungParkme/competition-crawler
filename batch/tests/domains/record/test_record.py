@@ -181,3 +181,14 @@ def test_export_without_remote_is_a_read_failure(tmp_path: Path) -> None:
     git(tmp_path, "init", "-b", "main", str(tmp_path / "lonely"))
     with pytest.raises(HistoryReadFailed):
         export_main_state(tmp_path / "lonely", tmp_path / "out")
+
+
+def test_missing_git_is_a_read_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import collector.domains.record.crud as crud
+
+    def no_git(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(crud.subprocess, "run", no_git)
+    with pytest.raises(HistoryReadFailed):
+        export_main_state(tmp_path, tmp_path / "out")

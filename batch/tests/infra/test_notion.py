@@ -100,3 +100,11 @@ def test_requests_are_paced_to_three_per_second(clock: FakeClock) -> None:
     for _ in range(4):
         http.read("GET", "/x")
     assert sum(clock.slept) == pytest.approx(1.0, abs=0.01)
+
+
+def test_retry_guidance_is_kept_for_the_log(clock: FakeClock) -> None:
+    body = {"code": "service_unavailable", "message": "잠시 뒤", "additional_data": {"retry_guidance": "not_persisted"}}
+    handler, _ = sequence(httpx.Response(503, json=body))
+    with pytest.raises(NotionFailure) as err:
+        make(handler, clock).write("POST", "/v1/pages", json={})
+    assert "retry_guidance: not_persisted" in err.value.detail

@@ -46,7 +46,12 @@ def _error_text(response: httpx.Response) -> str:
     except ValueError:
         return f"응답 {response.status_code}"
     if isinstance(body, dict):
-        return f"응답 {response.status_code} {body.get('code', '')}: {body.get('message', '')}".strip()
+        text = f"응답 {response.status_code} {body.get('code', '')}: {body.get('message', '')}".strip()
+        extra = body.get("additional_data")
+        guidance = extra.get("retry_guidance") if isinstance(extra, dict) else None
+        if guidance:
+            text += f" (retry_guidance: {guidance})"  # 503이 쓰기가 저장됐는지 알려 준다. 로그에만 남긴다
+        return text
     return f"응답 {response.status_code}"
 
 

@@ -155,3 +155,27 @@ def test_parse_retry_after_reads_seconds_and_dates() -> None:
     now = datetime(2026, 9, 27, 0, 0, 0, tzinfo=timezone.utc)
     assert parse_retry_after("Sun, 27 Sep 2026 00:00:30 GMT", now=now) == pytest.approx(30)
     assert parse_retry_after("soon") is None
+
+
+def test_budget_also_cuts_a_slow_body(clock: FakeClock) -> None:
+    # httpx 타임아웃은 조각마다 다시 재므로, 조금씩 오는 본문은 기한을 넘겨도 끊기지 않는다(CCR-INFRA-001 8.5)
+    def slow_body():
+        for _ in range(10):
+            clock.now += 50
+            yield b"x" * 10
+
+    http = make_http(lambda r: httpx.Response(200, content=slow_body()), clock=clock)
+    with pytest.raises(HttpFailure) as err:
+        http.fetch("GET", "https://src.test/list", parse=text)
+    assert err.value.category == "budget"
+
+
+def test_compressed_body_is_decoded_once(clock: FakeClock) -> None:
+    import gzip
+
+    body = gzip.compress("한글 목록".encode())
+    http = make_http(
+        lambda r: httpx.Response(200, content=body, headers={"content-encoding": "gzip", "content-type": "text/plain; charset=utf-8"}),
+        clock=clock,
+    )
+    assert http.fetch("GET", "https://src.test/list", parse=text) == "한글 목록"
