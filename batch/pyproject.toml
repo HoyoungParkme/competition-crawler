@@ -1,0 +1,24 @@
+[project]
+name = "competition-collector"
+version = "0.1.0"
+description = "AI·개발 대회를 매일 모아 노션 대회목록에 넣는 배치"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "httpx>=0.28",
+    "openai>=2.0",
+    "selectolax>=0.3.27",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[tool.uv]
+required-version = "==0.11.8"
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

@@ -1,0 +1,1781 @@
+{
+ "meta": {
+  "alerts": [],
+  "warnings": [],
+  "precision": 2,
+  "engine": {
+   "name": "v1",
+   "type": "default"
+  },
+  "page": {
+   "current": 1,
+   "total_pages": 1,
+   "total_results": 40,
+   "size": 100
+  },
+  "request_id": "f16541be-f653-40b7-9c00-86e298558ed6"
+ },
+ "results": [
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "intween"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-16T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 울진군 창업아이디어톤 참여자 모집"
+   },
+   "category2": {
+    "raw": "창업 지원"
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-23T07:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-09-29T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135608"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "팝업스토어",
+     "수출상담회",
+     "수출지원",
+     "바이어매칭",
+     "중소기업"
+    ]
+   },
+   "subdomain": {
+    "raw": "kbrandglowweek"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-15T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "[무료] 2026 K-Brand GLOW WEEK 참여기업 모집"
+   },
+   "category2": {
+    "raw": "정부지원사업"
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-29T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-29T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135467"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "자바개발자국비지원",
+     "JAVA개발자국비지원",
+     "자바웹개발자국비지원",
+     "JAVA웹개발자국비지원",
+     "하이미디어종로"
+    ]
+   },
+   "subdomain": {
+    "raw": "ithimedia"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-07T00:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "✅ [프로젝트기반]자바 풀스택 개발자(React.js, Springboot, CI/CD 활용) -  종로"
+   },
+   "category2": {
+    "raw": null
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-29T13:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2027-03-25T09:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "126168"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "장애인식개선",
+     "초등/청소년/대학생/일반",
+     "대한민국국민모두",
+     "컨텐츠공모전"
+    ]
+   },
+   "subdomain": {
+    "raw": "bumoyd"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-11T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "제10회 대한민국 장애인인식개선 컨텐츠 공모전"
+   },
+   "category2": {
+    "raw": "디자인"
+   },
+   "category": {
+    "raw": "인문/사회"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-29T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-09-29T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "131673"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "oceanjob"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-07T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 AI 창업 경진대회 참가자 모집"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-30T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-31T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134904"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "낙동강유역환경청",
+     "환경",
+     "공모전",
+     "캐릭터",
+     "디자인"
+    ]
+   },
+   "subdomain": {
+    "raw": "nakdongstory"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-11T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 낙동강유역환경청 캐릭터 디자인 공모전"
+   },
+   "category2": {
+    "raw": "디자인"
+   },
+   "category": {
+    "raw": "디자인/영상"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-30T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-23T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "132657"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "첨단",
+     "청년",
+     "대학생",
+     "AI",
+     "공모전"
+    ]
+   },
+   "subdomain": {
+    "raw": "aigonggong"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-04T01:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "청년들이 만드는 공공서비스 AI 영상 공모전"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-30T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-09-30T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135599"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "spectory2"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-26T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "﻿﻿﻿﻿﻿﻿[외교부] 국제개발협력 청년 공모전 (~9/30)"
+   },
+   "category2": {
+    "raw": null
+   },
+   "category": {
+    "raw": "인문/사회"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-30T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-09-30T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "133835"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "purplaycompany"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-18T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "[성평등가족부] 성별균형 인식격차 해소를 위한 공감사례 이벤트"
+   },
+   "category2": {
+    "raw": null
+   },
+   "category": {
+    "raw": "라이프"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-30T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-09-30T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "133015"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "국민체육진흥공단",
+     "와이앤아처",
+     "체육인",
+     "스타트업",
+     "벤처기업"
+    ]
+   },
+   "subdomain": {
+    "raw": "ynarcher2015"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-04-01T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "「2026 체육인 직업안정(창업지원) 사업」"
+   },
+   "category2": {
+    "raw": "비즈니스 컨설팅"
+   },
+   "category": {
+    "raw": "경영"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-09-30T14:59:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-09-30T14:59:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "123508"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "salearn"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-09T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "배재대 스마트 ICT 메이커톤"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-01T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-25T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135060"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "cnttech"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-13T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "[씨엔티테크] 2026년 초기창업패키지 로켓십  IR 경진대회(2회차: 콘텐츠, 플랫폼) 참가기업 모집"
+   },
+   "category2": {
+    "raw": "정부지원사업"
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-02T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-20T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135332"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "AI",
+     "공모전",
+     "활동지원금",
+     "AI서비스",
+     "멘토링"
+    ]
+   },
+   "subdomain": {
+    "raw": "YV7SqV3glfKc"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-16T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "[활동비 100만원 지원] AI로 우리 지역·기업의 변화를 만드는 ‘마이AI랩’ 참가팀 모집"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-02T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-12-09T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135633"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "dec"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-06-09T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "[방송미디어통신위원회/한국지능정보사회진흥원] 2026 디지털윤리 창작콘텐츠 공모전 (~10/2)"
+   },
+   "category2": {
+    "raw": "기타"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-02T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-02T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "128072"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "aifactory2"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-04T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 국립공원 위성 모니터링 AI 챌린지"
+   },
+   "category2": {
+    "raw": null
+   },
+   "category": {
+    "raw": "과학기술"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-06T05:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-14T05:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "131983"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "공모전",
+     "대외활동",
+     "금융",
+     "핀테크",
+     "핀테크아이디어공모전"
+    ]
+   },
+   "subdomain": {
+    "raw": "fintechcontest"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-03T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 제9회 핀테크 아이디어 공모전"
+   },
+   "category2": {
+    "raw": "IT"
+   },
+   "category": {
+    "raw": "경제/금융"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-08T07:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-27T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "131927"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "G밸리",
+     "창업경진대회",
+     "창업",
+     "한국산업단지공단",
+     "스타트업"
+    ]
+   },
+   "subdomain": {
+    "raw": "bdcaccelerator"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-20T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 제10회 G밸리 창업경진대회"
+   },
+   "category2": {
+    "raw": "스타트업"
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-08T08:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-04T08:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135787"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "강원",
+     "철원",
+     "가요제",
+     "노래",
+     "축제"
+    ]
+   },
+   "subdomain": {
+    "raw": "macfac9"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-15T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "제3회 철원오대쌀 가요제"
+   },
+   "category2": {
+    "raw": "음악"
+   },
+   "category": {
+    "raw": "예술"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-09T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-17T10:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135505"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "dmcconet"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-15T01:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026년 DMC 이노베이션 캠프 창업경진대회(DMC2026)"
+   },
+   "category2": {
+    "raw": "창업 지원"
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-11T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-28T08:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135416"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "maycan"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-21T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "[고용노동부·한국고용정보원] 2026 고용24 국민참여 AI 고용서비스 발굴 온라인 해커톤 ~10/13"
+   },
+   "category2": {
+    "raw": "비즈니스 컨설팅"
+   },
+   "category": {
+    "raw": "경영"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-12T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-12T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135942"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "마케팅",
+     "관악구",
+     "마케팅과제",
+     "기업실무과제",
+     "뷰티브랜드마케팅"
+    ]
+   },
+   "subdomain": {
+    "raw": "openknowlcareer"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-22T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "📢 실제 기업 과제로 마케팅 실무경험 쌓기! 「미니인턴 × 로테아」 참여자 모집"
+   },
+   "category2": {
+    "raw": "취업"
+   },
+   "category": {
+    "raw": "마케팅"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-14T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-06T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "136024"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "jfda"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-19T00:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "제54회 중앙패션디자인콘테스트"
+   },
+   "category2": {
+    "raw": "디자인"
+   },
+   "category": {
+    "raw": "디자인/영상"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-15T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-15T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "133092"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "청소년서밋",
+     "환경리더십",
+     "글로벌교류",
+     "청소년컨퍼런스",
+     "GYSKorea2026"
+    ]
+   },
+   "subdomain": {
+    "raw": "gyskorea2026"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-26T09:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "Global Youth Summit Korea 2026"
+   },
+   "category2": {
+    "raw": "환경보건"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-16T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-08T12:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "133542"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "illusionists1004"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-21T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 AI 농수산 가격예측 해커톤"
+   },
+   "category2": {
+    "raw": "ChatGPT"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-17T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-19T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135933"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "rhtech"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-22T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 경남 관광창업 아이디어 경진대회"
+   },
+   "category2": {
+    "raw": null
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-18T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-29T07:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135980"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "데이터공모전",
+     "경진대회",
+     "해커톤",
+     "공모전",
+     "데이터안심구역"
+    ]
+   },
+   "subdomain": {
+    "raw": "eventdatasafetyzone"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-31T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "데이터안심구역 경진대회"
+   },
+   "category2": {
+    "raw": "빅데이터"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-22T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-22T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134171"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "kdataaichallenge"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-08T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 데이터·AI 혁신 챌린지 통합경진대회 데이터 문제해결 부문 모집"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "과학기술"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-22T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-22T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134967"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "공모전",
+     "개발공모전",
+     "불법광고탐지",
+     "공공데이터",
+     "디지털혁신"
+    ]
+   },
+   "subdomain": {
+    "raw": "aigongmo"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-14T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "﻿공공 웹사이트 불법광고 탐지 도구 개발 공모전"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-23T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-23T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135354"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "globalyouthsummit"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-18T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "Global Youth Summit Korea 2026"
+   },
+   "category2": {
+    "raw": "환경보건"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-24T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-10T03:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "135715"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "자작곡",
+     "경연대회",
+     "콜텍문화재단",
+     "콘테스트"
+    ]
+   },
+   "subdomain": {
+    "raw": "gtshappiness"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-03T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "Guitar is Happiness 창작곡 콘테스트 2026"
+   },
+   "category2": {
+    "raw": "음악"
+   },
+   "category": {
+    "raw": "예술"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-25T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-25T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134649"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "npinvestment"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-02T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "뉴패러다임인베스트먼트 2026년 하반기 아기유니콘 성장 프로그램 기업모집"
+   },
+   "category2": {
+    "raw": "창업 지원"
+   },
+   "category": {
+    "raw": "창업"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-30T08:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-30T08:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134550"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "iAWARDS",
+     "",
+     "아이어워즈",
+     "KIPFA",
+     "한국인터넷전문가협회",
+     "AI서비스어워드"
+    ]
+   },
+   "subdomain": {
+    "raw": "O4BLzYOg5gZn"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-07T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "🏆2026년 최고의 AI서비스를 찾아라! AI서비스어워드 2026 수상후보 공모"
+   },
+   "category2": {
+    "raw": "AI"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-30T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-30T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134911"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "한국인터넷전문가협회",
+     "",
+     "스마트앱어워드",
+     "",
+     "아이어워즈",
+     "",
+     "iAWARDS"
+    ]
+   },
+   "subdomain": {
+    "raw": "O4BLzYOg5gZn"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-07T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "🏆2026년 최고의 스마트앱을 찾아라! 스마트앱어워드 2026 수상후보 공모"
+   },
+   "category2": {
+    "raw": "IT"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-30T15:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-30T15:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134902"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "트레일런",
+     "마라톤",
+     "러닝",
+     "트레일런대회",
+     "러너"
+    ]
+   },
+   "subdomain": {
+    "raw": "jbtriathlon"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-24T05:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 군산 오성산 트레일런"
+   },
+   "category2": {
+    "raw": "스포츠"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-31T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-15T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "132156"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "O4BLzYOg5gZn"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-07T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "🏆2026년 최고의 웹사이트를 찾아라! 웹어워드코리아 2026 수상후보 공모"
+   },
+   "category2": {
+    "raw": "IT"
+   },
+   "category": {
+    "raw": "IT/프로그래밍"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-31T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-31T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134896"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "kiapbvidea"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-08-17T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "제5회 기아 PBV 아이디어 공모전"
+   },
+   "category2": {
+    "raw": "스타트업"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-10-31T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-10-31T14:59:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "132987"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "kknowledge"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-07T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 제3회 국가지식정보 통합플랫폼 디지털집현전 우수사례 공모전"
+   },
+   "category2": {
+    "raw": "기타"
+   },
+   "category": {
+    "raw": "과학기술"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-11-06T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-06T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134840"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "AI윤리교육",
+     "교육콘텐츠",
+     "인공지능",
+     "ai윤리",
+     "인공지능윤리원칙"
+    ]
+   },
+   "subdomain": {
+    "raw": "aiethics"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2026-09-08T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "2026 인공지능 윤리교육 콘텐츠 공모전"
+   },
+   "category2": {
+    "raw": "기타"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-11-07T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-08T14:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "134969"
+   }
+  },
+  {
+   "tags": {
+    "raw": []
+   },
+   "subdomain": {
+    "raw": "C4t8vPAw"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2025-12-03T00:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "서울관광·MICE기업 지원센터-분야별 전문가 무료상담(경영법무/인사노무/회계세무)"
+   },
+   "category2": {
+    "raw": "관광"
+   },
+   "category": {
+    "raw": "기타"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-11-30T09:00:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-11-30T09:00:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "117848"
+   }
+  },
+  {
+   "tags": {
+    "raw": [
+     "혁신바우처",
+     "정부지원",
+     "스타트업",
+     "브랜딩",
+     "수출바우처"
+    ]
+   },
+   "subdomain": {
+    "raw": "hyped"
+   },
+   "is_ignore": {
+    "raw": "false"
+   },
+   "register_start_date": {
+    "raw": "2025-07-16T15:00:00+00:00"
+   },
+   "state": {
+    "raw": "Start"
+   },
+   "title": {
+    "raw": "혁신바우처, 수출바우처 마케팅 전문 수행기관 골드넥스의 무료 컨설팅"
+   },
+   "category2": {
+    "raw": "브랜딩"
+   },
+   "category": {
+    "raw": "마케팅"
+   },
+   "event_type": {
+    "raw": "대회/공모전"
+   },
+   "register_due_date": {
+    "raw": "2026-12-31T14:30:00+00:00"
+   },
+   "close_date": {
+    "raw": "2026-07-01T16:30:00+00:00"
+   },
+   "disclosure_status": {
+    "raw": "open"
+   },
+   "id": {
+    "raw": "108469"
+   }
+  }
+ ]
+}
