@@ -25,7 +25,7 @@ upstream: [CCR-DOM-001, CCR-INFRA-001, CCR-API-001, CCR-UC-001]
 - 경계는 넷이다. 수집 · 선별 · 노션 · 기록. 의존은 선별 → 수집 · 노션 · 기록, 노션 · 기록 → 수집의 한 방향이다([[CCR-DOM-001]] 4.2).
 - 경계끼리는 값으로 주고받는다. 받은 값을 고쳐 돌려보내지 않는다.
 - 노션 경계는 읽기와 만들기만, 기록 경계는 읽기와 덧붙이기만 연다.
-- 판정 규칙의 수치(유사도 0.80 · 마감일 180일 · 판별 실패 절반)는 코드의 상수이고, 조정값은 `batch/settings.toml`이다([[CCR-INFRA-001]] 4.1).
+- 판정 규칙의 수치(유사도 0.90 · 마감일 180일 · 판별 실패 절반)는 코드의 상수이고, 조정값은 `batch/settings.toml`이다([[CCR-INFRA-001]] 4.1).
 
 ## 1. 폴더 구조
 
@@ -395,7 +395,7 @@ classDiagram
 | `EventUsSource` | `build_query` · `parse_page` · `normalize` | [[CCR-API-001#POST/api.event-us.kr/api/v1/engine/search]] | `total_pages`까지 |
 | `DaconSource` | `parse_page` · `link_for` · `normalize` | [[CCR-API-001#GET/app.dacon.io/api/v1/competition/list]] | 빈 쪽이나 접수 중인 대회가 없는 쪽 |
 | `KaggleSource` | `parse_page` · `is_practice` · `normalize` | [[CCR-API-001#POST/api.kaggle.com/v1/…/ListCompetitions]] | 토큰 없음 · 다음 쪽 없음 · 모두 마감된 쪽 |
-| `WevitySource` | `parse_list` · `parse_detail_end` · `deadline_of` · `-calibrate` | [[CCR-API-001#GET/www.wevity.com/?c=find]] · [[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]] | 분야마다 `마감` 공고가 나온 쪽이나 빈 쪽 |
+| `WevitySource` | `parse_list` · `parse_detail_end` · `deadline_of` · `-calibrate` | [[CCR-API-001#GET/www.wevity.com/?c=find]] · [[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]] | 분야마다 마지막 공고가 `마감`인 쪽이나 빈 쪽(5장 결정 8) |
 | `AiFactorySource` | `extract_payload` · `parse_tasks` · `group_tasks` · `competition_name` · `to_competition` | [[CCR-API-001#GET/aifactory.space/ko/competition]] | 한 쪽 |
 | `ContestKoreaSource` | `parse_list` · `resolve_dates` | [[CCR-API-001#GET/www.contestkorea.com/sub/list.php]] | 분야마다 12건보다 적은 쪽 |
 
@@ -403,7 +403,7 @@ classDiagram
 - 어댑터는 읽은 것을 곧바로 `Competition`으로 맞춘다([[CCR-UC-001#UC-S2]]). 대회명이나 원천 ID · 링크를 채우지 못한 레코드는 `dropped`로 센다. 수집 건수는 원본 레코드의 수다. AI팩토리는 합치기 전 과제의 수이고, 여러 분야에 같은 공고가 올라오는 wevity · 콘테스트코리아는 원천 ID로 합친 뒤의 수다([[CCR-DOM-001#Run]] · [[CCR-API-001]] 1.2).
 - 대회명은 앞뒤의 공백과 보이지 않는 서식 문자만 뗀다(`clean_text`, [[CCR-UC-001#UC-S2]] 4). event-us와 콘테스트코리아가 대회명 앞에 BOM을 붙여 주는 일이 있다(2026-09-27 실측). HTML 소스(wevity · 콘테스트코리아)는 브라우저가 보여 주는 대로 이어진 공백을 하나로 모은다(`html_text`).
 - 쪽 상한 20은 소스 안에서 합산한다. wevity와 콘테스트코리아는 분야를 넘나들며 한 상한을 쓴다. 상한에 닿으면 `page_cap_hit`을 켜고 로그에 남긴다.
-- 목록 요청은 리디렉션을 따라가지 않는다. 따라가는 것은 robots.txt(RFC 9309)와 wevity 날수 맞춰 보기의 상세 요청(같은 사이트의 `gbn=viewok`로 가는 302, 2026-09-27 실측, 6장) 둘이다.
+- 목록 요청은 리디렉션을 따라가지 않는다. 따라가는 것은 robots.txt(RFC 9309)와 wevity 날수 맞춰 보기의 상세 요청(같은 사이트의 `gbn=viewok`로 가는 302, 2026-09-27 실측, [[CCR-API-001]] 1.2) 둘이다.
 - 시간대 표기가 없는 값은 KST로 본다. 날짜 변환은 `shared/dates.py` 한 곳이다.
 
 ### 4.2 선별
@@ -455,8 +455,8 @@ classDiagram
 
 **규칙이 사는 곳**
 - **마감 판정.** 접수마감일이 기준일보다 이른 대회와 Kaggle 상시 연습용 대회를 버린다. 오늘 마감과 마감일이 빈 대회는 남긴다. 버린 수가 `dropped.expired`다.
-- **묶기.** `matching.group`이 같다는 짝을 강한 것부터 합치고, 합친 묶음에 2 · 3단계로 다른 짝이 생기면 합치지 않는다. 대표는 접수 날짜가 더 채워진 쪽, 같으면 소스 우선순위 · 원천 ID 순이다.
-- **아는 대회.** 노션 행과 처리 이력 기록을 합친다. 버림을 없는 것으로 보는 실행이면 버림 기록을 넣지 않되, 자기 기록이 있는지(`history_ids`)는 모든 기록으로 본다. 묶음은 구성원 가운데 하나라도 1단계로 같거나, 아는 대회를 넣어도 묶는 규칙이 지켜지면 아는 대회다.
+- **묶기.** `matching.group`이 같다는 짝을 강한 것부터 합치되, 합친 묶음 안의 모든 짝이 같다고 나올 때만 합친다. 2 · 3단계로 다른 짝은 물론 5단계에서 판단하지 않은 짝이 하나라도 있으면 합치지 않는다(5장 결정 7). 대표는 접수 날짜가 더 채워진 쪽, 같으면 소스 우선순위 · 원천 ID 순이다.
+- **아는 대회.** 노션 행과 처리 이력 기록을 합친다. 버림을 없는 것으로 보는 실행이면 버림 기록을 넣지 않되, 자기 기록이 있는지(`history_ids`)는 모든 기록으로 본다. 묶음은 구성원 가운데 하나라도 1단계로 같거나, 아는 대회가 구성원 하나 이상과 같고 어느 구성원과도 다르지 않으면 아는 대회다. 묶을 때와 달리 모든 구성원과 같을 필요는 없다.
 - **아는 대회로 빠진 묶음의 기록.** 확실하게 같은 짝이 있을 때만 자기 기록이 없는 구성원을 적는다. 결과는 견준 쪽을 따르되, 확실하게 같은 것 가운데 남김(노션 행 · 남김 기록)이 하나라도 있으면 남김이다(5장 결정 2). 날짜 없는 구성원은 대표의 날짜로 채운다(`entries_for`).
 - **판별.** 묶음마다 대표 하나를 묻는다. 동시에 넷(설정값)이고, 결과는 받는 차례대로 한 흐름이 처리한다. 버림은 받는 대로 적는다. 다시 물어도 같은 답이 올 오류(`JudgeError.fatal`)가 나면 아직 묻지 않은 묶음은 묻지 않고 판별 실패로 둔다. OpenAI 키가 없으면 판별기가 없고(`judge=None`) 모든 묶음이 판별 실패다.
 - **미루기.** 판별 실패가 대상의 절반을 넘으면 실패한 묶음 가운데 접수마감일이 기준일이 아닌 것을 미룬다. 미룬 묶음은 넣지도 적지도 않는다. 원인은 키가 없으면 `missing_key`, 그 밖은 `call_failed`다.
@@ -474,13 +474,13 @@ normalize_link(link) -> str | None          추적용 매개변수(utm_* · fbcl
 key_of_competition(c) -> MatchKey
 key_of_notion(row) -> MatchKey              링크를 싣는다. 원천 ID는 없다
 key_of_history(record) -> MatchKey          링크를 싣지 않는다. 링크는 노션 행과 견줄 때만 쓴다
-similarity(a, b) -> float                   0.80에 닿을 수 없으면 계산하지 않고 0
+similarity(a, b) -> float                   0.90에 닿을 수 없으면 계산하지 않고 0
 judge_pair(a, b) -> PairResult              다섯 단계
 representative_order(c) -> tuple            대표를 고르는 차례
-group(competitions, keys) -> list[list[int]]  후보끼리 묶기
+group(competitions, keys) -> list[list[int]]  후보끼리 묶기. 모든 짝이 같을 때만 합친다
 ```
 
-**규칙이 사는 곳** — 판정표([[CCR-UC-001#UC-S4]] · [[CCR-PRD-001]] 5.2)를 그대로 옮긴다. 상수 `SIMILARITY = 0.80` · `DEADLINE_GAP_DAYS = 180`. 정규화의 세부(꼬리말 목록 · 날짜 괄호로 보는 것 · 회차 표기)는 [[CCR-MS-001#matching.normalize_title]] · [[CCR-MS-001#matching.extract_marks]]가 정한다. 유사도 계산 전의 거르기(길이 · 글자 집합의 상한)는 결과를 바꾸지 않는다. 0.80에 닿을 수 없는 짝만 건너뛴다.
+**규칙이 사는 곳** — 판정표([[CCR-UC-001#UC-S4]] · [[CCR-PRD-001]] 5.2)를 그대로 옮긴다. 상수 `SIMILARITY = 0.90` · `DEADLINE_GAP_DAYS = 180`. 정규화의 세부(꼬리말 목록 · 날짜 괄호로 보는 것 · 회차 표기)는 [[CCR-MS-001#matching.normalize_title]] · [[CCR-MS-001#matching.extract_marks]]가 정한다. 유사도 계산 전의 거르기(길이 · 글자 집합의 상한)는 결과를 바꾸지 않는다. 0.90에 닿을 수 없는 짝만 건너뛴다.
 
 ### 4.4 판별
 
@@ -787,10 +787,13 @@ main() -> int
 
 **결정 6. 판별 스레드의 결과는 한 흐름이 받는다.** 추가분 파일은 한 곳만 쓴다는 [[CCR-INFRA-001]] 6.2를 지키기 위해서다. 판별 스레드는 답만 돌려주고, 받는 쪽이 받은 차례대로 버림을 적는다.
 
+**결정 7. 같은 대회는 문턱 0.90으로 가르고, 모든 짝이 같을 때만 묶는다(사용자 결정, 2026-09-28).** 이 문서 6장의 미결이었다. 2026-09-27 후보 321건에서 문턱 0.80 · 사슬 규칙은 서로 다른 아이디어 공모전 스무 건을 한 묶음으로 만들었다. 새 규칙으로는 여럿인 묶음 59개 가운데 57개가 실제로 같은 대회였고, 가장 큰 묶음은 세 건이었다. 대가로 0.80~0.90 사이의 옳은 짝 10개가 갈려 노션에 행이 둘 생길 수 있다. 숫자와 까닭은 [[CCR-PRD-001]] 5.2다. `group`은 두 묶음을 합칠 때 가로지르는 짝이 모두 같음 집합에 있는지 본다. 묶음이 작아(대개 둘) 모든 짝을 봐도 비용이 없다. 아는 대회와 견주는 `_matches`의 조건은 바꾸지 않았다([[CCR-UC-001#UC-S4]] 5).
+
+**결정 8. wevity는 쪽의 마지막 공고가 `마감`일 때 분야를 멈춘다.** 목록 위쪽 홍보 칸에 마감된 공고가 남으면, `마감`이 하나라도 보일 때 멈추던 처음 규칙은 뒤쪽의 접수 중 공고를 놓친다. 2026-09-28 아침에는 웹/모바일/IT와 논문/리포트의 2쪽 22건을 놓쳤다([[CCR-API-001#GET/www.wevity.com/?c=find]]). 모두 마감인 쪽까지 읽는 방법은 분야마다 한 쪽씩 늘어 쪽 상한 20에 가까워져 쓰지 않았다.
+
 ## 6. 미결사항
 
-- [ ] **같은 대회 판정이 틀박이 이름을 잇는다.** 2026-09-27 실측 후보 321건을 판정표대로 묶었더니, 여럿인 묶음 63개 가운데 적어도 네 개가 서로 다른 대회를 합쳤다. 가장 큰 것은 스무 건이다(「2026 대구 관광 혁신 아이디어 공모전」 · 「[포천도시공사] 2026년 혁신 아이디어 공모전」 · 「2026년 성남시 규제혁신 아이디어 공모전」 …). 5단계 짝 47개 가운데 절반쯤이 틀렸고, 대괄호 머리말(주최)만 다르고 나머지가 같은 이름이 많았다. 유사도 문턱 0.90과 「모든 짝이 같아야 한 묶음」을 함께 쓰면 가장 큰 묶음이 셋으로 준다. 판정 규칙은 [[CCR-PRD-001]] 5.2의 결정이라 코드는 판정표 그대로 두었다. PRD를 고칠지 정한다
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]).
+
 - [ ] Kaggle 어댑터는 실측 전이다. 토큰이 생기면 [[CCR-API-001]] 5장대로 필드 이름 · 연습용 표기 · 쪽 크기를 실측하고 `kaggle.py`를 맞춘다. 그때까지는 토큰이 없어 설정 누락으로 건너뛴다
-- [ ] wevity 날수 맞춰 보기는 매 실행 상세 한 쪽으로 보정값을 잰다. 2026-09-27 22시에 잰 값은 0이었다(저녁). 08:50 예약 실행의 로그에서 −1이 나오는지 본다([[CCR-API-001]] 5장)
-- [ ] wevity 상세는 `gbn=view` → `gbn=viewok`로 302를 보낸다(2026-09-27). [[CCR-API-001]]의 상세 엔드포인트 절에 적는다
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
