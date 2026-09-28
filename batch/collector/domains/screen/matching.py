@@ -2,7 +2,7 @@
 
 대회 · 노션 행 · 처리 이력 기록에서 같은 방법으로 판정 값을 뽑고(CCR-DOM-001 4.2 규칙 6),
 두 값이 같은지 다섯 단계로 가른다. 앞 단계에서 결론이 나면 뒤 단계는 보지 않는다.
-수치(유사도 0.80 · 마감일 180일)는 조정값이 아니라 규칙이라 코드에 둔다(CCR-INFRA-001 4.1).
+수치(유사도 0.90 · 마감일 180일)는 조정값이 아니라 규칙이라 코드에 둔다(CCR-INFRA-001 4.1).
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from collector.domains.record.models import HistoryRecord
 from collector.domains.screen.models import MatchKey, PairResult, Verdict
 from collector.shared.text import clean_text
 
-SIMILARITY = 0.80
+SIMILARITY = 0.90
 DEADLINE_GAP_DAYS = 180
 
 _HEAD_BRACKETS = re.compile(r"^\s*(?:[\[【〔][^\]】〕]*[\]】〕]\s*)+")
@@ -171,7 +171,7 @@ def key_of_history(record: HistoryRecord) -> MatchKey:
 
 
 def similarity(a: MatchKey, b: MatchKey) -> float:
-    """정규화한 대회명의 유사도. 0.80에 닿을 수 없으면 계산하지 않고 0을 돌려준다."""
+    """정규화한 대회명의 유사도. 0.90에 닿을 수 없으면 계산하지 않고 0을 돌려준다."""
     la, lb = len(a.title_norm), len(b.title_norm)
     total = la + lb
     if total == 0 or 2 * min(la, lb) < SIMILARITY * total:
@@ -232,7 +232,7 @@ def judge_pair(a: MatchKey, b: MatchKey) -> PairResult:
     # 4단계. 정규화한 대회명이 같다
     if a.title_norm == b.title_norm:
         return PairResult(Verdict.SAME, step=4, similarity=1.0, certain=compared)
-    # 5단계. 유사도 0.80 이상. 못 미치면 판단하지 않는다
+    # 5단계. 유사도 0.90 이상. 못 미치면 판단하지 않는다
     ratio = similarity(a, b)
     if ratio >= SIMILARITY:
         return PairResult(Verdict.SAME, step=5, similarity=ratio, certain=compared)
@@ -245,10 +245,9 @@ def representative_order(competition: Competition) -> tuple[int, int, str]:
 
 
 def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[int]]:
-    """후보끼리 같은 대회를 묶는다(UC-S4 4). 합친 묶음에 2·3단계로 다른 짝이 생기면 합치지 않는다."""
+    """후보끼리 같은 대회를 묶는다(UC-S4 4). 합친 묶음 안의 모든 짝이 같음일 때만 합친다(CCR-DOM-002 5장 결정 7)."""
     n = len(competitions)
     same: list[tuple[tuple, int, int]] = []
-    different: set[tuple[int, int]] = set()
     for i in range(n):
         for j in range(i + 1, n):
             result = judge_pair(keys[i], keys[j])
@@ -261,8 +260,7 @@ def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[in
                     _order_of(competitions[second]),
                 )
                 same.append((order, i, j))
-            elif result.verdict is Verdict.DIFFERENT:
-                different.add((i, j))
+    same_pairs = {(i, j) for _, i, j in same}
 
     owner = list(range(n))
     members: dict[int, list[int]] = {i: [i] for i in range(n)}
@@ -270,8 +268,8 @@ def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[in
         gi, gj = owner[i], owner[j]
         if gi == gj:
             continue
-        if any((min(x, y), max(x, y)) in different for x in members[gi] for y in members[gj]):
-            continue  # UC-S4 4b. 먼저 본 짝 쪽 묶음에 남는다
+        if any((min(x, y), max(x, y)) not in same_pairs for x in members[gi] for y in members[gj]):
+            continue  # UC-S4 4b. 다름이나 판단하지 않음이 하나라도 있으면 먼저 본 짝 쪽 묶음에 남는다
         if len(members[gi]) < len(members[gj]):
             gi, gj = gj, gi
         for x in members[gj]:
