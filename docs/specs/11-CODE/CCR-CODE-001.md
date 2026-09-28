@@ -10,7 +10,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 
 ## 0. 이 문서가 다루는 것
 
-배치를 어떤 차례의 조각(슬라이스)으로 만들었는지와, 조각마다 무엇을 구현하고 무엇으로 확인했는지다. 함수의 처리는 [[CCR-MS-001]], 흐름은 [[CCR-SEQ-001]]에 있다. 조각은 도메인 경계를 따라 나눴고, 조각 하나가 커밋 하나다. 커밋마다 그 커밋까지의 테스트가 혼자 통과한다. 명세 초안을 코드와 대조한 검증에서 나온 수정은 마지막 커밋 하나에 모았다.
+배치를 어떤 차례의 조각(슬라이스)으로 만들었는지와, 조각마다 무엇을 구현하고 무엇으로 확인했는지다. 함수의 처리는 [[CCR-MS-001]], 흐름은 [[CCR-SEQ-001]]에 있다. 조각은 도메인 경계를 따라 나눴고, 조각 하나가 커밋 하나다. 커밋마다 그 커밋까지의 테스트가 혼자 통과한다. 명세 초안을 코드와 대조한 검증에서 나온 수정은 마지막 커밋 하나에 모았다. 병합 뒤 사용자가 정한 같은 대회 판정 규칙과 실측에서 찾은 wevity 누락은 조각 둘(B7 · B8)로 더했다.
 
 **확인하는 법.** `batch/`에서 `uv run pytest`(네트워크를 쓰지 않는다). 실제 소스에 수집만 해 보려면 `uv run python -m collector collect --show`. 노션 · OpenAI는 미리보기(`python -m collector`, 로컬은 늘 미리보기)로 본다.
 
@@ -109,6 +109,32 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 선행 | B2 |
 | 완료 | `4f689f6` |
 
+#### B7 문턱 0.90과 모든 짝 규칙
+
+| 항목 | 내용 |
+|---|---|
+| 근거 | [[CCR-PRD-001]] 5.2 · [[CCR-UC-001#UC-S4]] 4 · 4b · [[CCR-DOM-002]] 5장 결정 7 · [[CCR-SCN-001#S2]] · [[CCR-SCN-001#S3]] |
+| 구현 | `domains/screen/matching.py` — 5단계 문턱 `SIMILARITY`를 0.80에서 0.90으로 올리고, `group`은 합친 묶음 안의 모든 짝이 같음일 때만 합친다(다름 · 판단하지 않음이 하나라도 있으면 합치지 않는다). 아는 대회 후보 좁히기(`service.py`의 `_could_be_same`)는 같은 상수를 따른다. `AGENTS.md` · `settings.toml` 주석의 수치 |
+| 구현 함수 | [[CCR-MS-001#matching.similarity]] · [[CCR-MS-001#matching.judge_pair]] · [[CCR-MS-001#matching.group]] · [[CCR-MS-001#ScreenService._matches]] |
+| API | 없음 |
+| 화면 | 없음 |
+| 테스트 | `tests/domains/screen/test_matching.py` — Big Data 짝은 비율 0.85를 재현하되 0.90에 닿지 않아 0 · PRD의 0.82 짝은 판단하지 않음 · 0.90 경계(연도 없는 이름이 18자면 같음, 17자면 판단하지 않음) · A~B · B~C가 같아도 A–C가 판단하지 않음이면 따로 · 이름 틀이 비슷한 공모전 셋은 따로 · 연도 사슬 테스트는 이름을 18자 이상으로 늘림. 새 테스트 넷과 고친 Big Data 테스트는 예전 코드에서 실패한다. 실측: 2026-09-27 후보 321건을 새 코드로 묶으면 묶음 254개 · 여럿인 묶음 59개 · 가장 큰 묶음 3건으로, 측정에 쓴 규칙과 같다([[CCR-PRD-001]] 5.2) |
+| 선행 | B4 |
+| 완료 | `7d63b56` |
+
+#### B8 wevity 멈추는 때
+
+| 항목 | 내용 |
+|---|---|
+| 근거 | [[CCR-API-001#GET/www.wevity.com/?c=find]] · [[CCR-DOM-002]] 5장 결정 8 |
+| 구현 | `domains/collect/adapters/wevity.py` — 분야를 멈추는 때를 "쪽에 `마감`이 하나라도 있음"에서 "쪽의 마지막 공고가 `마감` · 빈 쪽"으로 |
+| 구현 함수 | [[CCR-MS-001#WevitySource.collect]] |
+| API | [[CCR-API-001#GET/www.wevity.com/?c=find]] |
+| 화면 | 없음 |
+| 테스트 | `tests/domains/collect/adapters/test_wevity.py` — 1쪽 가운데의 마감 공고로 멈추지 않고 2쪽 끝의 마감에서 멈추며, 모두 마감인 3쪽은 읽지 않는다(예전 코드는 1쪽만 읽어 실패한다). 실측: 2026-09-28 10시에 목록 11쪽 · 156건 · 접수 중 136건. 아침에 예전 규칙이 놓친 접수 중 22건이 모두 돌아왔다 |
+| 선행 | B1 |
+| 완료 | `0487ff4` |
+
 #### C 운영
 
 | 항목 | 내용 |
@@ -127,8 +153,8 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 시나리오 | 슬라이스 | 검증하는 것 |
 |---|---|---|
 | [[CCR-SCN-001#S1]] 평소 아침 | B5 | `test_happy_path_loads_keeps_and_records_discards` — 마감 지난 대회 · 노션에 있는 대회 · 버림이 빠지고 남김 하나가 들어가며, 남김 · 버림 · 아는 대회의 구성원이 처리 이력에 적힌다 |
-| [[CCR-SCN-001#S2]] 처음 돌리는 날 | B4 | `test_notion_row_keeps_and_wins_over_discard` · 링크가 같은 노션 행 — 손으로 넣은 행과 같은 공고가 빠지고 남김으로 적힌다 |
-| [[CCR-SCN-001#S3]] 여러 갈래 | B4 | `test_group_merges_duplicate_notices_across_sources` · `test_representative_prefers_more_dates_then_priority` · 실측 후보 321건의 묶음([[CCR-DOM-002]] 6장 미결) |
+| [[CCR-SCN-001#S2]] 처음 돌리는 날 | B4 · B7 | `test_notion_row_keeps_and_wins_over_discard` · 링크가 같은 노션 행 — 손으로 넣은 행과 같은 공고가 빠지고 남김으로 적힌다. `test_prd_pair_at_082_is_undecided` — 이름을 많이 다르게 쓴 같은 대회(0.82)는 판단하지 않아 행이 하나 더 생길 수 있다 |
+| [[CCR-SCN-001#S3]] 여러 갈래 | B4 · B7 | `test_group_merges_duplicate_notices_across_sources` · `test_representative_prefers_more_dates_then_priority` · `test_group_needs_every_pair_to_be_the_same` · `test_group_keeps_templated_idea_contests_apart` · 실측 후보 321건의 묶음(가장 큰 묶음 3건, [[CCR-PRD-001]] 5.2) |
 | [[CCR-SCN-001#S4]] 관심 없는 대회 | B4 · B5 | 판별 버림 · 절반 규칙 · 키 없음 · 치명 오류 |
 | [[CCR-SCN-001#S5]] 소스 하나가 깨짐 | B1 · B5 | 실패 종류 여섯 · `test_failed_source_is_marked_and_run_continues` · 소스 0건 경고 |
 | [[CCR-SCN-001#S6]] 실패한 날 다시 | B5 · B6 | 실패 사유 넷 · 오늘 마감 미적재 · 신호로 멈추면 중단 줄 · 이미 올린 실행을 다시 얹지 않음 |
@@ -149,12 +175,14 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | `4f689f6` | B6 | 마무리 단계: 추가분을 main 최신 판 위에 다시 얹어 한 커밋으로 올린다 |
 | `7a4a002` | C | 운영: 매일 08:50 KST 워크플로 · Dependabot · 안내 문서 |
 | `fe8a3d7` | A · B1 · B2 · B3 | 검증 반영: 본문을 받는 동안에도 시간 예산으로 끊고, 대회명 다듬기를 명세에 맞췄다 |
+| `7d63b56` | B7 | 선별: 같은 대회 판정 문턱을 0.90으로 올리고, 묶음은 모든 짝이 같을 때만 묶는다 |
+| `0487ff4` | B8 | 수집: wevity는 쪽의 마지막 공고가 마감일 때 분야를 멈춘다 |
 
-PR은 [#1](https://github.com/HoyoungParkme/competition-crawler/pull/1) 하나다(`feat/batch` → `main`). 위 커밋 해시를 그대로 남기려고 병합 커밋으로 합친다.
+PR은 둘이다. [#1](https://github.com/HoyoungParkme/competition-crawler/pull/1)(`feat/batch` → `main`)은 A ~ C와 검증 반영을, [#2](https://github.com/HoyoungParkme/competition-crawler/pull/2)(`fix/matching-wevity` → `main`)는 B7 · B8을 담았다. 위 커밋 해시를 그대로 남기려고 둘 다 병합 커밋으로 합쳤다.
 
 ## 4. 미결사항
 
-- [ ] **사용자가 준비할 것.** GitHub 환경 `notion-write` · `notion-read`와 각 `NOTION_TOKEN`, 저장소 시크릿 `NOTION_DATA_SOURCE_ID` · `OPENAI_API_KEY`(· `KAGGLE_API_TOKEN`), 규칙셋(강제 push 차단 · 삭제 제한), 액션 SHA 고정 요구, 실패 알림. 순서는 `README.md`
+- [ ] **사용자가 준비할 것.** 환경 `notion-write` · `notion-read` 각각의 `NOTION_TOKEN`, 저장소 시크릿 `NOTION_DATA_SOURCE_ID` · `OPENAI_API_KEY`(· `KAGGLE_API_TOKEN`), 실패 알림. 순서는 `README.md`. 환경 두 개(`notion-write`는 `main`만 · 관리자 우회 없음), 규칙셋 `main 보호`(삭제 · 강제 push 차단), 액션 SHA 고정 요구는 2026-09-28에 걸어 두었다
 - [ ] **실물 확인.** 시크릿을 넣은 뒤 `main`에서 미리보기(`dry_run`) 한 번으로 노션 읽기 · 컬럼 확인 · 판별을 보고, 그다음 수동 실행 한 번으로 행 만들기와 마무리 단계의 커밋을 본다
 - [ ] **Kaggle 실측.** 토큰이 생기면 [[CCR-API-001]] 5장대로 실측하고 `kaggle.py`와 테스트를 맞춘다
-- [ ] **같은 대회 판정 규칙.** [[CCR-DOM-002]] 6장. 규칙이 바뀌면 B4에 조각 하나를 더한다
+- [ ] **예약 실행.** 2026-09-28 08:50 KST의 첫 예약 실행이 생기지 않았다. 워크플로는 켜져 있고 수동 실행은 돈다. GitHub는 부하가 크면 예약 실행을 늦추거나 버린다. 다음 날에도 생기지 않으면 원인을 가린다
