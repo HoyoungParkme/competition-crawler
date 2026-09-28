@@ -138,10 +138,7 @@ class WevitySource:
                     parse=parse_list,
                 )
                 pages += 1
-                closed_seen = False
                 for item in items:
-                    if item.status == CLOSED_STATE:
-                        closed_seen = True
                     key = item.ix or (item.href or "")
                     if key in merged:
                         known = merged[key]
@@ -149,7 +146,9 @@ class WevitySource:
                         continue
                     merged[key] = item
                     order.append(key)
-                if closed_seen or not items:
+                # 일반 목록은 접수 중 뒤에 마감이 이어지므로 쪽의 끝이 마감이면 뒤쪽도 마감이다.
+                # 첫 쪽 위쪽 홍보 칸에 남은 마감 공고로는 멈추지 않는다(CCR-DOM-002 5장 결정 8)
+                if not items or items[-1].status == CLOSED_STATE:
                     break
                 gp += 1
             if cap_hit:

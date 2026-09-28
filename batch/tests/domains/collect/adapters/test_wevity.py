@@ -89,3 +89,35 @@ def test_page_cap_is_shared_across_categories(clock: FakeClock) -> None:
     collected = wevity.WevitySource().collect(make_http(handler, clock=clock), BASE, page_cap=3)
     assert collected.page_cap_hit
     assert len(pages) == 3
+
+
+def list_page(*rows: tuple[str, str, str]) -> str:
+    """(ix, 날수, 상태)마다 목록 한 줄. 실제 쪽처럼 머리 줄을 둔다."""
+    lis = "".join(
+        f'<li><div class="tit"><a href="?c=find&s=1&gub=1&cidx=20&gbn=view&gp=1&ix={ix}">공모전 {ix}</a></div>'
+        f'<div class="organ">주최</div><div class="day">{day}<span class="dday">{state}</span></div></li>'
+        for ix, day, state in rows
+    )
+    return f'<ul class="list"><li class="top"><div class="tit">공모전명</div></li>{lis}</ul>'
+
+
+def test_promoted_closed_notice_does_not_stop_the_category(clock: FakeClock) -> None:
+    # 2026-09-28 아침처럼 첫 쪽 위쪽 홍보 칸에 전날 마감된 공고가 있다. 쪽의 끝이 마감인 2쪽까지 읽고,
+    # 2쪽 앞머리의 접수 중 공고도 받는다. 모두 마감인 3쪽은 읽지 않는다(CCR-DOM-002 5장 결정 8)
+    pages = {
+        "1": list_page(("1", "D-3", "접수중"), ("2", "D+0", "마감"), ("3", "D-5", "접수중"), ("4", "D-9", "마감임박")),
+        "2": list_page(("5", "D-12", "접수중"), ("6", "D+1", "마감"), ("7", "D+2", "마감")),
+        "3": list_page(("8", "D+3", "마감"), ("9", "D+4", "마감")),
+    }
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("gbn") == "view":
+            return httpx.Response(404)  # 날수 맞춰 보기는 이 테스트에서 보지 않는다
+        cidx, gp = request.url.params["cidx"], request.url.params["gp"]
+        seen.append((cidx, gp))
+        return httpx.Response(200, text=pages[gp] if cidx == "20" else list_page())
+
+    collected = wevity.WevitySource().collect(make_http(handler, clock=clock), BASE, page_cap=20)
+    assert [gp for cidx, gp in seen if cidx == "20"] == ["1", "2"]
+    assert [c.source_id for c in collected.competitions] == ["1", "2", "3", "4", "5", "6", "7"]
