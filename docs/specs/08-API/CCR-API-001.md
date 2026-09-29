@@ -3,21 +3,21 @@ doc_id: CCR-API-001
 type: API
 title: 대회 수집 배치 API 명세 REST
 status: draft
-upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
+upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001, CCR-UI-001]
 ---
 
 # API 명세 REST — 대회 수집 배치
 
 ## 0. 이 문서가 다루는 것
 
-배치가 부르는 바깥 엔드포인트를 적는다. 대회 소스 여섯(event-us · DACON · Kaggle · wevity · AI팩토리 · 콘테스트코리아), 관련도 판별에 쓰는 OpenAI, 적재에 쓰는 노션이다. 배치는 서버가 없어 자기 엔드포인트가 없다([[CCR-INFRA-001#C1]]).
+배치와 대회 목록 페이지가 부르는 바깥 엔드포인트를 적는다. 배치는 대회 소스 여섯(event-us · DACON · Kaggle · wevity · AI팩토리 · 콘테스트코리아)과 관련도 판별에 쓰는 OpenAI를 부르고, 페이지는 저장소 파일을 읽고 쓰는 GitHub를 부른다. 배치도 페이지도 서버가 없어 자기 엔드포인트가 없다([[CCR-INFRA-001#C1]] · [[CCR-INFRA-001#C14]]). 2026-09-29까지 있던 노션 항목 넷은 노션을 쓰지 않기로 하면서 지웠다.
 
-항목 하나가 엔드포인트 하나다. 헤딩은 `메서드/호스트/경로`다. 호스트가 여럿이라 경로만으로는 가를 수 없어 호스트를 넣는다. 항목 ID는 50자까지라 긴 경로는 줄여 적는다. 노션의 `{data_source_id}`는 `{id}`로, Kaggle의 서비스 이름은 `…`로 줄였다. 온전한 경로는 그 항목의 yaml에 있다. 블록마다 한 줄 요약, 유스케이스와 도메인 개념, 받은 값을 공통 형식으로 옮기는 법, 그 엔드포인트의 yaml을 둔다. yaml은 OpenAPI의 모양을 빌리되 배치가 보내고 읽는 것만 적는다. 응답에는 쓰지 않는 필드가 훨씬 많다.
+항목 하나가 엔드포인트 하나다. 헤딩은 `메서드/호스트/경로`다. 호스트가 여럿이라 경로만으로는 가를 수 없어 호스트를 넣는다. 항목 ID는 50자까지라 긴 경로는 줄여 적는다. Kaggle의 서비스 이름과 GitHub의 `{owner}/{repo}`는 `…`로 줄였다. 온전한 경로는 그 항목의 yaml에 있다. 블록마다 한 줄 요약, 유스케이스와 도메인 개념, 받은 값을 공통 형식으로 옮기는 법, 그 엔드포인트의 yaml을 둔다. yaml은 OpenAPI의 모양을 빌리되 배치가 보내고 읽는 것만 적는다. 응답에는 쓰지 않는 필드가 훨씬 많다.
 
 확인한 방법은 셋이다.
 - **실측:** 소스 다섯은 2026-09-23에 직접 불러 봤다. wevity · 콘테스트코리아는 2026-09-27에 다시 불렀고, wevity는 2026-09-28 아침에 한 번 더 불렀다.
 - **공식 클라이언트 코드:** Kaggle은 공식 클라이언트(`kagglesdk`) 코드로 확인했다. 실측은 아직이다(5장).
-- **공식 문서:** OpenAI와 노션은 공식 문서로 확인했다.
+- **공식 문서:** OpenAI와 GitHub는 공식 문서로 확인했다. GitHub Contents API는 2026-09-29에 이 저장소의 파일 하나를 읽어 응답 모양을 봤다.
 
 event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 문서가 없다. wevity · AI팩토리 · 콘테스트코리아는 페이지를 읽는다. 어느 것이든 예고 없이 바뀔 수 있다([[CCR-PRD-001#R9]]).
 
@@ -28,11 +28,10 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 | AI팩토리 과제를 대회로 합치는 법과 대회명([[CCR-PRD-001]] 6장 · [[CCR-DOM-001]] 6장) | 페이지 이름과 접수시작일로 합치고, 대회명은 네 차례로 정한다 | 3.1 AI팩토리 |
 | 소스마다 채우는 날짜와 부가 정보(같은 두 곳) | 소스별 필드. Kaggle은 실측 뒤 확정한다 | 4.1 |
 | Kaggle 호출 방식([[CCR-INFRA-001]] 3장) | 공식 API의 대회 목록. 실측 뒤 확정한다 | 3.1 Kaggle |
-| 노션 `출처` 컬럼의 종류([[CCR-DOM-001]] 6장) | select | 1.4 |
-| 노션 컬럼을 이름으로 지정할지 id로 지정할지([[CCR-INFRA-001]] 9장) | 이름 | 1.4 |
-| 응답 없이 끊긴 행 만들기를, 행이 생겼는지 확인한 뒤 다시 보낼지([[CCR-INFRA-001]] 9장) | 확인하지도 다시 보내지도 않는다 | 2.3 |
+| 페이지가 저장소를 읽고 쓰는 모양([[CCR-INFRA-001]] 8.11) | 표시는 raw 파일로 읽고, 쓰기 직전의 판 읽기와 쓰기는 Contents API로 한다 | 1.4 · 3.3 |
+| 판이 어긋난 쓰기를 어떻게 다시 보낼지([[CCR-UC-001#UC-H1]] 4a) | 최신 판을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다 | 2.3 |
 
-여기서 정하지 않는 것도 있다. 클래스와 메서드는 클래스 명세가, 상태 파일 한 줄의 형식은 ERD가 정한다. 타임아웃 · 재시도 횟수 · 시간 예산의 수치는 [[CCR-INFRA-001]] 8.5가 정했다. 이 문서는 어느 응답을 다시 보낼지를 가른다(2장).
+여기서 정하지 않는 것도 있다. 클래스와 메서드는 클래스 명세가, 데이터 파일 한 줄의 필드 이름과 형식은 ERD([[CCR-DOM-003]])가 정한다. 타임아웃 · 재시도 횟수 · 시간 예산의 수치는 [[CCR-INFRA-001]] 8.5가 정했다. 이 문서는 어느 응답을 다시 보낼지를 가른다(2장).
 
 ## 1. 규칙
 
@@ -42,7 +41,8 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 - **요청 간격**은 같은 소스 안에서 요청 사이 1초다. `robots.txt` 요청도 센다([[CCR-INFRA-001]] 8.5).
 - **비밀값**은 환경 변수로만 받는다([[CCR-INFRA-001]] 5장). 요청 헤더와 요청 객체는 로그에 찍지 않는다([[CCR-UC-001#UC-S7]] 7 · [[CCR-INFRA-001]] 5.4).
 - **시간대.** 시간대가 붙은 시각은 KST로 바꾼 뒤 날짜만 쓴다. 시간대 표기가 없는 값은 KST로 보고 바꾸지 않는다([[CCR-UC-001#UC-S2]] 2 · 2b). 기준일 00:00 KST는 UTC로 전날 15:00이다. 기준일이 2026-09-23이면 `2026-09-22T15:00:00+00:00`이다.
-- **빈 값.** 알 수 없는 날짜는 빈 값으로 둔다. 노션에는 빈 문자열이 아니라 `null`을 보낸다.
+- **빈 값.** 알 수 없는 날짜는 빈 값으로 둔다. 파일에는 빈 문자열이 아니라 `null`로 적는다([[CCR-DOM-003]]).
+- **페이지의 요청**은 브라우저의 `fetch`다. User-Agent는 브라우저가 보내고, 배치의 것을 흉내 내지 않는다. `Authorization` 헤더는 `api.github.com`에만 보내고 raw 읽기에는 보내지 않는다. 토큰은 주소·콘솔에 싣지 않는다([[CCR-INFRA-001]] 5.8).
 
 ### 1.2 대회 소스
 
@@ -56,7 +56,7 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 
 2026-09-23에는 여섯 호스트 모두 목록 경로를 막지 않았다. `www.wevity.com`과 `www.contestkorea.com`은 200(`User-agent: *`에 `Allow: /`)이었고, `api.event-us.kr` · `app.dacon.io` · `api.kaggle.com` · `aifactory.space`는 404였다.
 
-**링크 정규형.** 판정 1단계는 노션 행과 링크로 견준다([[CCR-UC-001#UC-S4]] 판정 1단계). 그래서 같은 공고는 어느 목록에서 받든 늘 같은 링크여야 한다. 목록의 링크에는 분야 · 쪽 번호가 붙어 있어 그대로 쓰지 않고 아래 모양으로 만든다. 모두 2026-09-23에 200으로 열렸다.
+**링크 정규형.** 판정 1단계는 출처·원천 ID로 견주고, 링크는 소스가 개편해 원천 ID가 바뀐 공고를 잇는 예비다([[CCR-UC-001#UC-S4]] 판정 1단계). 링크는 목록 항목과 처리 이력에 그대로 남으므로, 같은 공고는 어느 목록에서 받든 늘 같은 링크여야 한다. 목록의 링크에는 분야 · 쪽 번호가 붙어 있어 그대로 쓰지 않고 아래 모양으로 만든다. 모두 2026-09-23에 200으로 열렸다.
 
 | 소스 | 상세 링크 |
 |---|---|
@@ -106,29 +106,21 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 
 기본값은 싼 쪽인 `gpt-6-luna`로 했다(`batch/settings.toml`). 저장소 변수 `OPENAI_MODEL`이 있으면 그것을 쓴다.
 
-### 1.4 노션
+### 1.4 저장소 파일 — 페이지가 읽고 쓰는 법
 
-- **API 버전**은 `Notion-Version: 2025-09-03`이다([[CCR-INFRA-001]] 3장). 최신은 2026-03-11이고 2025-09-03도 계속 지원된다. 2026-03-11에서 바뀐 것 가운데 이 배치에 걸리는 것은 없다. 휴지통을 뜻하던 옛 이름 `archived`가 없어지고 `in_trash`만 남는 것 등인데, 배치는 그 필드들을 읽지 않는다.
-- **컬럼은 이름으로 지정한다.** `기타` · `링크` · `시작일` · `마감일` · `상태` · `출처` · `수집일`이다. 노션 API는 컬럼을 속성(property)이라 부르고, 키로 이름과 id를 모두 받는다.
-  - 이름을 고른 이유: id로 지정하려면 컬럼마다 id를 설정에 넣어 두어야 한다. `출처` · `수집일`은 배치가 만들기 전에는 id도 없다. 이름은 사람이 보는 그대로라 따로 둘 것이 없다.
-  - 이름이 바뀌면: `기타` · `링크` · `시작일` · `마감일` · `상태`는 행을 만들기 전 확인(아래)에 걸려 행 생성 전면 실패 경고로 드러난다. 참가자가 이름을 되돌리면 다음 실행이 다시 넣는다. `출처` · `수집일`은 없는 것으로 보여 새로 만든다([[CCR-UC-001#UC-S6]] 1a). 이름을 바꾼 옛 컬럼은 그대로 남고, 그 뒤의 값은 새 컬럼에 들어간다.
-- **행을 만들기 전에 컬럼을 확인한다**([[CCR-UC-001#UC-S6]] 1). 넣을 묶음이 하나 이상일 때, 첫 행을 만들기 전에 실행마다 한 번 한다. [[#GET/api.notion.com/v1/data_sources/{id}]]로 스키마를 읽어 아래 표와 맞춰 본다.
-  - `출처` · `수집일`이 없으면 만든다([[CCR-UC-001#UC-S6]] 1a). 노션에 쓰지 않는 실행은 확인만 하고 만들지 않는다([[CCR-UC-001#UC-S6]] 1a2).
-  - 나머지 다섯 가운데 하나라도 없거나, 일곱 가운데 하나라도 종류가 다르거나, `상태`에 `시작 전` 선택지가 없으면 행을 만들지 않는다. 컬럼을 만들지 못한 때와 같이 넣으려던 묶음을 모두 행 생성 실패로 센다. 그러면 행 생성 전면 실패 경고가 붙는다([[CCR-UC-001#UC-S6]] 1b · 2b). 행마다 `400 validation_error`가 올 요청을 보내지 않는 것이다.
-  - 스키마를 끝내 읽지 못해도 컬럼을 만들지 못한 때와 같다([[CCR-UC-001#UC-S6]] 1b). 노션 읽기 실패로 보지 않는다. 판별이 끝나 버림이 이미 적힌 뒤라, 판별 전에 멈추는 노션 읽기 실패([[CCR-UC-001#UC-A1]] 5a)와 맞지 않는다.
+페이지는 서버 없이 GitHub의 공개 파일 주소와 REST API만 쓴다([[CCR-INFRA-001]] 8.11). 저장소는 `HoyoungParkme/competition-crawler`, 브랜치는 `main`이고, 둘 다 페이지 설정 파일의 상수다([[CCR-INFRA-001]] 4.1).
 
-| 컬럼 | 종류 | 배치가 |
-|---|---|---|
-| `기타` | title | 읽고 쓴다 |
-| `링크` | url | 읽고 쓴다 |
-| `시작일` · `마감일` | date | 읽고 쓴다 |
-| `상태` | status | `시작 전`으로만 쓴다 |
-| `출처` | select | 쓴다. 없으면 만든다 |
-| `수집일` | date | 쓴다. 없으면 만든다 |
-
-- **`출처`는 select다.** 값이 소스 이름 여섯 가운데 하나라([[CCR-DOM-001#Source]]) 선택지가 맞고, 노션에서 걸러 보기 쉽다. 없는 선택지 이름으로 쓰면 노션이 선택지를 만든다. 데이터 소스를 고칠 권한(Update content)이 있어야 하는데 쓰기 연결에 있다([[CCR-INFRA-001]] 5.1).
-- **요청 한도.** Business · Enterprise 요금제가 아니면 연결마다 분당 180회(평균 초당 3회)다. Business · Enterprise는 분당 600회다. 워크스페이스 단위의 한도도 있는데 수치는 공개되지 않았고, 이때 오는 `Retry-After`는 60초를 넘을 수 있다. 60초보다 길면 기다리지 않는다([[CCR-INFRA-001]] 8.5).
-- **질의 한 번에 최대 10,000행**이 나온다. 응답의 `request_status.type`이 `incomplete`면 다 읽지 못한 것이라 노션 읽기 실패로 둔다([[CCR-UC-001#UC-A1]] 5a). 이때 `has_more`는 false라 `request_status`를 따로 봐야 한다.
+- **읽는 길은 둘이다.** 화면에 보여 줄 때는 `raw.githubusercontent.com`에서 목록 파일과 상태 파일을 인증 없이 받는다([[#GET/raw.githubusercontent.com/…/data/{file}]]). 상태 파일을 쓰기 직전에는 Contents API로 같은 파일을 다시 읽어 판(`sha`)을 얻는다([[#GET/api.github.com/…/contents/data/status.json]]). raw는 CDN이 몇 분 캐시하므로 쓰기의 기준으로 쓰지 않는다([[CCR-INFRA-001]] 6.4).
+- **캐시를 피하는 쿼리.** raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. 같은 주소가 반복되지 않아 브라우저 캐시를 피한다. CDN 캐시까지 늘 피하는지는 실측이 남았다([[CCR-INFRA-001]] 9장).
+- **API 헤더.** `Accept: application/vnd.github+json` · `X-GitHub-Api-Version: 2022-11-28` · `Authorization: Bearer <페이지 토큰>`. 토큰은 fine-grained personal access token이고 이 저장소의 Contents 읽기·쓰기만 있다([[CCR-INFRA-001]] 5.8).
+- **쓰기는 파일 하나를 한 커밋으로 올린다**([[#PUT/api.github.com/…/contents/data/status.json]]). 본문에 새 내용(UTF-8 JSON을 Base64로), 읽어 둔 `sha`, 커밋 메시지, `branch: main`을 넣는다. `committer`·`author`는 보내지 않아 토큰 주인이 작성자가 된다. 파일이 아직 없으면 `sha` 없이 보내 만든다.
+- **커밋 메시지**는 페이지가 만든다. 상태를 바꾸면 `status: <대회명> → <상태 이름>`, 지우면 `status: <대회명> 지움`, 되살리면 `status: <대회명> 되살림`이다. 대회명은 60자에서 자른다.
+- **한 번에 요청 하나.** 앞 쓰기의 응답이 오기 전에 다음 바꿈이 생기면 줄 세워 차례로 보낸다. 같은 `sha`로 두 번 보내면 둘째가 409로 거절되기 때문이다. 화면은 먼저 바뀐다([[CCR-UC-001#UC-H1]] 2).
+- **판이 어긋나면**(409 · 422) 최신 판을 다시 읽고, 이번 바꿈만 그 위에 얹어 한 번 더 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다(2.3).
+- **크기.** Contents API의 `GET`은 1MB까지 내용을 돌려준다. 상태 파일은 항목 하나가 100바이트 안팎이라 수천 건이어도 그 안이다. 목록 파일은 raw로만 읽으므로 이 한도와 상관없다.
+- **한도.** 인증한 요청은 시간당 5,000회다. 사람이 누르는 속도라 닿지 않는다. raw 읽기는 별도이고 한도가 공개되지 않았다.
+- **목록 파일 읽기.** 줄마다 JSON으로 읽는다. 읽히지 않는 줄은 건너뛴다. 식별자가 같은 줄이 여럿이면 앞의 것을 쓴다. 상태 파일에 있고 목록에 없는 식별자는 무시한다([[CCR-INFRA-001]] 6.2).
+- **필드 이름**은 ERD가 정한다([[CCR-DOM-003]]). 4.2에 페이지가 읽고 쓰는 값만 적는다.
 
 ## 2. 에러
 
@@ -169,26 +161,24 @@ wevity의 날수 맞춰 보기(상세 페이지 한 쪽)는 실패해도 소스�
 - **400을 그 묶음만의 실패로 두는 이유.** 400은 한 묶음의 입력 탓일 수 있다. 같은 답으로 보고 모두 멈추면, 그 묶음 하나 때문에 날마다 판별 전체가 미뤄진다. 설정 탓의 400이면(모델이 `reasoning.effort: none`을 받지 않는 경우 등) 모든 묶음이 같은 400으로 실패해 판별 미룸이 된다([[CCR-UC-001#UC-S5]] 2c).
 - **거절 · 잘림을 다시 묻지 않는 이유.** 같은 입력이면 같은 답이 올 가능성이 높다. [[CCR-INFRA-001]] 8.5도 다시 묻는 경우에 넣지 않았다.
 
-### 2.3 노션
+### 2.3 저장소(페이지)
 
-읽기는 같은 요청을 다시 보내도 결과가 같다. 쓰기는 다시 보내면 같은 행이 둘 생길 수 있어, 노션이 속도 제한이나 과부하로 거절했거나 요청이 노션에 닿지 않았을 때만 다시 보낸다([[CCR-UC-001#UC-S6]] 2a1). 노션 공식 문서도 멱등이 아닌 쓰기는 429와 529만 다시 보내라고 한다. 다시 보내는 횟수와 기다림은 [[CCR-INFRA-001]] 8.5를 따른다.
+읽기는 다시 보내도 결과가 같다. 쓰기는 GitHub가 `sha`로 판을 견주므로 같은 요청을 두 번 보내도 둘째는 409로 거절될 뿐 두 번 들어가지 않는다. 그래서 응답 없이 끊긴 쓰기는 「다시 시도」로 최신 판을 다시 읽고 같은 바꿈을 다시 보내면 된다. 이미 들어갔으면 다시 읽은 판에 그 값이 있어 같은 값을 다시 쓰는 것이 된다. 페이지는 스스로 되풀이하지 않고, 판이 어긋난 경우 한 번만 다시 쓴다([[CCR-INFRA-001]] 8.5).
 
-| 응답 | 읽기(행 읽기) | 쓰기(컬럼 만들기 · 행 만들기) |
+| 요청 | 응답 | 처리 |
 |---|---|---|
-| 200 | 성공 | 성공. 행이면 곧바로 처리 이력에 남김으로 적는다([[CCR-UC-001#UC-S6]] 4) |
-| 429 `rate_limited` · 529 `service_overload` | `Retry-After`만큼 기다려 다시 보낸다 | 같다 |
-| 그 밖의 4xx(`400 validation_error` · `401 unauthorized` · `403 restricted_resource` · `404 object_not_found` · `409 conflict_error` 등) | 노션 읽기 실패 | 다시 보내지 않는다. 행 생성 실패 |
-| 503, 본문에 `additional_data.committed_resource_id`가 있음 | — | 행이 만들어진 것으로 보고 곧바로 남김으로 적는다([[CCR-UC-001#UC-S6]] 2d) |
-| 그 밖의 5xx | 다시 보낸다 | 다시 보내지 않는다. 행 생성 실패 |
-| 연결을 맺지 못함(연결 거부 · 이름 풀이 실패 · 연결 타임아웃) | 다시 보낸다 | 다시 보낸다. 요청이 닿지 않았다 |
-| 연결을 맺은 뒤 응답 없음(읽기 타임아웃 · 끊김) | 다시 보낸다 | 다시 보내지 않는다. 행 생성 실패([[CCR-UC-001#UC-S6]] 2c) |
+| raw 읽기 | 200 | 표시한다 |
+| raw 읽기 | 404 | 목록 파일이면 빈 목록(첫 실행 전, [[CCR-UI-001#UI-1]] 10). 상태 파일이면 빈 객체로 본다 |
+| raw 읽기 | 5xx · 연결 오류 · 타임아웃 | 한 번 다시 받는다. 그래도 실패하면 읽지 못했다고 알린다([[CCR-UC-001#UC-A2]] 1b) |
+| 판 읽기 | 200 | `sha`와 내용을 쓰기의 기준으로 삼는다 |
+| 판 읽기 | 404 | 상태 파일이 아직 없다. `sha` 없이 새 파일로 쓴다 |
+| 판 읽기 · 쓰기 | 401 · 403 | 토큰이 없거나 틀리거나 권한이 모자란다. 값을 되돌리고 토큰을 다시 넣으라고 알린다([[CCR-UC-001#UC-H1]] 4b2 · [[CCR-UI-001#UI-1]] 12). 403에 `x-ratelimit-remaining: 0`이 있으면 한도다. 같은 알림에 그 사실을 적는다 |
+| 쓰기 | 200 · 201 | 성공. 응답의 `content.sha`를 다음 쓰기의 기준으로 기억한다 |
+| 쓰기 | 409 | 판이 어긋났다. 최신 판을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다. 다시 409면 값을 되돌리고 알린다([[CCR-UC-001#UC-H1]] 4a) |
+| 쓰기 | 422 | `sha`가 맞지 않으면 409와 같다. 본문이 잘못됐다는 뜻이면(빈 내용 · Base64 아님) 값을 되돌리고 알린다. 페이지 코드의 문제다 |
+| 쓰기 | 5xx · 연결 오류 · 타임아웃 | 커밋이 들어갔을 수 있다. 스스로 다시 보내지 않고 값을 되돌리고 알린다. 사용자가 「다시 시도」를 누르면 최신 판을 읽어 같은 바꿈을 다시 보낸다 |
 
-- **끝내 실패하면.** `Retry-After`가 60초보다 길거나 횟수를 다 쓰면, 행 읽기는 노션 읽기 실패([[CCR-UC-001#UC-A1]] 5a), 행 만들기는 그 행만 행 생성 실패다.
-- **스키마 읽기**(1.4)는 읽기처럼 다시 보낸다. 끝내 실패하면 노션 읽기 실패가 아니라 컬럼을 만들지 못한 때와 같다. 컬럼 만들기가 실패해도 같다. 넣으려던 묶음을 모두 행 생성 실패로 센다([[CCR-UC-001#UC-S6]] 1b).
-- **응답 없이 끊긴 쓰기**는 노션에 행이 생겼는지 확인하지도, 다시 보내지도 않는다(사용자 결정, 2026-09-23). 확인하려면 링크로 거른 질의를 한 번 더 보내야 한다. 행이 생겼다면 다음 실행이 노션 현재 행으로 알아보므로 중복되지 않는다. 그사이 참가자가 그 행을 지우면 되살아나는 것은 받아들인 한계다([[CCR-UC-001#UC-S6]] 2c).
-- **503의 `additional_data.retry_guidance`**는 로그에만 남긴다. 노션은 이 안내로 쓰기가 저장됐는지를 알려 주지만, 새 행의 id(`committed_resource_id`)가 없는 503은 다시 보내지 않는다. 서버 오류에는 행이 이미 생겼을 수 있기 때문이다([[CCR-UC-001#UC-S6]] 2a1).
-- **403 `restricted_resource`**는 권한이 모자랄 때와 블록 한도에 닿았을 때 둘 다 온다. 블록 한도면 본문에 `additional_data.block_limit`이 붙는다([[CCR-INFRA-001]] 5.1).
-- **행 생성 실패**는 그 행만 건너뛰고, 남은 행은 멈추지 않고 차례대로 보낸다([[CCR-INFRA-001]] 7장).
+토큰 검증([[CCR-UC-001#UC-H2]] 4)은 판 읽기와 같은 요청이다. 200이면 저장하고, 401 · 403 · 404면 저장하지 않고 이유를 보인다. 404는 토큰이 이 저장소에 닿지 않는 것이다(fine-grained 토큰은 접근할 수 없는 저장소를 404로 답한다).
 
 ## 3. 엔드포인트
 
@@ -483,7 +473,7 @@ wevity에서 IT에 가까운 네 분야와 기획/아이디어 분야의 공모�
 
 **읽을 곳.** `접수기간` 칸의 "YYYY-MM-DD ~ YYYY-MM-DD"에서 뒤 날짜를 읽는다. 보정값은 (뒤 날짜 − 기준일) − N이다. N은 그 공고의 목록 날수다.
 
-**실패하면.** 상세 페이지를 받지 못하거나, 날짜를 읽지 못하거나, 보정값이 0 · −1이 아니면 보정값을 −1로 두고 로그에 남긴다. 10:06의 관찰로는 배치가 도는 아침에 −1이 맞다. 틀리더라도 접수마감일이 하루 이르게 잡힐 뿐 늦게 잡히지 않는다. 늦게 잡히면 참가자가 노션을 믿다가 마감을 놓친다. 이 실패로 소스를 실패로 두지는 않는다.
+**실패하면.** 상세 페이지를 받지 못하거나, 날짜를 읽지 못하거나, 보정값이 0 · −1이 아니면 보정값을 −1로 두고 로그에 남긴다. 10:06의 관찰로는 배치가 도는 아침에 −1이 맞다. 틀리더라도 접수마감일이 하루 이르게 잡힐 뿐 늦게 잡히지 않는다. 늦게 잡히면 참가자가 페이지를 믿다가 마감을 놓친다. 이 실패로 소스를 실패로 두지는 않는다.
 
 **실측.** 2026-09-23 18:47에 `ix=110675`의 접수기간은 `2026-09-01 ~ 2026-10-07`이었고, 목록과 상세 모두 `D-14`였다. 2026-09-27 20:46의 목록에서는 같은 공고가 `D-10`이었다. 저녁에는 두 번 모두 보정값이 0이다. 2026-09-28 09:02에는 `ix=110678`이 목록에서 `D-1`, 상세의 접수마감일이 2026-09-28(기준일)이라 보정값이 −1이었다. 아침에는 날수가 하루 많다는 2026-09-23 10:06의 관찰과 같다.
 
@@ -537,7 +527,7 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 - 처음 상위 문서는 대회 하나만 보여 주는 페이지가 있으면 그 주소를 쓰라고 했다. 그런 페이지는 있다. 과제 상세에 소속 페이지 링크가 있고, 국립공원이면 `/ko/page/knps`다.
 - 그래도 늘 과제의 주소를 쓴다. 이유는 둘이다.
   - 페이지 주소는 목록에 없다. 얻으려면 과제 상세를 대회마다 한 번 더 받아야 한다.
-  - 지금은 대회 하나만 걸린 페이지라도, 다음 해 대회가 같은 페이지에 걸리면 여러 대회가 걸린 페이지가 된다. 그때 이미 들어간 노션 행의 링크는 고칠 수 없다([[CCR-PRD-001#R6]]). 과제의 주소는 다른 대회와 겹치지 않는다.
+  - 지금은 대회 하나만 걸린 페이지라도, 다음 해 대회가 같은 페이지에 걸리면 여러 대회가 걸린 페이지가 된다. 그때 이미 들어간 목록 항목의 링크는 고칠 수 없다([[CCR-PRD-001#R6]]). 과제의 주소는 다른 대회와 겹치지 않는다.
 - 원천 ID 과제가 다른 과제보다 먼저 끝나면 링크가 끝난 과제를 가리킨다. 2026-09-23의 국립공원이 그렇다. 9304는 09-11에 접수를 닫았고, 9306 · 9307이 접수 중이다. 과제 상세에서 소속 페이지로 건너갈 수 있어 받아들인다.
 - 상위 문서도 이에 맞췄다([[CCR-PRD-001#R2]] · [[CCR-UC-001#UC-S2]] 1d2).
 
@@ -592,7 +582,7 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 **날짜.** 목록의 날짜에는 연도가 없다.
 - **접수마감일:** "접수 MM.DD~MM.DD"의 뒤 날짜다. 연도는 기준일 + N에 가장 가까운 날이 되는 해로 정한다. "D-0"이면 N은 0이다. "D-N"을 읽지 못하면 연도를 정할 수 없어 두 날짜를 모두 비운다(1.2). 날수만으로 세지 않는 것은 wevity처럼 날수가 하루 어긋날 수 있어서다. 2026-09-23(겹친 것을 뺀 503건)과 2026-09-27(136건) 실측에서는 모두 기준일 + N이 뒤 날짜와 같았다.
 - **접수시작일:** 앞 날짜에 접수마감일의 연도를 붙인다. 그 날이 접수마감일보다 뒤면 한 해 전으로 본다. "05.16~01.16"에 "D-115"면 마감이 2027-01-16이고 시작은 2026-05-16이다.
-- 발표일은 쓰지 않는다. 노션 `결과날`은 채우지 않기로 했다([[CCR-PRD-001#R6]]). 5장에 남긴다.
+- 발표일은 쓰지 않는다. 목록 항목에 `결과날`을 두지 않기로 했다([[CCR-PRD-001#R6]]). 5장에 남긴다.
 
 **공통 형식으로 옮기기.**
 
@@ -653,7 +643,7 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
   - 응답의 `status`가 `completed`가 아니다(`incomplete` · `failed`). SDK는 `status`를 보지 않으므로 배치가 본다.
   - `output_parsed`가 비었다. 거절이거나 최종 메시지가 없는 것이다.
 
-**판별 결과로 옮기기.** `decision`이 `keep`이면 남김, `discard`면 버림이다. `reason`은 로그에만 남긴다([[CCR-UC-001#UC-S5]] 4).
+**판별 결과로 옮기기.** `decision`이 `keep`이면 남김, `discard`면 버림이다. `reason`은 로그에 남기고, 남긴 대회는 목록 항목의 판별 근거로도 들어간다([[CCR-UC-001#UC-S5]] 4 · [[CCR-UC-001#UC-S6]]). 자유 문장이지만 대회명과 분류 이유뿐이라 비밀값이 섞일 자리가 없다([[CCR-INFRA-001]] 5.4).
 
 ```yaml
 /v1/responses:
@@ -701,92 +691,57 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
         description: "error.code로 가른다. 지출 한도 · 크레딧 소진은 다시 묻지 않는다(2.2)"
 ```
 
-### 3.3 노션 — 노션 경계
+### 3.3 저장소 — 목록 경계(페이지)
 
-네 엔드포인트 모두 헤더 `Authorization: Bearer <NOTION_TOKEN>`와 `Notion-Version: 2025-09-03`을 보낸다. `{data_source_id}`는 `NOTION_DATA_SOURCE_ID`다([[CCR-INFRA-001]] 5장). 항목 ID에서는 `{id}`로 줄여 적는다. 읽기 둘은 읽기 연결의 토큰으로도 되고, 쓰기 둘은 쓰기 연결의 토큰으로만 된다([[CCR-INFRA-001]] 5.1).
+세 엔드포인트 모두 페이지만 부른다. 배치는 git으로 저장소를 읽고 마무리 단계가 push하므로 REST API를 부르지 않는다([[CCR-INFRA-001]] 8.2). `{owner}/{repo}`는 `HoyoungParkme/competition-crawler`이고 항목 ID에서는 `…`로 줄였다.
 
-#### GET/api.notion.com/v1/data_sources/{id} 컬럼 확인
+#### GET/raw.githubusercontent.com/…/data/{file} 목록·상태 파일 읽기
 
-`대회목록`의 스키마를 읽어 컬럼이 있는지와 종류를 확인한다(1.4).
+기본 브랜치의 목록 파일과 상태 파일을 인증 없이 받아 화면에 보여 준다.
 
-유스케이스 [[CCR-UC-001#UC-S6]] 1 · 개념 [[CCR-DOM-001#NotionRow]] · 경계 노션
+유스케이스 [[CCR-UC-001#UC-A2]] 1 · 개념 [[CCR-DOM-001#ListEntry]] · [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
 
-`properties`는 컬럼 이름을 키로 한 객체다. 값마다 `id` · `name` · `type`과 종류별 설정이 있다. `status`에는 `options`와 `groups`가 있고, `select`에는 `options`가 있다.
+**요청.** 페이지를 열 때와 새로 고침(2)을 누를 때 두 파일을 함께 받는다. 주소에 `?t=<현재 시각 ms>`를 붙여 캐시를 피한다(1.4). `Authorization`을 보내지 않는다.
+
+**응답 읽기.** 목록 파일은 JSON Lines라 줄마다 읽고, 상태 파일은 JSON 객체 하나다(4.2). 파일이 없으면 404가 온다. 응답의 `Content-Type`은 `text/plain`이라 페이지가 직접 파싱한다.
 
 ```yaml
-/v1/data_sources/{data_source_id}:
+/{owner}/{repo}/main/data/{file}:
   get:
-    servers: [{url: "https://api.notion.com"}]
+    servers: [{url: "https://raw.githubusercontent.com"}]
     parameters:
-      - {name: Notion-Version, in: header, required: true, schema: {type: string, enum: ["2025-09-03"]}}
+      - {name: file, in: path, required: true, schema: {type: string, enum: [competitions.jsonl, status.json]}}
+      - {name: t, in: query, schema: {type: integer}, description: "현재 시각(ms). 캐시를 피하는 값"}
     responses:
       "200":
+        description: "파일 내용 그대로. competitions.jsonl은 한 줄이 목록 항목 하나, status.json은 객체 하나(4.2)"
         content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                object: {type: string, example: data_source}
-                properties:
-                  type: object
-                  additionalProperties:
-                    type: object
-                    properties:
-                      id: {type: string}
-                      name: {type: string}
-                      type: {type: string, example: status}
-                      status: {type: object, properties: {options: {type: array, items: {type: object, properties: {name: {type: string, example: "시작 전"}}}}}}
+          text/plain:
+            example: |
+              {"id":"AI팩토리:9304","source":"AI팩토리","source_id":"9304","title":"2026 국립공원 위성 모니터링 AI 챌린지","link":"https://aifactory.space/competitions/9304","start_date":"2026-07-31","deadline":"2026-10-06","collected_on":"2026-09-29","reason":"위성 영상 AI 분석 경진대회"}
       "404":
-        description: "데이터 소스가 없거나, 연결이 대회목록 DB에 이어지지 않았다"
+        description: "파일이 없다. 목록 파일이면 첫 실행 전, 상태 파일이면 아직 아무것도 바꾸지 않은 것이다"
 ```
 
-#### PATCH/api.notion.com/v1/data_sources/{id} 컬럼 만들기
+#### GET/api.github.com/…/contents/data/status.json 상태 파일의 판 읽기
 
-`출처` · `수집일` 가운데 없는 것만 만든다.
+쓰기 직전에 상태 파일의 최신 판(`sha`)과 내용을 읽는다. 토큰을 넣을 때의 검증에도 같은 요청을 쓴다.
 
-유스케이스 [[CCR-UC-001#UC-S6]] 1a · 1b · 개념 [[CCR-DOM-001#NotionRow]] · 경계 노션
+유스케이스 [[CCR-UC-001#UC-H1]] 3 · 4a · [[CCR-UC-001#UC-H2]] 4 · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]] · [[CCR-UI-001#UI-2]]
 
-**없는 컬럼만 보낸다.** 있는 컬럼을 보내면 그 설정을 바꾼다. select에 `options`를 보내면 거기 없는 선택지가 지워진다. 노션에 쓰지 않는 실행은 부르지 않는다([[CCR-UC-001#UC-S6]] 1a2).
+**요청.** `ref=main`을 붙이고 1.4의 헤더 셋을 보낸다. 캐시되지 않는다.
 
-```yaml
-/v1/data_sources/{data_source_id}:
-  patch:
-    servers: [{url: "https://api.notion.com"}]
-    requestBody:
-      content:
-        application/json:
-          example:
-            properties:
-              "출처": {select: {}}
-              "수집일": {date: {}}
-    responses:
-      "200":
-        description: "고친 데이터 소스"
-```
-
-#### POST/api.notion.com/v1/data_sources/{id}/query 행 읽기
-
-`대회목록`의 모든 행을 읽어 이미 아는 대회를 가르는 데 쓴다.
-
-유스케이스 [[CCR-UC-001#UC-S4]] 1 · 개념 [[CCR-DOM-001#NotionRow]] · 경계 노션
-
-**요청.** `page_size` 100으로, `has_more`가 false가 될 때까지 `next_cursor`를 `start_cursor`로 넘긴다. 커서는 뜻을 읽지 않고 그대로 넘긴다. 거르거나 정렬하지 않는다. 10,000행에 닿으면 `has_more`가 false인 채로 `request_status.type`이 `incomplete`로 온다(1.4).
-
-**응답 읽기.** 행마다 `properties`에서 네 컬럼을 이름으로 읽는다([[CCR-DOM-001#NotionRow]]).
-- `기타`: `title` 배열의 `plain_text`를 이어 붙인다.
-- `링크`: `url`. 없으면 `null`이다.
-- `시작일` · `마감일`: `date.start`. 시각이 붙어 있으면 KST 날짜로 바꾼다. 비었으면 `date`가 `null`이다.
-- 컬럼이 없으면 그 값을 빈 값으로 본다. 컬럼 문제는 행을 만들기 전 확인이 잡는다(1.4).
-- 보관된 행(`is_archived`)은 기본으로 결과에서 빠진다. 참가자가 지우거나 보관해 결과에 없는 행은 처리 이력이 막는다([[CCR-UC-001#UC-S4]] 3).
+**응답 읽기.** `sha`가 판이고, `content`는 Base64로 인코딩된 파일 내용이다(`encoding`이 `base64`). 줄바꿈이 섞인 Base64라 디코딩 전에 공백을 뗀다. 디코딩한 UTF-8을 JSON으로 읽는다. 404면 파일이 아직 없는 것이다(2.3).
 
 ```yaml
-/v1/data_sources/{data_source_id}/query:
-  post:
-    servers: [{url: "https://api.notion.com"}]
-    requestBody:
-      content:
-        application/json:
-          example: {page_size: 100, start_cursor: "<앞 응답의 next_cursor>"}   # 첫 요청에는 start_cursor를 뺀다
+/repos/{owner}/{repo}/contents/data/status.json:
+  get:
+    servers: [{url: "https://api.github.com"}]
+    security: [{bearer: []}]                 # 페이지 토큰
+    parameters:
+      - {name: ref, in: query, required: true, schema: {type: string, enum: [main]}}
+      - {name: Accept, in: header, required: true, schema: {type: string, enum: ["application/vnd.github+json"]}}
+      - {name: X-GitHub-Api-Version, in: header, required: true, schema: {type: string, enum: ["2022-11-28"]}}
     responses:
       "200":
         content:
@@ -794,54 +749,60 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
             schema:
               type: object
               properties:
-                results:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      id: {type: string}
-                      properties:
-                        type: object
-                        properties:
-                          "기타": {type: object, properties: {title: {type: array, items: {type: object, properties: {plain_text: {type: string}}}}}}
-                          "링크": {type: object, properties: {url: {type: string, nullable: true}}}
-                          "시작일": {type: object, properties: {date: {type: object, nullable: true, properties: {start: {type: string, example: "2026-08-05"}}}}}
-                          "마감일": {type: object, properties: {date: {type: object, nullable: true, properties: {start: {type: string}}}}}
-                has_more: {type: boolean}
-                next_cursor: {type: string, nullable: true}
-                request_status: {type: object, properties: {type: {type: string, example: incomplete}}}
+                sha: {type: string, example: "3d21e0e4a7f0c2b3c1e6a8f9d4b2c1a0e5f6d7c8"}
+                size: {type: integer}
+                encoding: {type: string, enum: [base64]}
+                content: {type: string, description: "Base64. 76자마다 줄바꿈이 있다"}
+      "401":
+        description: "토큰이 없거나 틀렸다"
+      "403":
+        description: "권한이 모자라거나 한도에 닿았다. 한도면 x-ratelimit-remaining 헤더가 0이다"
+      "404":
+        description: "파일이 없거나, 토큰이 이 저장소에 닿지 않는다"
 ```
 
-#### POST/api.notion.com/v1/pages 행 만들기
+#### PUT/api.github.com/…/contents/data/status.json 상태 파일 쓰기
 
-묶음의 대표 하나로 `대회목록`에 행 하나를 만든다.
+상태 파일 전체를 새 내용으로 바꿔 `main`에 한 커밋으로 올린다.
 
-유스케이스 [[CCR-UC-001#UC-S6]] 2 · 3 · 4 · 개념 [[CCR-DOM-001#NotionRow]] · 경계 노션
+유스케이스 [[CCR-UC-001#UC-H1]] 4 · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
 
-**값.** 컬럼마다 넣는 값은 4.2다. 제목의 `text` 객체 하나와 링크는 2,000자를 넘을 수 없다. 넘는 대회명은 2,000자에서 자른다. 멱등 키가 없으므로 다시 보내는 경우를 2.3의 표대로 지킨다.
+**요청.** 읽어 둔 내용에 이번 바꿈을 얹어 만든 객체를 JSON 문자열로 만들고(키는 식별자 순으로 정렬, 두 칸 들여쓰기, 끝에 줄바꿈), UTF-8 바이트를 Base64로 넣는다. `sha`는 읽어 둔 판이다. 파일이 없으면 `sha`를 빼 새로 만든다. `branch`는 `main`이다. 커밋 메시지는 1.4의 꼴이다.
+
+**응답 읽기.** 201(새 파일)이나 200(고침)이 오면 `content.sha`를 다음 쓰기의 기준으로 기억한다. `commit.sha`는 로그에도 남기지 않는다. 409 · 422 · 401 · 403 · 5xx는 2.3대로 다룬다.
 
 ```yaml
-/v1/pages:
-  post:
-    servers: [{url: "https://api.notion.com"}]
+/repos/{owner}/{repo}/contents/data/status.json:
+  put:
+    servers: [{url: "https://api.github.com"}]
+    security: [{bearer: []}]                 # 페이지 토큰
+    parameters:
+      - {name: Accept, in: header, required: true, schema: {type: string, enum: ["application/vnd.github+json"]}}
+      - {name: X-GitHub-Api-Version, in: header, required: true, schema: {type: string, enum: ["2022-11-28"]}}
     requestBody:
       content:
         application/json:
           example:
-            parent: {type: data_source_id, data_source_id: "<NOTION_DATA_SOURCE_ID>"}
-            properties:
-              "기타": {title: [{text: {content: "2026 국립공원 위성 모니터링 AI 챌린지"}}]}
-              "링크": {url: "https://aifactory.space/competitions/9304"}
-              "시작일": {date: {start: "2026-07-31"}}
-              "마감일": {date: {start: "2026-10-06"}}
-              "상태": {status: {name: "시작 전"}}
-              "출처": {select: {name: "AI팩토리"}}
-              "수집일": {date: {start: "2026-09-23"}}
+            message: "status: 2026 국립공원 위성 모니터링 AI 챌린지 → 진행 중"
+            content: "<UTF-8 JSON의 Base64>"
+            sha: "3d21e0e4a7f0c2b3c1e6a8f9d4b2c1a0e5f6d7c8"   # 파일이 없으면 뺀다
+            branch: "main"
     responses:
       "200":
-        description: "만든 행(page). id가 새 행의 ID다"
-      "503":
-        description: "노션을 쓸 수 없거나 제시간에 응답을 만들지 못했다. 행을 만들었으면 additional_data.committed_resource_id에 새 행의 ID가 있다(2.3)"
+        description: "고쳤다. content.sha가 새 판이다"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: {type: object, properties: {sha: {type: string}}}
+                commit: {type: object, properties: {sha: {type: string}}}
+      "201":
+        description: "새로 만들었다. 모양은 200과 같다"
+      "409":
+        description: "sha가 최신 판이 아니다. 최신 판을 다시 읽고 한 번 더 쓴다(2.3)"
+      "422":
+        description: "sha가 없거나 맞지 않거나, 본문이 잘못됐다(2.3)"
 ```
 
 ## 4. 스키마
@@ -859,21 +820,38 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 | 시간대 | UTC | 표기 없음(KST) | UTC | 기준일로 셈 | UTC | 연도만 기준일로 정함 |
 | 부가 정보 | 분야 · 태그 | 키워드 | 분야 · 태그 | 분야 · 주최 | 페이지 · 과제명 | 분야 · 주최 · 대상 |
 
-### 4.2 노션 행의 값
+### 4.2 목록 항목과 상태 파일의 값
 
-[[CCR-PRD-001#R6]]의 표를 노션이 받는 모양으로 옮겼다. 값은 모두 묶음의 대표에서 온다.
+필드 이름과 형식은 ERD가 정한다([[CCR-DOM-003]]). 여기는 페이지가 읽고 쓰는 값만 적는다. 값은 모두 [[CCR-DOM-001#ListEntry]] · [[CCR-DOM-001#Status]]의 속성이다.
 
-| 컬럼 | 보내는 모양 | 값 |
-|---|---|---|
-| `기타` | `{"title": [{"text": {"content": …}}]}` | 대회명. 2,000자에서 자른다 |
-| `링크` | `{"url": …}` | 상세 링크 |
-| `시작일` | `{"date": {"start": "YYYY-MM-DD"}}`. 모르면 `{"date": null}` | 접수시작일 |
-| `마감일` | 같은 모양 | 접수마감일 |
-| `상태` | `{"status": {"name": "시작 전"}}` | 늘 `시작 전` |
-| `출처` | `{"select": {"name": …}}` | 소스 이름. event-us · DACON · Kaggle · wevity · AI팩토리 · 콘테스트코리아 가운데 하나([[CCR-DOM-001#Source]]) |
-| `수집일` | `{"date": {"start": "YYYY-MM-DD"}}` | 기준일 |
+**목록 파일 한 줄(페이지가 읽는다).** 값은 묶음의 대표에서 온다([[CCR-PRD-001#R6]]).
 
-`결과날`은 보내지 않는다([[CCR-PRD-001#R6]]).
+| 속성 | 페이지가 |
+|---|---|
+| 식별자 | 상태 파일의 키로 쓴다. `<출처>:<원천 ID>` 꼴이다 |
+| 대회명 | 대회명 링크의 글([[CCR-UI-001#UI-1]] 7.2) |
+| 링크 | 새 창으로 여는 주소 |
+| 접수시작일 · 접수마감일 | 정렬과 마감 표시(7.1). 접수마감일이 `null`이면 맨 뒤다 |
+| 출처 | 칩(7.3)과 거르기(3.1) |
+| 수집일 | 수집일 열. 오늘이면 새로 들어온 대회다 |
+| 판별 근거 | 대회명 아래 회색 글(7.6) |
+
+**상태 파일(페이지가 읽고 쓴다).** 식별자를 키로 한 객체 하나다. 값이 없는 대회는 `시작 전`이고 감추지 않은 것이다.
+
+```json
+{
+  "AI팩토리:9304": {"status": "in_progress", "hidden": false, "updated_at": "2026-09-29T00:12:41Z"},
+  "event-us:135608": {"status": "not_started", "hidden": true, "updated_at": "2026-09-29T00:13:07Z"}
+}
+```
+
+| 값 | 뜻 |
+|---|---|
+| `status` | `not_started` · `in_progress` · `submitted` · `done`. 화면에는 `시작 전` · `진행 중` · `제출` · `완료`로 보인다 |
+| `hidden` | 지웠으면 `true`. 되살리면 `false`로 둔다. 키를 지우지 않는다 |
+| `updated_at` | 마지막으로 바꾼 시각. UTC, 초 단위 |
+
+`결과날`은 두지 않는다([[CCR-PRD-001#R6]]).
 
 ### 4.3 판별 스키마
 
@@ -901,6 +879,6 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 
 - [ ] **Kaggle 실측.** 토큰으로 목록을 한 번 불러 필드 이름 · 날짜 형식 · `category` 값 · 쪽 크기 · 첫 요청에 `page`가 필요한지를 확인하고, 커뮤니티 탭을 함께 받을지 정한다. 그때까지 이 문서의 Kaggle 항목은 공식 클라이언트 코드에 기댄 것이다
 - [ ] 콘테스트코리아는 목록에 발표일을 준다. 이 소스만이라도 `결과날`을 채울지 정한다([[CCR-PRD-001]] 6장)
-- [ ] 노션 API 버전을 2026-03-11로 올릴지
+- [ ] raw 주소의 `?t=` 쿼리가 CDN 캐시까지 피하는지. 첫 배포 뒤 실측한다([[CCR-INFRA-001]] 9장)
 - [ ] Kaggle 새 토큰의 만료와 범위. 설정 화면에서 만든 토큰은 공식 문서가 다루지 않는다([[CCR-INFRA-001]] 5.2)
-- [ ] **[[CCR-RFQ-001]]은 사람이 쓴 문서라 맞추지 않았다.** 이 문서와 다른 곳은 셋이다. Q2(분야로 좁히지 않는다 — wevity · 콘테스트코리아는 분야로 좁힌다), Q4(DACON은 서버 렌더링 페이로드가 아니라 JSON API, AI팩토리는 보이는 마크업이 아니라 페이지 안의 페이로드), 6장(`결과날` — 콘테스트코리아에는 발표일이 있다). 나머지 상위 문서는 2026-09-28에 맞췄다([[CCR-PRD-001]] · [[CCR-SCN-001]] · [[CCR-UC-001]] · [[CCR-INFRA-001]] · [[CCR-DOM-001]])
+- [ ] **[[CCR-RFQ-001]]은 사람이 쓴 문서라 맞추지 않았다.** 2026-09-29의 v9는 노션을 페이지로 바꾼 것만 고쳤다. 이 문서와 다른 곳은 여전히 셋이다. Q2(분야로 좁히지 않는다 — wevity · 콘테스트코리아는 분야로 좁힌다), Q4(DACON은 서버 렌더링 페이로드가 아니라 JSON API, AI팩토리는 보이는 마크업이 아니라 페이지 안의 페이로드), 6장(`결과날` — 콘테스트코리아에는 발표일이 있다). 나머지 상위 문서는 맞췄다([[CCR-PRD-001]] · [[CCR-SCN-001]] · [[CCR-UC-001]] · [[CCR-INFRA-001]] · [[CCR-DOM-001]] · [[CCR-UI-001]])
