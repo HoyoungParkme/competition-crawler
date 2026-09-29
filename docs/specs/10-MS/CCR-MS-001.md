@@ -14,6 +14,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 - 항목 ID는 `클래스.메서드` 또는 `접두어.함수`다. 접두어는 모듈이 있는 곳이다. 파일 이름과 같으면 그 파일(`matching` · `eventus` · `dacon` · `kaggle` · `wevity` · `aifactory` · `contestkorea` · `openai_judge` · `settings` · `logging` · `dates` · `text` · `http` · `robots` · `finish`), 그 밖은 경계 이름이다. `screen` = `domains/screen/service.py`, `notion` = `domains/notion/service.py`, `record` = `domains/record/crud.py`, `__main__` = `collector/__main__.py`.
 - 처리가 몇 줄이면 간략형(시그니처 · 처리 · 테스트 관점)으로 쓴다.
+- 시그니처는 코드와 글자 그대로 적는다. 이름은 함수 이름만(점 없이), `self` · `cls`는 빼고, 타입과 기본값까지. 코드의 함수 docstring 첫 줄은 `CCR-MS-001#항목`이고, 싱크독 `tools/check_code.py`가 둘을 대조한다(싱크독 개발 규약 SYNC-STD-004 DEV-3 · DEV-14).
 - 날짜는 모두 KST 날짜(`date`)다. 기준일은 `RunContext.base_date` 하나다.
 - 테스트 관점은 `batch/tests/`에 있는 테스트가 확인하는 것이다. 테스트가 아니라 손으로 재 본 것은 (실측)이라 적는다.
 
@@ -21,14 +22,14 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 | 모듈 | 함수 |
 |---|---|
-| core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#settings.read_dotenv]] · [[#logging.secret_variants]] · [[#logging.register_actions_masks]] · [[#SecretFilter.filter]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
-| infra | [[#SourceHttp.fetch]] · [[#http.parse_retry_after]] · [[#robots.ensure_allowed]] · [[#NotionHttp.read]] · [[#NotionHttp.write]] |
-| 수집 | [[#CollectService.collect_all]] · [[#CollectService._collect_one]] · [[#eventus.build_query]] · [[#eventus.normalize]] · [[#EventUsSource.collect]] · [[#dacon.normalize]] · [[#DaconSource.collect]] · [[#kaggle.normalize]] · [[#kaggle.is_practice]] · [[#KaggleSource.collect]] · [[#wevity.parse_list]] · [[#wevity.parse_detail_end]] · [[#wevity.deadline_of]] · [[#WevitySource.collect]] · [[#WevitySource._calibrate]] · [[#aifactory.extract_payload]] · [[#aifactory.parse_tasks]] · [[#aifactory.group_tasks]] · [[#aifactory.competition_name]] · [[#aifactory.to_competition]] · [[#contestkorea.parse_list]] · [[#contestkorea.resolve_dates]] · [[#ContestKoreaSource.collect]] |
-| 선별 | [[#matching.normalize_title]] · [[#matching.extract_marks]] · [[#matching.normalize_link]] · [[#matching.similarity]] · [[#matching.judge_pair]] · [[#matching.group]] · [[#matching.representative_order]] · [[#ScreenService.drop_expired]] · [[#ScreenService.bundle]] · [[#ScreenService.build_known]] · [[#ScreenService.split_known]] · [[#ScreenService._matches]] · [[#ScreenService._record_known]] · [[#screen.entries_for]] · [[#ScreenService.judge]] · [[#ScreenService._ask_all]] · [[#OpenAiJudge.judge]] · [[#openai_judge.build_input]] |
-| 노션 | [[#NotionService.read_rows]] · [[#notion.row_of]] · [[#NotionService.check_columns]] · [[#notion.check_schema]] · [[#NotionService.create_row]] · [[#notion.properties_of]] · [[#NotionCrud.query_pages]] |
-| 기록 | [[#RecordService.start]] · [[#RecordService.load]] · [[#RecordService.history_shrank]] · [[#RecordService.append]] · [[#RecordService.zero_count_warnings]] · [[#RecordService.write_run]] · [[#RecordCrud.read_history]] · [[#RecordCrud.read_runs]] · [[#record._atomic_write]] · [[#record.export_main_state]] |
-| 실행의 흐름 | [[#__main__.main]] · [[#__main__.run_batch]] · [[#__main__.run_collect]] · [[#Pipeline.run]] · [[#Pipeline._run]] · [[#Pipeline._load]] · [[#Pipeline._finish]] |
-| 마무리 단계 | [[#finish.finish]] · [[#finish.read_additions]] · [[#Git.fresh_main]] · [[#Git.commit_and_push]] · [[#finish.append_lines]] |
+| core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#Secrets.values]] · [[#settings.read_dotenv]] · [[#logging.secret_variants]] · [[#logging.register_actions_masks]] · [[#SecretFilter.filter]] · [[#logging.setup_logging]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
+| infra | [[#SourceHttp.fetch]] · [[#SourceHttp.remaining]] · [[#SourceHttp.close]] · [[#http.parse_retry_after]] · [[#robots.ensure_allowed]] · [[#NotionHttp.read]] · [[#NotionHttp.write]] · [[#NotionHttp.close]] |
+| 수집 | [[#Competition.dates_filled]] · [[#SourceResult.normalized]] · [[#SourceResult.failed]] · [[#Source.collect]] · [[#Source.missing_config]] · [[#CollectService.collect_all]] · [[#CollectService._collect_one]] · [[#eventus.build_query]] · [[#eventus.parse_page]] · [[#eventus.normalize]] · [[#EventUsSource.collect]] · [[#EventUsSource.missing_config]] · [[#dacon.parse_page]] · [[#dacon.normalize]] · [[#dacon.link_for]] · [[#DaconSource.collect]] · [[#DaconSource.missing_config]] · [[#kaggle.parse_page]] · [[#kaggle.normalize]] · [[#kaggle.is_practice]] · [[#KaggleSource.collect]] · [[#KaggleSource.missing_config]] · [[#wevity.parse_list]] · [[#wevity.parse_detail_end]] · [[#wevity.deadline_of]] · [[#WevitySource.collect]] · [[#WevitySource._calibrate]] · [[#WevitySource.missing_config]] · [[#aifactory.extract_payload]] · [[#aifactory.parse_tasks]] · [[#aifactory.parse_page]] · [[#aifactory.group_tasks]] · [[#aifactory.competition_name]] · [[#aifactory.to_competition]] · [[#AiFactorySource.collect]] · [[#AiFactorySource.missing_config]] · [[#contestkorea.parse_list]] · [[#contestkorea.resolve_dates]] · [[#ContestKoreaSource.collect]] · [[#ContestKoreaSource.missing_config]] |
+| 선별 | [[#matching.normalize_title]] · [[#matching.extract_marks]] · [[#matching.normalize_link]] · [[#matching.key_of_competition]] · [[#matching.key_of_notion]] · [[#matching.key_of_history]] · [[#matching.similarity]] · [[#matching.judge_pair]] · [[#matching.group]] · [[#matching.representative_order]] · [[#Bundle.deadline]] · [[#ScreenService.drop_expired]] · [[#ScreenService.bundle]] · [[#ScreenService.build_known]] · [[#KnownSet.add]] · [[#ScreenService.split_known]] · [[#ScreenService._matches]] · [[#ScreenService._record_known]] · [[#screen.entries_for]] · [[#ScreenService.judge]] · [[#ScreenService._ask_all]] · [[#Judge.judge]] · [[#OpenAiJudge.judge]] · [[#openai_judge.build_input]] |
+| 노션 | [[#NotionService.read_rows]] · [[#notion.row_of]] · [[#NotionService.check_columns]] · [[#notion.check_schema]] · [[#NotionService.create_row]] · [[#notion.properties_of]] · [[#NotionCrud.query_pages]] · [[#NotionCrud.get_data_source]] · [[#NotionCrud.add_properties]] · [[#NotionCrud.create_page]] |
+| 기록 | [[#HistoryRecord.of]] · [[#HistoryRecord.to_dict]] · [[#HistoryRecord.from_dict]] · [[#SourceLine.to_dict]] · [[#RunWarning.to_dict]] · [[#RunLine.fail]] · [[#RunLine.to_dict]] · [[#RecordService.start]] · [[#RecordService.load]] · [[#State.keep_count]] · [[#State.last_keep_count]] · [[#RecordService.history_shrank]] · [[#RecordService.append]] · [[#RecordService.appended_count]] · [[#RecordService.zero_count_warnings]] · [[#RecordService.write_run]] · [[#RecordCrud.read_history]] · [[#RecordCrud.read_runs]] · [[#RecordCrud.prepare]] · [[#RecordCrud.reset_appends]] · [[#RecordCrud.write_history_appends]] · [[#RecordCrud.write_run_append]] · [[#record._atomic_write]] · [[#record.export_main_state]] |
+| 실행의 흐름 | [[#__main__.main]] · [[#__main__.run_batch]] · [[#__main__.run_collect]] · [[#__main__.sources_of]] · [[#Pipeline.run]] · [[#Pipeline._run]] · [[#Pipeline._load]] · [[#Pipeline._finish]] |
+| 마무리 단계 | [[#finish.finish]] · [[#finish.read_additions]] · [[#finish.base_date_of]] · [[#finish.has_run]] · [[#finish.count_keep]] · [[#Git.fresh_main]] · [[#Git.commit_and_push]] · [[#finish.append_lines]] · [[#finish.main]] |
 
 ## 2. 함수
 
@@ -36,7 +37,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### RunContext.from_env 실행 문맥 만들기
 
-**시그니처** `RunContext.from_env(env: Mapping[str, str], *, now: datetime | None = None) -> RunContext`
+**시그니처** `from_env(env: Mapping[str, str], *, now: datetime | None = None) -> RunContext`
 
 **근거** [[CCR-UC-001#UC-A1]] 1 · 1b5 · 1b6 · 1b7 · [[CCR-INFRA-001]] 8.1 · [[CCR-SEQ-001#SEQ-8]]
 
@@ -60,7 +61,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### Settings.load 조정값 읽기
 
-**시그니처** `Settings.load(env: Mapping[str, str], path: Path | None = None) -> Settings`
+**시그니처** `load(env: Mapping[str, str], path: Path | None = None) -> Settings`
 
 **처리**
 1. `batch/settings.toml`(또는 `path`)을 읽어 `source` · `notion` · `judge` · `warning` 표를 타입에 맞춰 옮긴다.
@@ -70,11 +71,19 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### Secrets.from_env 비밀값 읽기
 
-**시그니처** `Secrets.from_env(env) -> Secrets` · `Secrets.values() -> list[str]`
+**시그니처** `from_env(env: Mapping[str, str]) -> Secrets`
 
-**처리** 네 이름(`NOTION_TOKEN` · `NOTION_DATA_SOURCE_ID` · `OPENAI_API_KEY` · `KAGGLE_API_TOKEN`)을 읽고 앞뒤 공백을 뗀다. 빈 문자열은 `None`이다. 등록되지 않은 시크릿은 빈 문자열로 들어오기 때문이다([[CCR-INFRA-001]] 5장). `values()`는 있는 값만.
+**처리** 네 이름(`NOTION_TOKEN` · `NOTION_DATA_SOURCE_ID` · `OPENAI_API_KEY` · `KAGGLE_API_TOKEN`)을 읽고 앞뒤 공백을 뗀다. 빈 문자열은 `None`이다. 등록되지 않은 시크릿은 빈 문자열로 들어오기 때문이다([[CCR-INFRA-001]] 5장).
 
 **테스트 관점** 빈 값 · 공백만 있는 값이 `None`
+
+#### Secrets.values 가릴 비밀값
+
+**시그니처** `values() -> list[str]`
+
+**처리** 네 비밀값 가운데 있는 값만 차례대로 돌려준다. 로그 가리기와 Actions 가릴 값 알리기가 쓴다([[#logging.secret_variants]]).
+
+**테스트 관점** [[#Secrets.from_env]]의 테스트가 함께 본다
 
 #### settings.read_dotenv 로컬 .env 읽기
 
@@ -97,7 +106,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### logging.register_actions_masks Actions에 가릴 값 알리기
 
-**시그니처** `register_actions_masks(values, emit=None) -> None`
+**시그니처** `register_actions_masks(values: Iterable[str], emit: Callable[[str], None] | None = None) -> None`
 
 **처리** `secret_variants`의 값마다 `::add-mask::값`을 표준 출력에 찍는다. 어떤 로그보다 먼저 부른다. Actions 안에서만 부른다.
 
@@ -105,7 +114,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### SecretFilter.filter 로그 가리기
 
-**시그니처** `SecretFilter(values).filter(record: LogRecord) -> bool`
+**시그니처** `filter(record: logging.LogRecord) -> bool`
 
 **처리**
 1. 메시지를 완성한 뒤(`getMessage`) 변형마다 `***`로 바꾸고 `args`를 비운다.
@@ -113,6 +122,14 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 3. 늘 참을 돌려준다(기록은 버리지 않는다).
 
 **테스트 관점** 메시지와 예외 원문 모두에서 UUID 꼴이 사라진다
+
+#### logging.setup_logging 로그 설정
+
+**시그니처** `setup_logging(secrets: Iterable[str]) -> None`
+
+**처리** 표준 출력 처리기 하나에 `SecretFilter(secrets)`를 걸고 루트 로거를 INFO로 둔다. 형식은 `수준 이름: 메시지`. `httpx` · `httpcore` · `openai` 로거는 요청 헤더가 섞일 수 있어 WARNING 이상만 남긴다.
+
+**테스트 관점** 가리기는 [[#SecretFilter.filter]]의 테스트가 본다
 
 #### dates.parse_to_kst_date 시각을 KST 날짜로
 
@@ -140,7 +157,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### text.clean_text 앞뒤 다듬기
 
-**시그니처** `clean_text(value) -> str`
+**시그니처** `clean_text(value: Any) -> str`
 
 **근거** [[CCR-UC-001#UC-S2]] 4
 
@@ -150,7 +167,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### text.html_text HTML 글자 다듬기
 
-**시그니처** `html_text(value) -> str`
+**시그니처** `html_text(value: Any) -> str`
 
 **처리** 이어진 공백을 하나로 모은 뒤 `clean_text`. 브라우저가 보여 주는 글자와 같다. HTML 소스(wevity · 콘테스트코리아)의 대회명에 쓴다.
 
@@ -160,7 +177,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### SourceHttp.fetch 소스에 요청
 
-**시그니처** `fetch(method, url, *, parse, params=None, json=None, headers=None, follow_redirects=False, accept_client_errors=False) -> T`
+**시그니처** `fetch(method: str, url: str, *, parse: Callable[[httpx.Response], T], params: Mapping[str, Any] | None = None, json: Any = None, headers: Mapping[str, str] | None = None, follow_redirects: bool = False, accept_client_errors: bool = False) -> T`
 
 **근거** [[CCR-API-001]] 1.1 · 1.2 · 2.1 · [[CCR-INFRA-001]] 8.5 · [[CCR-SEQ-001#SEQ-2]]
 
@@ -184,9 +201,25 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 조금씩 오는 본문이 기한을 넘기면 `budget` · 압축 본문은 한 번만 풀림 · 5xx 두 번 뒤 성공(기다림 2 + 4초) · 세 번 모두 5xx면 `status` · 404는 한 번만 · 301은 따라가지 않고 `status` · `Retry-After: 45`는 기다리지 않고 실패 · `Retry-After: 7`은 7초 기다림 · 틀이 다르면 세 번 뒤 `format` · 연결 오류 뒤 성공 · 요청 사이 1초 · 예산을 넘기면 `budget` · 멈춤 표시면 `Stopped` · User-Agent가 배치를 밝힌다
 
+#### SourceHttp.remaining 남은 시간 예산
+
+**시그니처** `remaining() -> float`
+
+**처리** 기한에서 지금 시각을 뺀 초. 음수일 수 있다. [[#SourceHttp.fetch]]가 요청 · 기다림 · 본문 조각마다 본다.
+
+**테스트 관점** [[#SourceHttp.fetch]]의 예산 테스트가 함께 본다
+
+#### SourceHttp.close 연결 닫기
+
+**시그니처** `close() -> None`
+
+**처리** 안의 httpx 클라이언트를 닫는다. [[#CollectService._collect_one]]이 소스 하나를 다 받은 뒤 부른다.
+
+**테스트 관점** 없음(닫기만 한다)
+
 #### http.parse_retry_after Retry-After 읽기
 
-**시그니처** `parse_retry_after(value: str | None, now=None) -> float | None`
+**시그니처** `parse_retry_after(value: str | None, now: datetime | None = None) -> float | None`
 
 **처리** if 비었음 → `None` · if 숫자 → 그 초(음수는 0) · else if HTTP 날짜 → 지금부터의 초 · else `None`.
 
@@ -208,7 +241,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### NotionHttp.read 노션 읽기 요청
 
-**시그니처** `read(method: str, path: str, json=None) -> dict`
+**시그니처** `read(method: str, path: str, json: Any = None) -> dict[str, Any]`
 
 **근거** [[CCR-API-001]] 2.3 · [[CCR-INFRA-001]] 8.5
 
@@ -227,7 +260,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### NotionHttp.write 노션 쓰기 요청
 
-**시그니처** `write(method: str, path: str, json) -> WriteResponse`
+**시그니처** `write(method: str, path: str, json: Any) -> WriteResponse`
 
 **근거** [[CCR-API-001]] 2.3 · [[CCR-UC-001#UC-S6]] 2a · 2c · 2d
 
@@ -241,7 +274,55 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 연결 거부 · 529 뒤 성공 · 500 · 502 · 503 · 409 · 400은 한 번만(5xx는 `maybe_written`) · 읽기 타임아웃은 한 번만 · 503과 새 행 id는 성공
 
+#### NotionHttp.close 연결 닫기
+
+**시그니처** `close() -> None`
+
+**처리** 안의 httpx 클라이언트를 닫는다. 지금은 부르는 곳이 없다. 한 번 돌고 끝나는 배치라 프로세스가 끝날 때 함께 닫힌다.
+
+**테스트 관점** 없음(닫기만 한다)
+
 ### 2.3 수집
+
+#### Competition.dates_filled 채워진 접수 날짜 수
+
+**시그니처** `dates_filled() -> int`
+
+**처리** 접수시작일 · 접수마감일 가운데 있는 것의 수(0 · 1 · 2). 묶음의 대표를 고를 때 쓴다([[#matching.representative_order]]).
+
+**테스트 관점** [[#matching.representative_order]]의 테스트가 함께 본다
+
+#### SourceResult.normalized 정규화 뒤 건수
+
+**시그니처** `normalized() -> int`
+
+**처리** 속성. 맞춰 낸 대회의 수(`len(competitions)`). 실행 요약의 소스별 `normalized`가 이 값이다([[CCR-DOM-003#run_sources]]).
+
+**테스트 관점** [[#Pipeline._finish]]의 테스트가 함께 본다(소스 건수)
+
+#### SourceResult.failed 실패한 소스의 결과
+
+**시그니처** `failed(source: SourceName, kind: FailureKind, detail: str) -> SourceResult`
+
+**처리** 대회 없음 · 수집 0 · 탈락 0에 실패 종류와 원문 사유를 담아 만든다. 원문 사유는 로그에만 간다.
+
+**테스트 관점** [[#CollectService._collect_one]]의 테스트가 함께 본다
+
+#### Source.collect 소스 포트 — 수집
+
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
+
+**처리** 포트. 목록을 받아 공통 형식으로 맞춘다. 틀을 찾지 못하면 `FormatError`, 요청이 실패하면 `HttpFailure`. 구현은 어댑터 여섯이다([[#EventUsSource.collect]] 등).
+
+**테스트 관점** 어댑터마다의 테스트가 본다
+
+#### Source.missing_config 소스 포트 — 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** 포트. 필요한 자격증명이 설정에 없으면 참. 그때는 요청하지 않는다([[CCR-UC-001#UC-S1]] 1a).
+
+**테스트 관점** [[#KaggleSource.missing_config]]의 테스트가 본다
 
 #### CollectService.collect_all 여섯 소스 수집
 
@@ -277,15 +358,23 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### eventus.build_query event-us 조회 조건
 
-**시그니처** `build_query(base_date: date, page: int) -> dict`
+**시그니처** `build_query(base_date: date, page: int) -> dict[str, Any]`
 
 **처리** [[CCR-API-001#POST/api.event-us.kr/api/v1/engine/search]]의 본문을 만든다. 쪽 크기 100. `all` 조건 넷(대회/공모전 · 진행 중 · 공개 · 무시되지 않음)과, `any` 조건(접수마감일이 기준일 KST 자정 이후 · 또는 접수마감일이 없고 행사 종료일이 기준일 이후이거나 없음). 접수마감일 오름차순.
 
 **테스트 관점** 쪽 · 조건 · 기준일 자정이 UTC 전날 15시
 
+#### eventus.parse_page event-us 응답 한 쪽
+
+**시그니처** `parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], int]`
+
+**처리** JSON이 아니면 `FormatError`. 최상위가 객체이고 `results`가 배열이며 `meta.page.total_pages`가 정수여야 한다. 아니면 `FormatError`. (레코드 목록, 전체 쪽 수)를 돌려준다.
+
+**테스트 관점** 저장한 쪽에서 레코드 40건과 전체 쪽 수 1
+
 #### eventus.normalize event-us 공고 하나
 
-**시그니처** `normalize(item: dict) -> Competition | None`
+**시그니처** `normalize(item: dict[str, Any]) -> Competition | None`
 
 **처리** 필드마다 `raw` 값을 읽는다. if `id` · 대회명 · `subdomain` 가운데 하나라도 없음 → `None`(탈락). 링크 `https://event-us.kr/{subdomain}/event/{id}`, 접수시작일 · 마감일은 UTC 시각을 KST 날짜로, 부가 정보는 분야 둘과 태그.
 
@@ -293,31 +382,71 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### EventUsSource.collect event-us 수집
 
-**시그니처** `collect(http, base_date, page_cap) -> Collected`
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
 
 **처리** 1쪽부터 `total_pages`까지 `POST`한다. if 쪽 번호 > 상한 → `page_cap_hit`으로 멈춤. 레코드마다 `normalize`, `None`이면 탈락.
 
 **테스트 관점** 두 쪽을 차례로 읽음 · 상한에 닿으면 멈춤
 
+#### EventUsSource.missing_config event-us 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** 늘 거짓. 자격증명이 필요 없다.
+
+**테스트 관점** 없음(늘 거짓)
+
+#### dacon.parse_page DACON 응답 한 쪽
+
+**시그니처** `parse_page(response: httpx.Response) -> list[dict[str, Any]]`
+
+**처리** JSON이 아니면 `FormatError`. 최상위가 객체이고 `data`가 배열이어야 한다. 아니면 `FormatError`. `data`를 돌려준다.
+
+**테스트 관점** 저장한 쪽에서 레코드 15건
+
 #### dacon.normalize DACON 대회 하나
 
-**시그니처** `normalize(item: dict) -> Competition | None` · `link_for(cpt_id, is_landing) -> str`
+**시그니처** `normalize(item: dict[str, Any]) -> Competition | None`
 
-**처리** if `cpt_id` · `name`이 없음 → `None`. 링크는 `is_landing_cpt == 1`이면 `/competition/{id}/overview`, 아니면 `/competitions/official/{id}/overview/description`. 날짜는 `period_start` · `period_end`(시간대 없음 → KST). 부가 정보는 `keyword`를 `|`로 나눈 것.
+**처리** if `cpt_id` · `name`이 없음 → `None`. 링크는 [[#dacon.link_for]]. 날짜는 `period_start` · `period_end`(시간대 없음 → KST). 부가 정보는 `keyword`를 `|`로 나눈 것.
 
 **테스트 관점** 236746의 링크 · 날짜 · 키워드
 
+#### dacon.link_for DACON 상세 링크
+
+**시그니처** `link_for(cpt_id: str, is_landing: Any) -> str`
+
+**처리** if `is_landing_cpt`가 1 → `https://dacon.io/competition/{id}/overview` · else → `https://dacon.io/competitions/official/{id}/overview/description`.
+
+**테스트 관점** 대회 페이지(236746)와 공식 대회 페이지 두 꼴
+
 #### DaconSource.collect DACON 수집
 
-**시그니처** `collect(http, base_date, page_cap) -> Collected`
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
 
 **처리** `offset` 0부터 상한까지 `GET ?offset=N&range=`. if 빈 쪽 → 멈춤. 쪽마다 맞춘 뒤, if 그 쪽에 접수마감일 ≥ 기준일인 대회가 없음 → 멈춤(종료일이 늦은 차례라 뒤쪽도 끝났다). 상한까지 가면 `page_cap_hit`.
 
 **테스트 관점** 둘째 쪽에 접수 중인 대회가 없어 두 쪽에서 멈춤
 
+#### DaconSource.missing_config DACON 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** 늘 거짓. 자격증명이 필요 없다.
+
+**테스트 관점** 없음(늘 거짓)
+
+#### kaggle.parse_page Kaggle 응답 한 쪽
+
+**시그니처** `parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], str]`
+
+**처리** JSON이 아니면 `FormatError`. 최상위가 객체여야 하고 `competitions`(없으면 빈 목록)가 배열이어야 한다. (대회 목록, 다음 쪽 토큰 · 없으면 빈 문자열)을 돌려준다.
+
+**테스트 관점** [[#KaggleSource.collect]]의 테스트가 함께 본다. 실측 전이다(3장)
+
 #### kaggle.normalize Kaggle 대회 하나
 
-**시그니처** `normalize(item: dict) -> Competition | None`
+**시그니처** `normalize(item: dict[str, Any]) -> Competition | None`
 
 **처리** `ref`(전체 URL)의 마지막 조각이 원천 ID(slug). if slug · `title`이 없음 → `None`. 링크 `https://www.kaggle.com/competitions/{slug}`, 접수시작일 `enabledDate`, 접수마감일 `newEntrantDeadline` · 없으면 `deadline`(UTC → KST). 부가 정보는 `category`와 태그 이름. `practice = is_practice(category)`.
 
@@ -325,7 +454,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### kaggle.is_practice 상시 연습용 대회인가
 
-**시그니처** `is_practice(category) -> bool`
+**시그니처** `is_practice(category: Any) -> bool`
 
 **처리** 공백을 빼고 소문자로 바꾼 값이 `gettingstarted` · `playground` 가운데 하나인가. 상위 문서의 두 표기(`Getting Started` · `gettingStarted`)를 모두 맞게 견준다.
 
@@ -333,15 +462,23 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### KaggleSource.collect Kaggle 수집
 
-**시그니처** `collect(http, base_date, page_cap) -> Collected`
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
 
 **처리** 쪽마다 `POST ListCompetitions`(일반 탭 · 마감 늦은 차례 · 쪽 크기 100 · `pageToken`)에 `Authorization: Bearer 토큰`. if 다음 쪽 토큰이 없음 · 빈 쪽 · 그 쪽이 모두 마감됨 → 멈춤. 토큰이 없으면 `CollectService`가 부르지 않는다(`missing_config`).
 
 **테스트 관점** Bearer 헤더 · 마감된 쪽에서 멈춤. 실측 전이다(3장)
 
+#### KaggleSource.missing_config Kaggle 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** API 토큰이 없으면 참. 그때 `CollectService`가 요청하지 않고 `missing_config`로 끝낸다([[CCR-UC-001#UC-S1]] 1a).
+
+**테스트 관점** 토큰이 없으면 참 · 있으면 거짓
+
 #### wevity.parse_list wevity 목록 한 쪽
 
-**시그니처** `parse_list(response) -> list[WevityItem]`
+**시그니처** `parse_list(response: httpx.Response) -> list[WevityItem]`
 
 **처리** `ul.list`가 없으면 `FormatError`. 머리 줄(`li.top`)을 뺀 `li`마다 `div.tit a`의 `href`에서 `ix`, 제목(배지 `span.stat`를 뺀 글자 · `html_text`), 분야(`div.sub-tit`의 `:` 뒤를 쉼표로), 주최(`div.organ`), 날수(`div.day`의 `D-N` · `D+N`), 상태(`span.dday`)를 읽는다.
 
@@ -349,7 +486,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### wevity.parse_detail_end wevity 상세의 접수마감일
 
-**시그니처** `parse_detail_end(response) -> date`
+**시그니처** `parse_detail_end(response: httpx.Response) -> date`
 
 **처리** 글자에서 `접수기간` 뒤의 첫 `YYYY-MM-DD ~ YYYY-MM-DD`를 찾아 뒤 날짜. 못 찾으면 `FormatError`.
 
@@ -357,7 +494,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### wevity.deadline_of 날수로 접수마감일
 
-**시그니처** `deadline_of(item, base_date, offset) -> date | None`
+**시그니처** `deadline_of(item: WevityItem, base_date: date, offset: int) -> date | None`
 
 **처리** if 날수가 없음 → `None` · if `D-N` → 기준일 + N + 보정값 · else(`D+N`, 마감 뒤) → 기준일 − N + 보정값. 마감 뒤인 공고는 마감 판정에서 버려진다.
 
@@ -365,7 +502,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### WevitySource.collect wevity 수집
 
-**시그니처** `collect(http, base_date, page_cap) -> Collected`
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
 
 **근거** [[CCR-API-001#GET/www.wevity.com/?c=find]] · [[CCR-SEQ-001#SEQ-2]]
 
@@ -381,7 +518,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### WevitySource._calibrate 날수 맞춰 보기
 
-**시그니처** `_calibrate(http, items, base_date) -> tuple[int, str]`
+**시그니처** `_calibrate(http: SourceHttp, items: list[WevityItem], base_date: date) -> tuple[int, str]`
 
 **근거** [[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]
 
@@ -391,6 +528,14 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 3. 보정값 = (상세의 마감일 − 기준일) − N. if 0 · −1이 아님 → (−1, 사유) · else (보정값, 설명).
 
 **테스트 관점** 저녁처럼 맞으면 0 · 아침처럼 목록이 하루 많으면 −1 · 상세 404면 −1 · 2026-09-28 09:02에 −1(실측)
+
+#### WevitySource.missing_config wevity 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** 늘 거짓. 자격증명이 필요 없다.
+
+**테스트 관점** 없음(늘 거짓)
 
 #### aifactory.extract_payload 페이로드 꺼내기
 
@@ -412,9 +557,17 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 저장한 페이지에서 과제 112건 · `1970` 마감일은 `None`
 
+#### aifactory.parse_page AI팩토리 페이지
+
+**시그니처** `parse_page(response: httpx.Response) -> list[Task]`
+
+**처리** `parse_tasks(extract_payload(본문))`. if 과제가 없음 → `FormatError`.
+
+**테스트 관점** 저장한 페이지에서 과제 112건 · 페이로드가 없는 페이지는 `FormatError`
+
 #### aifactory.group_tasks 같은 대회의 과제 합치기
 
-**시그니처** `group_tasks(tasks) -> list[list[Task]]`
+**시그니처** `group_tasks(tasks: list[Task]) -> list[list[Task]]`
 
 **처리** 페이지 이름과 접수시작일이 같은 과제끼리 모은다. id 차례.
 
@@ -422,7 +575,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### aifactory.competition_name 대회명 정하기
 
-**시그니처** `competition_name(page, tasks, start) -> str`
+**시그니처** `competition_name(page: str, tasks: list[Task], start: date | None) -> str`
 
 **근거** [[CCR-API-001#GET/aifactory.space/ko/competition]] 대회명
 
@@ -437,15 +590,31 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### aifactory.to_competition 과제 묶음을 대회로
 
-**시그니처** `to_competition(group) -> Competition | None`
+**시그니처** `to_competition(group: list[Task]) -> Competition | None`
 
 **처리** 이름 있는 과제만 쓴다. if 없음 → `None`. 원천 ID는 가장 작은 id, 링크 `https://aifactory.space/competitions/{id}`, 접수시작일은 가장 이른 값, 마감일은 가장 늦은 값. if 시작일 > 마감일 → 시작일을 비운다. 부가 정보는 페이지 이름과 과제명들.
 
 **테스트 관점** 다섯 대회의 날짜와 링크
 
+#### AiFactorySource.collect AI팩토리 수집
+
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
+
+**처리** 목록 한 쪽을 `GET`해 `parse_page`로 과제를 읽고, `group_tasks`로 묶은 뒤 묶음마다 `to_competition`. `None`이면 그 묶음의 과제 수만큼 탈락이다. 수집 건수는 합치기 전 과제의 수다([[CCR-DOM-001#SourceResult]]).
+
+**테스트 관점** 수집 건수는 과제 112건, 대회는 88개
+
+#### AiFactorySource.missing_config AI팩토리 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** 늘 거짓. 자격증명이 필요 없다.
+
+**테스트 관점** 없음(늘 거짓)
+
 #### contestkorea.parse_list 콘테스트코리아 목록 한 쪽
 
-**시그니처** `parse_list(response) -> list[CkItem]`
+**시그니처** `parse_list(response: httpx.Response) -> list[CkItem]`
 
 **처리** `div.list_style_2`가 없으면 `FormatError`. `div.list_style_2 > ul > li`마다 `div.title > a`의 `str_no`, 대회명(`span.txt` · `html_text`), 분야(`span.category`), 주최 · 대상(`ul.host`), 접수 기간(`span.step-1`의 `MM.DD~MM.DD`), 날수(`span.day`의 `D-N`).
 
@@ -453,7 +622,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### contestkorea.resolve_dates 접수 날짜의 연도 정하기
 
-**시그니처** `resolve_dates(base_date, period, days) -> tuple[date | None, date | None]`
+**시그니처** `resolve_dates(base_date: date, period: tuple[int, int, int, int] | None, days: int | None) -> tuple[date | None, date | None]`
 
 **근거** [[CCR-API-001#GET/www.contestkorea.com/sub/list.php]]
 
@@ -467,11 +636,19 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ContestKoreaSource.collect 콘테스트코리아 수집
 
-**시그니처** `collect(http, base_date, page_cap) -> Collected`
+**시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
 
 **처리** 분야 둘(`030310001` · `031410001`)을 차례로, 접수 마감이 이른 차례의 쪽(12건)을 읽는다. 쪽 상한은 합산이다. `str_no`로 합치고 분야를 더한다. if 12건보다 적은 쪽 → 그 분야를 멈춤. 링크 `/sub/view.php?int_gbn=1&str_no={str_no}`, 날짜는 `resolve_dates`, 부가 정보는 분야 · 주최 · 대상.
 
 **테스트 관점** 두 분야의 쪽 요청 차례 · 합쳐서 12건 · 링크와 마감일
+
+#### ContestKoreaSource.missing_config 콘테스트코리아 설정 누락
+
+**시그니처** `missing_config() -> bool`
+
+**처리** 늘 거짓. 자격증명이 필요 없다.
+
+**테스트 관점** 없음(늘 거짓)
 
 ### 2.4 선별
 
@@ -511,6 +688,30 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** wevity 링크의 `ix`는 남고 추적 매개변수만 빠짐 · 대소문자 · 끝 `/`
 
+#### matching.key_of_competition 대회의 판정 값
+
+**시그니처** `key_of_competition(competition: Competition) -> MatchKey`
+
+**처리** 출처 · 원천 ID · 정규화한 링크와, 대회명에서 뽑은 정규화 대회명 · 연도 · 회차 · 글자 집합, 접수시작일 · 마감일을 담는다. 노션 행이 아니다.
+
+**테스트 관점** [[#matching.judge_pair]]의 테스트가 함께 본다
+
+#### matching.key_of_notion 노션 행의 판정 값
+
+**시그니처** `key_of_notion(row: NotionRow) -> MatchKey`
+
+**처리** 원천 ID 없이 링크를 싣고 노션 행으로 표시한다. 나머지는 [[#matching.key_of_competition]]과 같다.
+
+**테스트 관점** 노션 링크가 같아도 연도가 다르면 다름([[#matching.judge_pair]])
+
+#### matching.key_of_history 처리 이력 기록의 판정 값
+
+**시그니처** `key_of_history(record: HistoryRecord) -> MatchKey`
+
+**처리** 출처 · 원천 ID를 싣고 링크는 싣지 않는다. 링크는 노션 행과 견줄 때만 쓴다.
+
+**테스트 관점** 작년 공고를 3단계로 가름([[#matching.judge_pair]])
+
 #### matching.similarity 대회명 유사도
 
 **시그니처** `similarity(a: MatchKey, b: MatchKey) -> float`
@@ -547,7 +748,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### matching.group 후보끼리 묶기
 
-**시그니처** `group(competitions, keys) -> list[list[int]]`
+**시그니처** `group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[int]]`
 
 **근거** [[CCR-UC-001#UC-S4]] 4 · 4b
 
@@ -560,15 +761,23 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### matching.representative_order 대표를 고르는 차례
 
-**시그니처** `representative_order(c) -> tuple[int, int, str]`
+**시그니처** `representative_order(competition: Competition) -> tuple[int, int, str]`
 
 **처리** (−채워진 접수 날짜 수, 소스 우선순위, 원천 ID). 가장 작은 것이 대표다([[CCR-UC-001#UC-S4]] 4a).
 
 **테스트 관점** 날짜가 더 채워진 event-us가 DACON보다 먼저
 
+#### Bundle.deadline 묶음의 접수마감일
+
+**시그니처** `deadline() -> date | None`
+
+**처리** 속성. 구성원 접수마감일 가운데 가장 늦은 값 · 없으면 `None`. 오늘 마감인지 가를 때만 쓴다([[CCR-DOM-002]] 5장 결정 1).
+
+**테스트 관점** [[#ScreenService.judge]]의 테스트가 함께 본다(오늘 마감 구성원이 있어도 더 늦은 구성원이 있으면 미룸)
+
 #### ScreenService.drop_expired 마감 지난 대회 버리기
 
-**시그니처** `drop_expired(competitions) -> tuple[list[Competition], int]`
+**시그니처** `drop_expired(competitions: list[Competition]) -> tuple[list[Competition], int]`
 
 **근거** [[CCR-UC-001#UC-S3]]
 
@@ -578,7 +787,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ScreenService.bundle 묶음 만들기
 
-**시그니처** `bundle(competitions) -> list[Bundle]`
+**시그니처** `bundle(competitions: list[Competition]) -> list[Bundle]`
 
 **처리** 대회마다 `key_of_competition`, `group`으로 묶고, 묶음마다 `representative_order`가 가장 작은 구성원을 대표로, 구성원의 판정 값(`keys`)을 함께 싣는다. 묶음 수와 여럿인 묶음 수를 로그에.
 
@@ -597,9 +806,17 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 버림 무시면 버림 기록과 같은 공고가 아는 대회가 아님
 
+#### KnownSet.add 아는 대회 하나 넣기
+
+**시그니처** `add(known: Known) -> None`
+
+**처리** 목록에 붙이고 색인 셋을 채운다. 출처 · 원천 ID가 있으면 `by_id`, 노션 행이고 링크가 있으면 `by_link`, 정규화 대회명이 있으면 `by_title`.
+
+**테스트 관점** [[#ScreenService.build_known]]의 테스트가 함께 본다
+
 #### ScreenService.split_known 아는 대회로 빠진 묶음 빼기
 
-**시그니처** `split_known(bundles, known: KnownSet) -> tuple[list[Bundle], int]`
+**시그니처** `split_known(bundles: list[Bundle], known: KnownSet) -> tuple[list[Bundle], int]`
 
 **근거** [[CCR-UC-001#UC-S4]] 5 · 6 · 7
 
@@ -611,7 +828,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ScreenService._matches 묶음과 같은 아는 대회 찾기
 
-**시그니처** `_matches(bundle, known) -> list[tuple[Known, PairResult]]`
+**시그니처** `_matches(bundle: Bundle, known: KnownSet) -> list[tuple[Known, PairResult]]`
 
 **처리**
 1. 후보 좁히기. 구성원마다 `by_id`(같은 출처 · 원천 ID) · `by_link`(같은 링크) · `by_title`(같은 정규화 대회명)과, 모든 아는 대회 가운데 유사도 0.90에 닿을 수 있는 것(`similarity`의 1 · 2와 같은 거르기).
@@ -624,7 +841,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ScreenService._record_known 아는 대회로 빠진 묶음 적기
 
-**시그니처** `_record_known(bundle, matches, known) -> None`
+**시그니처** `_record_known(bundle: Bundle, matches: list[tuple[Known, PairResult]], known: KnownSet) -> None`
 
 **근거** [[CCR-UC-001#UC-S4]] 6 · [[CCR-DOM-002]] 5장 결정 2
 
@@ -638,7 +855,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### screen.entries_for 처리 이력에 적을 값
 
-**시그니처** `entries_for(bundle, result, members=None) -> list[HistoryEntry]`
+**시그니처** `entries_for(bundle: Bundle, result: Result, members: list[Competition] | None = None) -> list[HistoryEntry]`
 
 **처리** 구성원(또는 주어진 구성원)마다 한 줄. 같은 (출처, 원천 ID)는 한 번만. 접수시작일 · 마감일이 없으면 대표의 값으로 채운다([[CCR-UC-001]] 0.1).
 
@@ -646,7 +863,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ScreenService.judge 관심 분야 판별
 
-**시그니처** `judge(bundles) -> JudgeOutcome`
+**시그니처** `judge(bundles: list[Bundle]) -> JudgeOutcome`
 
 **근거** [[CCR-UC-001#UC-S5]] · [[CCR-SEQ-001#SEQ-4]]
 
@@ -665,7 +882,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ScreenService._ask_all 동시에 묻기
 
-**시그니처** `_ask_all(bundles, outcome) -> list[Bundle]`
+**시그니처** `_ask_all(bundles: list[Bundle], outcome: JudgeOutcome) -> list[Bundle]`
 
 **처리**
 1. 스레드 넷(설정값)에 묶음마다 `ask`를 맡긴다. `ask`: if 멈춤 표시 → `Stopped` · if 치명 오류 표시 → 묻지 않고 실패 · else `judge.judge(대표)`. `JudgeError(fatal)`이면 치명 오류 표시를 켠다. 그 밖의 예외도 그 묶음의 실패다.
@@ -675,6 +892,14 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 **출력** 판별 실패 묶음
 
 **테스트 관점** `judge`의 테스트가 함께 본다
+
+#### Judge.judge 판별 포트
+
+**시그니처** `judge(competition: Competition) -> Answer`
+
+**처리** 포트. 묶음의 대표 하나가 관심 분야인지 묻는다. 실패하면 `JudgeError`. 구현은 [[#OpenAiJudge.judge]]이고, 테스트는 가짜를 넣는다.
+
+**테스트 관점** [[#ScreenService.judge]]의 테스트가 가짜 판별기로 본다
 
 #### OpenAiJudge.judge 판별 모델에 묻기
 
@@ -696,7 +921,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### openai_judge.build_input 판별 입력
 
-**시그니처** `build_input(competition) -> str`
+**시그니처** `build_input(competition: Competition) -> str`
 
 **처리** `대회명: …` · `출처: …` · (있으면) `부가 정보: …`를 줄로. 부가 정보는 쉼표로 잇고 800자에서 자른다.
 
@@ -718,7 +943,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### notion.row_of 행 하나 읽기
 
-**시그니처** `row_of(page: dict) -> NotionRow`
+**시그니처** `row_of(page: dict[str, Any]) -> NotionRow`
 
 **처리** `기타`의 `title` 조각들의 `plain_text`를 잇는다. `링크`는 `url`. `시작일` · `마감일`은 `date.start`를 KST 날짜로. 컬럼이 없으면 빈 값.
 
@@ -741,7 +966,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### notion.check_schema 스키마 맞춰 보기
 
-**시그니처** `check_schema(properties: dict) -> tuple[list[str], str | None]`
+**시그니처** `check_schema(properties: dict[str, Any]) -> tuple[list[str], str | None]`
 
 **처리** 일곱 컬럼마다: if 없음 → `출처` · `수집일`이면 만들 목록에 · 아니면 문제 · if 종류가 다름 → 문제. 그다음 `상태`의 선택지에 `시작 전`이 없으면 문제.
 
@@ -749,7 +974,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### NotionService.create_row 행 만들기
 
-**시그니처** `create_row(competition, base_date) -> CreateOutcome`
+**시그니처** `create_row(competition: Competition, base_date: date) -> CreateOutcome`
 
 **근거** [[CCR-UC-001#UC-S6]] 2 · 3 · 2a · 2c · 2d · [[CCR-API-001#POST/api.notion.com/v1/pages]]
 
@@ -759,7 +984,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### notion.properties_of 행 값
 
-**시그니처** `properties_of(competition, base_date) -> dict`
+**시그니처** `properties_of(competition: Competition, base_date: date) -> dict[str, Any]`
 
 **처리** [[CCR-API-001]] 4.2 그대로. `기타` 대회명(2,000자에서 자름) · `링크` · `시작일` · `마감일`(모르면 `{"date": null}`) · `상태` `시작 전` · `출처` 소스 이름 · `수집일` 기준일. `결과날`은 보내지 않는다.
 
@@ -767,13 +992,93 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### NotionCrud.query_pages 모든 행 받기
 
-**시그니처** `query_pages() -> list[dict]`
+**시그니처** `query_pages() -> list[dict[str, Any]]`
 
 **처리** `page_size` 100으로 `POST query`. if `request_status.type == incomplete` → `NotionFailure` · if `results`가 배열이 아님 → `NotionFailure`. `has_more`이고 `next_cursor`가 있는 동안 `start_cursor`로 넘긴다. 거르거나 정렬하지 않는다.
 
 **테스트 관점** 첫 요청에 커서 없음 · 둘째에 커서
 
+#### NotionCrud.get_data_source 데이터 소스 읽기
+
+**시그니처** `get_data_source() -> dict[str, Any]`
+
+**처리** `GET /v1/data_sources/{id}`. 읽기 요청이다([[#NotionHttp.read]]). 컬럼 확인이 쓴다.
+
+**테스트 관점** [[#NotionService.check_columns]]의 테스트가 함께 본다
+
+#### NotionCrud.add_properties 컬럼 만들기 요청
+
+**시그니처** `add_properties(properties: dict[str, Any]) -> None`
+
+**처리** `PATCH /v1/data_sources/{id}`로 없는 컬럼만 보낸다. 쓰기 요청이다([[#NotionHttp.write]]). 있는 컬럼을 보내면 그 설정이 바뀐다([[CCR-API-001#PATCH/api.notion.com/v1/data_sources/{id}]]).
+
+**테스트 관점** [[#NotionService.check_columns]]의 테스트가 함께 본다(없는 컬럼만 보냄)
+
+#### NotionCrud.create_page 행 만들기 요청
+
+**시그니처** `create_page(properties: dict[str, Any]) -> WriteResponse`
+
+**처리** `POST /v1/pages`에 부모(`data_source_id`)와 행 값을 보낸다. 쓰기 요청이다.
+
+**테스트 관점** [[#NotionService.create_row]]의 테스트가 함께 본다
+
 ### 2.6 기록
+
+#### HistoryRecord.of 처리 이력 기록 만들기
+
+**시그니처** `of(entry: HistoryEntry, base_date: date, run_id: str) -> HistoryRecord`
+
+**처리** 선별이 정한 값에 기준일과 실행 식별자를 붙인다. 기록 경계는 묶음을 모른다([[CCR-DOM-001]] 4.2 규칙 5).
+
+**테스트 관점** [[#RecordService.append]]의 테스트가 함께 본다(날짜와 실행 식별자)
+
+#### HistoryRecord.to_dict 처리 이력 한 줄
+
+**시그니처** `to_dict() -> dict[str, Any]`
+
+**처리** [[CCR-DOM-003#processed]]의 필드 아홉. 날짜는 ISO, 없으면 `null`.
+
+**테스트 관점** [[#RecordService.append]]의 테스트가 함께 본다
+
+#### HistoryRecord.from_dict 처리 이력 한 줄 읽기
+
+**시그니처** `from_dict(data: dict[str, Any]) -> HistoryRecord`
+
+**처리** if 필수 넷(`source` · `source_id` · `result` · `run_id`) 가운데 없거나 빈 것이 있음 → `ValueError`. 나머지는 없으면 빈 값이고, 날짜를 읽지 못하면 `None`.
+
+**테스트 관점** [[#RecordService.load]]의 테스트가 함께 본다(필수 필드 없음)
+
+#### SourceLine.to_dict 소스별 건수 한 칸
+
+**시그니처** `to_dict() -> dict[str, Any]`
+
+**처리** `collected` · `normalized` · `failure`.
+
+**테스트 관점** [[#RecordService.write_run]]의 테스트가 함께 본다
+
+#### RunWarning.to_dict 경고 한 칸
+
+**시그니처** `to_dict() -> dict[str, Any]`
+
+**처리** `kind`와, 있는 것만 `source` · `last_nonzero`(ISO) · `cause`. 빈 속성은 쓰지 않는다.
+
+**테스트 관점** [[#RecordService.write_run]]의 테스트가 함께 본다(경고의 빈 속성은 없음)
+
+#### RunLine.fail 실패로 바꾸기
+
+**시그니처** `fail(reason: FailureReason) -> None`
+
+**처리** 결과를 실패로 바꾸고 사유를 적는다. 결과 중단의 줄은 이 클래스가 만들지 않는다(마무리 단계).
+
+**테스트 관점** [[#Pipeline._run]]의 테스트가 함께 본다(실패 사유)
+
+#### RunLine.to_dict 실행 요약 한 줄
+
+**시그니처** `to_dict() -> dict[str, Any]`
+
+**처리** [[CCR-DOM-003#runs]]의 필드 열넷. 소스는 이름마다 `SourceLine.to_dict`, 경고는 `RunWarning.to_dict`의 목록이다.
+
+**테스트 관점** [[#RecordService.write_run]]의 테스트가 함께 본다(줄의 필드 열넷)
 
 #### RecordService.start 추가분 비우기
 
@@ -798,9 +1103,25 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 첫 실행 · 깨진 줄 · 필수 필드 없음 · 읽히지 않는 실행 요약 줄 세기
 
+#### State.keep_count 지금 남김 기록의 수
+
+**시그니처** `keep_count() -> int`
+
+**처리** 속성. 읽은 처리 이력에서 결과가 남김인 기록의 수.
+
+**테스트 관점** [[#RecordService.history_shrank]]의 테스트가 함께 본다
+
+#### State.last_keep_count 마지막으로 적힌 남김 수
+
+**시그니처** `last_keep_count() -> int | None`
+
+**처리** 실행 요약 줄을 뒤에서부터 보며 정수인 `keep_count`의 첫 값. 없으면 `None`. 불리언은 정수로 치지 않는다.
+
+**테스트 관점** [[#RecordService.history_shrank]]의 테스트가 함께 본다
+
 #### RecordService.history_shrank 남김 기록이 줄었나
 
-**시그니처** `history_shrank(state) -> bool`
+**시그니처** `history_shrank(state: State) -> bool`
 
 **근거** [[CCR-UC-001#UC-S4]] 2c · 2a2
 
@@ -818,9 +1139,17 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 두 번 적으면 두 줄 · 날짜와 실행 식별자 · 임시 파일이 남지 않음 · 미리보기는 쓰지 않음
 
+#### RecordService.appended_count 이번 실행에 적은 줄 수
+
+**시그니처** `appended_count() -> int`
+
+**처리** 속성. 이번 실행에 쌓은 처리 이력 줄의 수.
+
+**테스트 관점** 미리보기는 아무것도 적지 않음(`test_preview_writes_nothing`)
+
 #### RecordService.zero_count_warnings 소스 0건 경고
 
-**시그니처** `zero_count_warnings(results, state, days) -> list[RunWarning]`
+**시그니처** `zero_count_warnings(results: list[SourceResult], state: State, days: int) -> list[RunWarning]`
 
 **근거** [[CCR-UC-001#UC-S7]] 2 · 2a · 2b
 
@@ -855,6 +1184,38 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 **처리** if 파일이 없음 → 빈 것. 줄마다 UTF-8 · JSON을 읽고, 객체이며 `run_id` · `base_date`가 있으면 줄로, 아니면 `corrupt` +1. 파일을 열지 못하면 `HistoryReadFailed`.
 
 **테스트 관점** 깨진 줄 둘을 세고 하나를 읽음
+
+#### RecordCrud.prepare 상태 폴더 준비
+
+**시그니처** `prepare() -> None`
+
+**처리** if main 판을 꺼내야 함 → [[#record.export_main_state]] · else 아무것도 하지 않는다([[CCR-DOM-002]] 5장 결정 5).
+
+**테스트 관점** [[#record.export_main_state]]의 테스트가 함께 본다
+
+#### RecordCrud.reset_appends 추가분 비우기
+
+**시그니처** `reset_appends() -> None`
+
+**처리** 추가분 두 파일을 빈 파일로 통째로 바꿔 쓴다([[#record._atomic_write]]).
+
+**테스트 관점** [[#RecordService.start]]의 테스트가 함께 본다
+
+#### RecordCrud.write_history_appends 처리 이력 추가분 쓰기
+
+**시그니처** `write_history_appends(lines: list[dict[str, Any]]) -> None`
+
+**처리** 받은 줄 전부를 JSON Lines로 처리 이력 추가분에 통째로 바꿔 쓴다.
+
+**테스트 관점** [[#RecordService.append]]의 테스트가 함께 본다(두 번 적으면 두 줄 · 임시 파일이 남지 않음)
+
+#### RecordCrud.write_run_append 실행 요약 추가분 쓰기
+
+**시그니처** `write_run_append(line: dict[str, Any]) -> None`
+
+**처리** 줄 하나를 실행 요약 추가분에 통째로 바꿔 쓴다.
+
+**테스트 관점** [[#RecordService.write_run]]의 테스트가 함께 본다
 
 #### record._atomic_write 통째로 바꿔 쓰기
 
@@ -899,7 +1260,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### __main__.run_batch 하루치
 
-**시그니처** `run_batch(env, stop) -> int`
+**시그니처** `run_batch(env: dict[str, str], stop: threading.Event) -> int`
 
 **처리** `RunContext` · `Settings` · `Secrets`를 만들고 서비스를 조립한다. 소스 여섯(Kaggle에 토큰), `NotionService`(토큰과 대상 DB 식별자가 모두 있을 때만, 아니면 없음), `RecordCrud`(main 판을 꺼내야 하면 저장소 루트), `OpenAiJudge`(키가 있을 때만). `Pipeline.run`의 결과가 성공이면 0 · else 1.
 
@@ -907,11 +1268,19 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### __main__.run_collect 수집만
 
-**시그니처** `run_collect(env, stop, only, show) -> int`
+**시그니처** `run_collect(env: dict[str, str], stop: threading.Event, only: str | None, show: bool) -> int`
 
 **처리** 소스를 (이름이 주어지면 그 하나만) `CollectService`로 돌리고 소스마다 결과 한 줄, `--show`면 대회마다 한 줄(원천 ID · 접수 기간 · 대회명 · 링크)을 찍는다. 노션 · OpenAI를 부르지 않고 아무것도 쓰지 않는다. 하나라도 성공하면 0. 사이트 개편을 가를 때 쓴다([[CCR-UC-001#UC-A3]]).
 
 **테스트 관점** 실측으로 다섯 소스 성공 · Kaggle 설정 누락(2026-09-27)
+
+#### __main__.sources_of 소스 여섯
+
+**시그니처** `sources_of(secrets: Secrets) -> list[Source]`
+
+**처리** 어댑터 여섯을 만든다. 이 차례가 수집 결과와 실행 요약의 소스 차례다. Kaggle에만 토큰을 준다.
+
+**테스트 관점** 없음(조립만 한다)
 
 #### Pipeline.run 한 실행
 
@@ -929,7 +1298,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### Pipeline._run 기본 흐름과 실패 건너뛰기
 
-**시그니처** `_run(line) -> tuple[State, list[SourceResult]]`
+**시그니처** `_run(line: RunLine) -> tuple[State, list[SourceResult]]`
 
 **근거** [[CCR-UC-001#UC-A1]] 1d1 · 2 ~ 7 · 2b · 5a · [[CCR-SEQ-001#SEQ-9]]
 
@@ -949,7 +1318,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### Pipeline._load 노션에 넣기
 
-**시그니처** `_load(line, bundles) -> None`
+**시그니처** `_load(line: RunLine, bundles: list[Bundle]) -> None`
 
 **근거** [[CCR-UC-001#UC-S6]] · [[CCR-UC-001#UC-A1]] 7a · [[CCR-SEQ-001#SEQ-5]]
 
@@ -965,7 +1334,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### Pipeline._finish 실행 기록
 
-**시그니처** `_finish(line, state, results, started) -> None`
+**시그니처** `_finish(line: RunLine, state: State, results: list[SourceResult], started: float) -> None`
 
 **근거** [[CCR-UC-001#UC-S7]] · [[CCR-SEQ-001#SEQ-6]]
 
@@ -1006,6 +1375,30 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** `finish`의 테스트가 함께 본다
 
+#### finish.base_date_of 마무리 단계의 기준일
+
+**시그니처** `base_date_of(started_at: str | None) -> str`
+
+**처리** `RUN_STARTED_AT`(ISO, `Z` 허용. 시간대가 없으면 UTC로 본다)을 KST 날짜로. 없으면 지금. 배치의 기준일과 같은 값이 된다([[CCR-UC-001]] 0.1).
+
+**테스트 관점** KST 기준일
+
+#### finish.has_run 이 실행의 줄이 있나
+
+**시그니처** `has_run(runs_path: Path, run_id: str) -> bool`
+
+**처리** 실행 요약 파일의 줄마다 JSON으로 읽어 `run_id`가 같은 줄이 있으면 참. 읽히지 않는 줄은 건너뛴다.
+
+**테스트 관점** [[#finish.finish]]의 테스트가 함께 본다(이미 올린 실행은 다시 붙이지 않음)
+
+#### finish.count_keep 남김 기록 세기
+
+**시그니처** `count_keep(history_path: Path) -> int`
+
+**처리** 처리 이력 파일에서 `result`가 `keep`인 줄의 수. 읽히지 않는 줄은 건너뛴다.
+
+**테스트 관점** [[#finish.finish]]의 테스트가 함께 본다(남김 수를 채움)
+
 #### Git.fresh_main main 최신 판 받기
 
 **시그니처** `fresh_main() -> None`
@@ -1030,6 +1423,15 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 줄바꿈으로 끝나지 않는 파일
 
+#### finish.main 마무리 단계 입구
+
+**시그니처** `main() -> int`
+
+**처리** 환경 변수 `RUN_ID` · `APPEND_DIR` · `RUNNER_TEMP` · `GITHUB_REPOSITORY` 가운데 없는 것이 있으면 1. 원격 주소와 `Git(RUNNER_TEMP/finish-main, 원격, GITHUB_TOKEN)`으로 [[#finish.finish]]를 부르고, 설명을 찍은 뒤 종료 코드를 돌려준다.
+
+**테스트 관점** 없음. 흐름은 [[#finish.finish]]의 테스트가 본다
+
 ## 3. 미결사항
 
 - [ ] Kaggle의 필드 이름 · 연습용 표기 · 쪽 크기는 실측 전이다([[#kaggle.normalize]] · [[#KaggleSource.collect]])
+- [ ] 키워드 전용 인자가 있는 [[#RunContext.from_env]] · [[#SourceHttp.fetch]]는 시그니처가 코드와 글자 그대로여도 싱크독 `tools/check_code.py`가 불일치로 본다. 검사기가 `kwonlyargs`를 세지 않아서다(싱크독 이슈 #196)
