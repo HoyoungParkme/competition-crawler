@@ -2,7 +2,7 @@
 doc_id: CCR-RFQ-001
 type: RFQ
 title: AI·개발 대회 일배치 수집기 요구
-status: draft
+status: approved
 upstream: []
 ---
 
