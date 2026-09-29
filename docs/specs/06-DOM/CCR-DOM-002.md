@@ -161,11 +161,10 @@ classDiagram
         +date deadline
         +date collected_on
         +str reason
-        +id() str
     }
 ```
 
-`domains/list/models.py`. 목록 파일의 한 줄이다. `id`는 `<출처>:<원천 ID>`이고 필드가 아니라 속성(property)이다. 두 값에서 늘 같게 만들어지므로 따로 저장한 값을 믿지 않는다. 파일에는 ERD대로 적는다. 반드시 있는 것은 `source` · `source_id` · `title` · `link` · `collected_on`이고, 하나라도 없으면 `from_dict`가 `ValueError`를 낸다. 읽는 쪽(`ListCrud.read`)은 이것을 목록 파일 읽기 실패로 올린다([[CCR-UC-001#UC-S4]] 1b).
+`domains/list/models.py`. 목록 파일의 한 줄이다. `id`는 `<출처>:<원천 ID>`이고 필드가 아니라 속성(property)이라 그림에 두지 않는다. 두 값에서 늘 같게 만들어지므로 따로 저장한 값을 믿지 않는다. 파일에는 ERD대로 적는다. 반드시 있는 것은 `source` · `source_id` · `title` · `link` · `collected_on`이고, 하나라도 없으면 `from_dict`가 `ValueError`를 낸다. 읽는 쪽(`ListCrud.read`)은 이것을 목록 파일 읽기 실패로 올린다([[CCR-UC-001#UC-S4]] 1b).
 
 선별이 넣기로 한 묶음의 대표에서 `entry_of(competition, base_date, reason)`이 만든다. 값은 [[CCR-UC-001#UC-S6]]의 표다. 판별 근거는 판별이 낸 한 줄이고, 판별 없이 들어온 대회는 그 사정(`판별 실패` · `오늘 마감`)이다. 상태는 여기 없다.
 
