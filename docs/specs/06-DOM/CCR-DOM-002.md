@@ -113,7 +113,7 @@ frontend/
 ├── tsconfig.json
 ├── src/
 │   ├── main.tsx                입구. CompetitionList를 붙인다
-│   ├── config.ts               저장소 소유자 · 이름 · 브랜치 · 데이터 파일 경로 · raw · Contents API 주소
+│   ├── config.ts               저장소 소유자 · 이름 · 브랜치 · 데이터 파일 경로 · raw · Contents API 주소 · 상태 커밋의 작성자
 │   ├── styles.css              공통 틀의 색 · 글꼴 토큰(UI 명세 3장)
 │   ├── domain/
 │   │   └── types.ts            ListEntry · Status · StatusValue · StatusFile · 상태 표시 이름
@@ -1021,7 +1021,7 @@ api/github.ts
 **규칙이 사는 곳**
 - raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. `Authorization`을 보내지 않는다. 5xx · 연결 오류면 한 번 다시 받고, 그래도 실패하면 `DataReadError`다([[CCR-API-001]] 1.4 · 2.3).
 - Contents API에는 헤더 셋을 보낸다. 토큰은 `Authorization` 헤더에만 있고 주소 · 콘솔 · 오류 메시지에 싣지 않는다([[CCR-INFRA-001]] 5.8).
-- `writeStatusFile`은 `sha`가 `null`이면 `sha` 없이 보내 새 파일을 만든다. `committer` · `author`는 보내지 않는다.
+- `writeStatusFile`은 `sha`가 `null`이면 `sha` 없이 보내 새 파일을 만든다. `author` · `committer`에는 `config.ts`의 커밋 작성자(저장소 주인의 이름과 noreply 주소)를 둘 다 적는다. 빼면 GitHub가 토큰 주인 계정의 기본 이메일을 넣어 개인 주소가 공개 커밋에 남는다. `committer`만 빼도 그 자리에 기본 이메일이 들어간다([[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 1.4).
 - 판 읽기는 200 · 404, 쓰기는 200 · 201이 아니면 `GitHubError(status, rateLimited)`를 낸다. 403에 `x-ratelimit-remaining: 0`이 붙어 오면 `rateLimited`가 참이다. 가르는 일은 `StatusStore`와 `SettingsDialog`가 한다.
 
 #### TokenStore 토큰 보관
@@ -1064,7 +1064,7 @@ TokenStore
 
 ## 6. 미결사항
 
-2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 코드에서 지운다(사용자 결정, [[CCR-CODE-001]] 4장).
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`).
 
 - [ ] Kaggle 어댑터는 실측 전이다. 토큰이 생기면 [[CCR-API-001]] 5장대로 필드 이름 · 연습용 표기 · 쪽 크기를 실측하고 `kaggle.py`를 맞춘다. 그때까지는 토큰이 없어 설정 누락으로 건너뛴다
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
