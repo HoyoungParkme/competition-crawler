@@ -84,7 +84,7 @@ uv run ruff format --check && uv run ruff check
 
 로컬 실행은 데이터 파일을 작업 트리가 아니라 `origin/main` 최신 판에서 꺼내 읽습니다. 그래서 `git fetch`가 되는 곳에서 돌립니다.
 
-페이지는 `frontend/`에서 띄웁니다. 로컬에서도 데이터는 `main`의 raw 파일을 읽고, 쓰기는 같은 Contents API입니다.
+페이지는 `frontend/`에서 띄웁니다. 로컬에서도 `main`의 파일을 배포된 페이지와 같은 길로 읽습니다. 목록 파일은 raw 주소로, 상태 파일은 토큰이 있으면 Contents API로 읽습니다(raw는 5분까지 캐시됩니다). 쓰기는 같은 Contents API입니다.
 
 ```bash
 cd frontend
