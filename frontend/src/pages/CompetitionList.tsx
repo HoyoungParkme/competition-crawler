@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DataReadError, readListFile, readStatusFile } from '../api/data'
+import { readStatusVersion, type StatusVersion } from '../api/github'
 import { CompetitionTable } from '../components/CompetitionTable'
 import { DEFAULT_FILTERS, FilterBar, type Filters } from '../components/FilterBar'
 import {
@@ -42,6 +43,22 @@ export function kstToday(now: Date = new Date()): string {
 /** 접수마감일이 오늘보다 이르면 마감 지남. 마감일이 없으면 지나지 않은 것이다 */
 export function isExpired(entry: ListEntry, today: string): boolean {
   return entry.deadline !== null && entry.deadline < today
+}
+
+/** 화면에 보일 상태 파일. 토큰이 있으면 Contents API의 판 읽기로 받는다. raw는 CDN이 5분 캐시해
+ * 방금 바꾼 값이 옛 값으로 보이기 때문이다(CCR-INFRA-001 6.4). 판 읽기가 실패하면 raw로 받고,
+ * 토큰 문제는 저장할 때 드러난다 */
+export async function readStatusForView(
+  token: string | null,
+  readVersion: (token: string) => Promise<StatusVersion> = readStatusVersion,
+  readRaw: () => Promise<StatusFile> = readStatusFile,
+): Promise<StatusFile> {
+  if (token === null) return readRaw()
+  try {
+    return (await readVersion(token)).file
+  } catch {
+    return readRaw()
+  }
 }
 
 /** 접수마감일 오름차순. 없으면 맨 뒤. 같은 마감일이면 대회명 순. 원본은 바꾸지 않는다 */
