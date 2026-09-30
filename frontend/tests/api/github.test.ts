@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { decodeContent, encodeStatusFile } from '../../src/api/github'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { decodeContent, encodeStatusFile, writeStatusFile } from '../../src/api/github'
+import { COMMIT_AUTHOR } from '../../src/config'
 
 describe('encodeStatusFile', () => {
   it('sorts keys, indents two spaces, ends with a newline and encodes UTF-8', () => {
@@ -39,5 +40,45 @@ describe('decodeContent', () => {
     expect(JSON.parse(decodeContent(wrapped))).toEqual({
       'AI팩토리:9304': { status: 'submitted', hidden: false, updated_at: '2026-09-29T00:12:41Z' },
     })
+  })
+})
+
+describe('writeStatusFile', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  /** fetch를 가짜로 바꾸고, 보낸 본문을 돌려준다. 응답은 200과 새 판 */
+  const stubFetch = () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ content: { sha: 'new-sha' } }), { status: 200 }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    return () => JSON.parse(fetchMock.mock.calls[0]![1]!.body as string) as Record<string, unknown>
+  }
+
+  it("sends the repository owner's noreply address as author and committer", async () => {
+    const sentBody = stubFetch()
+    const sha = await writeStatusFile('token', {}, 'old-sha', 'status: 대회 1 → 진행 중')
+    expect(sha).toBe('new-sha')
+    const body = sentBody()
+    expect(body).toMatchObject({
+      message: 'status: 대회 1 → 진행 중',
+      branch: 'main',
+      sha: 'old-sha',
+    })
+    expect(body.author).toEqual(COMMIT_AUTHOR)
+    expect(body.committer).toEqual(COMMIT_AUTHOR)
+    expect(COMMIT_AUTHOR.email).toMatch(/^\d+\+HoyoungParkme@users\.noreply\.github\.com$/)
+  })
+
+  it('leaves sha out for a new file and still sends the author', async () => {
+    const sentBody = stubFetch()
+    await writeStatusFile('token', {}, null, 'status: 대회 1 지움')
+    const body = sentBody()
+    expect('sha' in body).toBe(false)
+    expect(body.committer).toEqual(COMMIT_AUTHOR)
   })
 })

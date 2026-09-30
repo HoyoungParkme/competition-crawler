@@ -1,6 +1,6 @@
 /** GitHub Contents API로 상태 파일의 판을 읽고 쓴다(CCR-API-001 GET · PUT contents/data/status.json). */
 
-import { BRANCH, CONTENTS_URL, FETCH_TIMEOUT_MS } from '../config'
+import { BRANCH, COMMIT_AUTHOR, CONTENTS_URL, FETCH_TIMEOUT_MS } from '../config'
 import type { StatusFile } from '../domain/types'
 import { parseStatusFile } from './data'
 
@@ -66,17 +66,21 @@ export async function readStatusVersion(token: string): Promise<StatusVersion> {
   return { sha: body.sha, file: parseStatusFile(decodeContent(body.content)) }
 }
 
-/** 파일 전체를 한 커밋으로 올린다. sha가 null이면 새 파일. 돌려주는 값은 새 판(content.sha). */
+/** 파일 전체를 한 커밋으로 올린다. sha가 null이면 새 파일. 돌려주는 값은 새 판(content.sha).
+ * 작성자와 커미터는 저장소 주인의 noreply 주소다. 커미터를 빼면 토큰 주인 계정의 기본 이메일이
+ * 공개 커밋에 남는다(CCR-API-001 1.4). */
 export async function writeStatusFile(
   token: string,
   file: StatusFile,
   sha: string | null,
   message: string,
 ): Promise<string> {
-  const payload: Record<string, string> = {
+  const payload: Record<string, unknown> = {
     message,
     content: encodeStatusFile(file),
     branch: BRANCH,
+    author: COMMIT_AUTHOR,
+    committer: COMMIT_AUTHOR,
   }
   if (sha !== null) payload.sha = sha
   const response = await fetch(CONTENTS_URL, {
