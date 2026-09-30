@@ -213,7 +213,7 @@ competition-crawler/
 | `batch/pyproject.toml` · `uv.lock` | Python 버전과 의존성, uv 버전(`required-version`) | `setup-uv`(설치할 uv 버전)·uv |
 | `batch/settings.toml` | 판별 모델 이름의 기본값, 0건 경고의 연속 일수(기본 3), 소스별 요청 타임아웃·재시도·간격·쪽 상한, OpenAI의 타임아웃·재시도, 판별 동시 요청 수(8.5) | 배치 |
 | 저장소 변수 `OPENAI_MODEL` | 판별 모델 이름. 있으면 `settings.toml`의 기본값을 덮는다. 저장소 설정에서 바꾸므로 코드도 커밋도 없이 모델을 바꿀 수 있다([[CCR-RFQ-001#Q14]]) | 배치 |
-| GitHub Secrets | 비밀값 둘(5장). 환경(environment)은 두지 않는다(5.1) | 배치 |
+| GitHub Secrets | 비밀값 둘(5장). 시크릿을 담는 환경(environment)은 두지 않는다(5.1) | 배치 |
 | `.env` | 로컬에서 돌릴 때만 쓰는 비밀값과 `OPENAI_MODEL`. 저장소 루트에 두고 커밋하지 않는다. 저장소에는 이름과 설명만 적은 `.env.example`만 둔다([[#C3]]) | 배치 |
 | `.github/workflows/pages.yml` | 페이지 배포 트리거(`frontend/**` push · 수동), 권한, 빌드·배포 스텝(8.11) | GitHub Actions |
 | `frontend/vite.config.ts` | Pages 하위 경로 `base: '/competition-crawler/'`. 저장소 이름이 바뀌면 여기만 고친다 | Vite |
@@ -242,9 +242,11 @@ competition-crawler/
 
 ### 5.1 GitHub 환경(environment)을 두지 않는다
 
-노션에 넣던 때(2026-09-29까지)는 쓰기 토큰과 읽기 토큰을 `notion-write`·`notion-read` 두 환경에 나누어 두고, `notion-write`의 배포 브랜치를 `main`으로 제한해 [[#C12]]를 노션의 권한으로 지켰다. 노션이 빠지면서 그 두 환경은 지운다. 남은 시크릿 둘(OpenAI·Kaggle)은 어느 브랜치의 실행이든 같은 값을 써야 하므로 환경에 둘 이유가 없다. 브랜치의 미리보기도 판별 모델을 실제로 부른다([[CCR-UC-001#UC-A1]] 1b1).
+노션에 넣던 때(2026-09-29까지)는 쓰기 토큰과 읽기 토큰을 `notion-write`·`notion-read` 두 환경에 나누어 두고, `notion-write`의 배포 브랜치를 `main`으로 제한해 [[#C12]]를 노션의 권한으로 지켰다. 노션이 빠지면서 그 두 환경과 저장소 시크릿 `NOTION_DATA_SOURCE_ID`는 2026-09-30에 지웠다. 남은 시크릿 둘(OpenAI·Kaggle)은 어느 브랜치의 실행이든 같은 값을 써야 하므로 환경에 둘 이유가 없다. 브랜치의 미리보기도 판별 모델을 실제로 부른다([[CCR-UC-001#UC-A1]] 1b1).
 
 저장소에 쓰는 쪽은 마무리 단계의 push 하나이고, 그 자격은 환경이 아니라 잡 토큰(`GITHUB_TOKEN`)이다. 어느 브랜치의 워크플로도 `contents: write`를 선언하면 이 토큰으로 `main`에 push할 수 있다. 환경을 두어도 브랜치의 워크플로가 `environment:` 줄을 빼면 그만이라 막지 못한다. 그래서 [[#C12]]는 워크플로 파일의 조건으로 지키고, 브랜치에서 그것을 고치는 경우는 받아들인 위험으로 둔다(8.10). 잘못 올라간 커밋은 git으로 되돌린다.
+
+예외는 페이지 배포의 `github-pages` 환경 하나다. Pages를 GitHub Actions 소스로 켜면 GitHub가 만들고, 배포 브랜치를 `main` 하나로 묶는다. 시크릿이 없는 배포 전용 환경이라 이 절의 뜻(시크릿을 환경에 나누지 않는다)과 부딪히지 않는다. 이 환경을 쓰는 것은 `pages.yml`의 잡뿐이고, 배치 잡은 환경 없이 돈다(8.11).
 
 ### 5.2 Kaggle 쪽 준비 — 새 API 토큰
 
@@ -522,6 +524,7 @@ GitHub 공식 문서에 따르면 공개 저장소에서 60일 동안 저장소 
 |---|---|---|
 | 트리거 | `push`(브랜치 `main`, 경로 `frontend/**`·`.github/workflows/pages.yml`) + `workflow_dispatch` | 페이지 코드가 바뀔 때만 배포한다. `data/`만 바뀌는 배치·페이지의 커밋에는 돌지 않는다(8.3) |
 | 권한 | `pages: write` · `id-token: write` · `contents: read` | `actions/deploy-pages`가 OIDC 토큰으로 배포한다. 저장소에 쓰지 않는다 |
+| 환경 | `github-pages`. Pages를 GitHub Actions 소스로 켜면 GitHub가 만든다. 시크릿이 없고, 배포 브랜치는 `main` 하나다 | `actions/deploy-pages`가 이 환경으로 배포하라고 요구한다. 5.1의 예외다 |
 | 동시성 | 그룹 `pages`, `cancel-in-progress: false` | 배포가 겹치지 않게. 진행 중인 배포는 끊지 않는다 |
 | 잡 | 하나. `actions/checkout` → `actions/setup-node`(Node 24, `cache: npm`, `cache-dependency-path: frontend/package-lock.json`) → `npm ci` → `npm run build` → `actions/configure-pages` → `actions/upload-pages-artifact`(`path: frontend/dist`) → `actions/deploy-pages` | 모든 액션은 40자 SHA로 고정한다(5.6) |
 | 주소 | `https://hoyoungparkme.github.io/competition-crawler/` | 사용자 사이트의 하위 경로. Vite의 `base`를 이 경로로 둔다 |
