@@ -136,7 +136,7 @@ frontend/
 **기본형과 다른 점, 그리고 왜.** 규약 1.9의 프론트 기본형은 `pages · components · api · store`다. 여기서 벗어난 곳은 둘이다.
 
 1. **도메인 폴더가 없다.** 화면이 하나이고 개념이 둘(목록 항목 · 상태)뿐이라 `domain/types.ts` 하나로 충분하다. 경계는 배치의 것이고, 페이지는 목록 경계의 두 개념만 읽고 쓴다([[CCR-DOM-001]] 4.1).
-2. **상태 관리 라이브러리를 쓰지 않는다.** 저장할 것이 상태 파일 하나이고 바꾸는 조작이 셋(상태 · 지우기 · 되살리기)이다. `store/status.ts`의 클래스 하나가 큐와 판을 갖고, 화면은 React 상태로 그린다. 의존성을 줄이는 쪽이다([[CCR-INFRA-001]] 5.6).
+2. **상태 관리 라이브러리를 쓰지 않는다.** 저장할 것이 상태 파일 하나이고 바꾸는 조작이 셋(상태 · 지우기 · 되살리기)이다. `store/status.ts`의 클래스 하나가 큐와 화면 기준의 상태 파일을 갖고, 화면은 React 상태로 그린다. 의존성을 줄이는 쪽이다([[CCR-INFRA-001]] 5.6).
 
 `tests/`는 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 같은 순수 모듈만 본다. 화면은 사용자가 브라우저에서 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 빌드 결과 `dist/`는 커밋하지 않는다.
 
@@ -187,9 +187,9 @@ classDiagram
     }
 ```
 
-`frontend/src/domain/types.ts`. 상태 파일은 식별자를 키로 한 객체 하나이고(`StatusFile = Record<string, Status>`), 값 하나가 이 타입이다. `StatusValue`는 `not_started` · `in_progress` · `submitted` · `done`이고 화면 이름(`시작 전` · `진행 중` · `제출` · `완료`)은 같은 모듈의 `STATUS_LABELS`에 한 번만 적는다. `updated_at`은 UTC 초 단위의 ISO 문자열이다([[CCR-API-001]] 4.2).
+`frontend/src/domain/types.ts`. 상태 파일은 식별자를 키로 한 객체 하나이고(`StatusFile = Record<string, Status>`), 값 하나가 이 타입이다. `StatusValue`는 `not_started` · `in_progress` · `submitted` · `done`이고 화면 이름(`시작 전` · `진행 중` · `제출` · `완료`)은 같은 모듈의 `STATUS_LABEL`에 한 번만 적고, 선택지의 차례는 `STATUS_VALUES`다. `updated_at`은 UTC 초 단위의 ISO 문자열이다([[CCR-API-001]] 4.2).
 
-배치에는 이 타입이 없다. 배치는 상태 파일을 읽지도 쓰지도 않는다([[CCR-DOM-001]] 4.2 규칙 3). 값이 없는 대회는 페이지가 `시작 전` · 감추지 않음으로 본다. 목록에 없는 식별자의 값은 무시한다.
+배치에는 이 타입이 없다. 배치는 상태 파일을 읽지도 쓰지도 않는다([[CCR-DOM-001]] 4.2 규칙 3). 값이 없는 대회는 페이지가 `시작 전` · 감추지 않음(`DEFAULT_STATUS`)으로 본다. 목록에 없는 식별자의 값은 무시한다.
 
 ### 2.2 기록
 
@@ -297,6 +297,7 @@ classDiagram
 | `KnownKind` | `list` · `history` | `Known`. 목록 항목에서 온 아는 대회와 처리 이력 기록에서 온 아는 대회 |
 | `Outcome` | `known` · `discarded` · `loaded` · `deferred` | `Bundle`의 처리 결과([[CCR-DOM-001#Bundle]]) |
 | `StatusValue`(페이지) | `not_started` · `in_progress` · `submitted` · `done` | `Status.status`. 문자열 리터럴 유니온이다 |
+| `ChangeKind`(페이지) | `status` · `hide` · `restore` | `Change.kind`. 상태 바꾸기 · 지우기 · 되살리기 |
 
 `SOURCE_PRIORITY`(DACON 1 · Kaggle 2 · AI팩토리 3 · event-us 4 · wevity 5 · 콘테스트코리아 6)는 `domains/collect/models.py`의 상수다([[CCR-UC-001#UC-S4]] 4a2).
 
@@ -332,11 +333,13 @@ classDiagram
 | 타입 | 필드 | 파일 · 쓰는 곳 |
 |---|---|---|
 | `ListEntry` · `Status` · `StatusFile` | 2.1 | domain/types |
+| `Row` | `entry: ListEntry` · `status: Status` · `expired: boolean` | domain/types. 표 한 줄. 정렬과 거르기의 단위 |
 | `StatusVersion` | `sha: string \| null` · `file: StatusFile` | api/github. 판 읽기의 결과. 파일이 없으면 `sha`가 `null` |
-| `Change` | `id` · `title` · `status?: StatusValue` · `hidden?: boolean` | store/status. 바꿈 하나. 상태 바꾸기는 `status`만, 지우기 · 되살리기는 `hidden`만 채운다 |
-| `SaveState` | `saving: boolean` · `error?: {status: number, message: string}` | store/status → 화면. 저장 중(8)과 저장 실패(12) |
-| `Filters` | `source: SourceName \| 'all'` · `status: StatusValue \| 'all'` · `showHidden: boolean` | pages/CompetitionList. localStorage에 기억한다 |
-| `Row` | `entry: ListEntry` · `status: Status` · `expired: boolean` | pages/CompetitionList. 표 한 줄. 정렬과 거르기의 단위 |
+| `Change` | `kind: ChangeKind` · `id` · `title` · `value?: StatusValue` · `before: Status \| undefined` · `at: string` | store/status. 바꿈 하나. `value`는 상태 바꾸기만 채운다. `before`는 되돌릴 때 쓰는 바꾸기 전 값이고 없었으면 `undefined`다. `at`은 바꾼 시각이고 `updated_at`에 적힌다 |
+| `SaveState` | `saving: boolean` · `error: SaveError \| null` | store/status → 화면. 저장 중(8)과 저장 실패(12) |
+| `SaveError` | `status: number \| null` · `rateLimited: boolean` · `change: Change` | store/status → 화면. 저장 실패의 이유. `status`가 `null`이면 응답이 없었다. 알림 문구는 `saveFailureText`(components/Notice)가 만든다. `change`는 되돌린 바꿈이다 |
+| `GitHubApi` | `readStatusVersion` · `writeStatusFile` | store/status. `StatusStore`가 받는 두 요청. 테스트는 가짜를 넣는다 |
+| `Filters` | `source: string` · `status: StatusValue \| ''` · `showAll: boolean` | components/FilterBar. 빈 문자열이 전체다. `showAll`은 3.3(마감 지남 · 지운 대회 보기)이다. `localStorage`의 `ccr.filters`에 기억한다 |
 
 예외와 그것이 바뀌는 곳은 이렇다.
 
@@ -349,7 +352,7 @@ classDiagram
 | `RunModeError` | `RunContext.from_env` | 입구가 종료 코드 2로 |
 | `Stopped` | 멈춤 표시를 보는 모든 곳 | 입구가 종료 코드 130으로. 줄을 쓰지 않는다 |
 | `GitError` | `finish.py`의 git 명령 | `finish`가 처음부터 다시 |
-| `GitHubError(status)`(페이지) | `api/github.ts` | `StatusStore`가 409 · 422면 한 번 다시 쓰고, 그 밖은 값을 되돌리고 `SaveState.error`로 |
+| `GitHubError(status, rateLimited)`(페이지) | `api/github.ts` | `StatusStore`가 409 · 422면 한 번 다시 쓰고, 그 밖은 값을 되돌리고 `SaveState.error`로. 토큰 검증에서는 `SettingsDialog`가 `tokenProblem`으로 |
 | `DataReadError`(페이지) | `api/data.ts` | `CompetitionList`가 읽지 못했다는 알림으로([[CCR-UC-001#UC-A2]] 1b) |
 
 여기 없는 예외(파일을 쓰지 못함 등)는 입구까지 올라가 스택을 로그에 남기고 종료 코드 1로 끝난다. 줄을 쓰지 않으므로 마무리 단계가 중단 줄을 쓴다([[CCR-UC-001#UC-A1]] \*a).
@@ -899,12 +902,13 @@ main() -> int
 
 ```
 CompetitionList(): JSX                              UI-1. 두 파일을 읽고 Row로 합쳐 그린다
-  상태: entries · statusFile · filters · saveState · alert · dialogOpen
-  refresh(): Promise<void>                          새로 고침(2). readListFile · readStatusFile
-  rows(): Row[]                                     항목 + 상태 + 마감 지남. 접수마감일 오름차순, 없으면 맨 뒤
-  onStatus(id, value) · onHide(id) · onRestore(id)  7.4 · 7.5 · 9.1. 토큰이 없으면 토큰 없음(11)
-sortByDeadline(rows: Row[], today: string): Row[]   순수 함수. tests/가 본다
-isExpired(entry: ListEntry, today: string): boolean
+  상태: entries · statusFile · loading · readError · updatedAt · filters · foldOpen · save · noToken · dialogOpen · hasToken
+  refresh(): void                                   새로 고침(2). readListFile · readStatusFile을 함께 부르고, 받은 상태 파일을 store.load로 넘긴다
+  active · folded                                   Row를 거르고 접수마감일 순으로 줄 세운 뒤, 열린 것과 접힌 구역(9)으로 가른다
+  onStatus(id, title, value) · onHide(id, title) · onRestore(id, title)   7.4 · 7.5 · 9.1. 토큰이 없으면 토큰 없음(11)
+kstToday(now?: Date): string                        브라우저의 KST 날짜. 마감 지남과 D-n의 기준
+sortByDeadline(rows: Row[]): Row[]                  순수 함수. 접수마감일 오름차순, 없으면 맨 뒤. tests/가 본다
+isExpired(entry: ListEntry, today: string): boolean  순수 함수. 마감일이 오늘보다 이르면 참
 ```
 
 | 자식 | 파일 | 요소 |
@@ -927,8 +931,8 @@ isExpired(entry: ListEntry, today: string): boolean
 `components/SettingsDialog.tsx`. UI-2를 그린다([[CCR-UI-001#UI-2]]).
 
 ```
-SettingsDialog({open, tokens: TokenStore, onClose}): JSX
-  상태: value · checking · problem
+SettingsDialog({open, tokens: TokenStore, onClose}): JSX   열려 있을 때만 DialogBody를 그린다. 열 때마다 새로 붙어 칸과 알림이 빈 채 시작한다
+  상태: value · checking · problem · has
   onSave(): Promise<void>                           20.4. readStatusVersion(value)로 검증한 뒤 tokens.set
   onClear(): void                                   20.5. tokens.clear
 tokenProblem(status: number): string                순수 함수. 401 · 403과 그 밖의 거절 코드를 사람 말로
@@ -948,12 +952,15 @@ classDiagram
     class StatusStore {
         «control»
         +constructor(github: GitHubApi, tokens: TokenStore, onChange: (file, save) => void)
+        +load(file: StatusFile) void
         +setStatus(id: string, title: string, value: StatusValue) void
         +hide(id: string, title: string) void
         +restore(id: string, title: string) void
         +retry() void
         -enqueue(change: Change) void
+        -drain() Promise~void~
         -commit(change: Change) Promise~void~
+        -write(token: string, change: Change, message: string) Promise~string~
         -revert(change: Change, error) void
     }
     class Status {
@@ -967,21 +974,26 @@ classDiagram
 ```
 mergeChange(file: StatusFile, change: Change, now: string): StatusFile   순수 함수. 그 대회의 값만 얹는다
 commitMessage(change: Change): string                                    status: <대회명> → <상태> · 지움 · 되살림. 대회명 60자
+nowIso(date?: Date): string                                              UTC 초 단위의 ISO 문자열. Change.at과 updated_at
+defaultGitHub: GitHubApi                                                 api/github의 두 함수. 테스트는 가짜 GitHubApi를 넣는다
 ```
+
+페이지 코드는 클래스 안에서만 쓰는 메서드를 밑줄 대신 TypeScript의 `private`로 가린다. 그림의 `-`가 그것이다.
 
 | 메서드 | 유스케이스 | 실패 |
 |---|---|---|
+| `load` | [[CCR-UC-001#UC-A2]] 1 | 없다 |
 | `setStatus` · `hide` · `restore` | [[CCR-UC-001#UC-H1]] 1 · 1b · 2 | 토큰이 없으면 부르지 않는다(화면이 막는다) |
-| `_commit` | [[CCR-UC-001#UC-H1]] 3 · 4 · 5 · 4a · 4b | 409 · 422면 한 번 다시 읽고 다시 쓴다. 그래도 실패하거나 다른 오류면 `_revert` |
-| `retry` | [[CCR-UI-001#UI-1]] 12.2 | 마지막으로 실패한 바꿈을 다시 `_commit` |
+| `commit` | [[CCR-UC-001#UC-H1]] 3 · 4 · 5 · 4a · 4b | 409 · 422면 한 번 다시 읽고 다시 쓴다. 그래도 실패하거나 다른 오류면 `drain`이 `revert`를 부른다 |
+| `retry` | [[CCR-UI-001#UI-1]] 12.2 | 마지막으로 실패한 바꿈을 다시 줄 세운다. 바꾸기 전 값과 시각은 그때 새로 잡는다 |
 
 **규칙이 사는 곳**
 - 화면을 먼저 바꾼다. `onChange`로 얹은 파일과 저장 중을 알린 뒤 커밋한다([[CCR-UC-001#UC-H1]] 2).
 - 한 번에 요청 하나. 앞 커밋의 응답이 오기 전의 바꿈은 큐에 서고 차례로 보낸다. 같은 판으로 두 번 보내면 둘째가 409로 거절되기 때문이다([[CCR-API-001]] 1.4).
-- 커밋마다 판 읽기부터 한다. raw로 읽은 파일은 표시용이고 쓰기의 기준이 아니다([[CCR-INFRA-001]] 6.4). 읽은 파일에 이번 바꿈만 얹어 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다.
-- 판이 어긋나면(409 · 422) 최신 판을 다시 읽고 한 번 더 쓴다. 다시 실패하면 값을 되돌리고 실패를 알린다. 5xx · 연결 오류 · 401 · 403은 되돌리고 알린다. 스스로 되풀이하지 않는다([[CCR-API-001]] 2.3).
+- 커밋마다 판 읽기부터 한다. raw로 읽어 `load`로 받은 파일은 표시용이고 쓰기의 기준이 아니다([[CCR-INFRA-001]] 6.4). 읽은 파일에 이번 바꿈만 얹어 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다.
+- 판이 어긋나면(409 · 422) 최신 판을 다시 읽고 한 번 더 쓴다. 다시 실패하면 값을 되돌리고 실패를 알린다. 그 밖의 오류(401 · 403 · 404 · 5xx · 연결 오류)는 되돌리고 알린다. 스스로 되풀이하지 않는다([[CCR-API-001]] 2.3).
 - 되돌리기는 바꾸기 전 값으로다. 큐에 남은 바꿈은 버리고 함께 알린다.
-- 성공한 응답의 `content.sha`를 기억하되, 다음 커밋도 판 읽기부터 한다. 기억한 판은 로그에도 찍지 않는다.
+- 성공한 응답의 새 판(`content.sha`)은 기억하지 않는다. 다음 커밋도 판 읽기부터 하므로 쓸 곳이 없다. 판은 로그에도 찍지 않는다.
 
 #### RepoFiles 저장소 파일 읽기 · 쓰기
 
@@ -1010,7 +1022,7 @@ api/github.ts
 - raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. `Authorization`을 보내지 않는다. 5xx · 연결 오류면 한 번 다시 받고, 그래도 실패하면 `DataReadError`다([[CCR-API-001]] 1.4 · 2.3).
 - Contents API에는 헤더 셋을 보낸다. 토큰은 `Authorization` 헤더에만 있고 주소 · 콘솔 · 오류 메시지에 싣지 않는다([[CCR-INFRA-001]] 5.8).
 - `writeStatusFile`은 `sha`가 `null`이면 `sha` 없이 보내 새 파일을 만든다. `committer` · `author`는 보내지 않는다.
-- 200 · 201이 아니면 `GitHubError(status)`를 낸다. 가르는 일은 `StatusStore`가 한다.
+- 판 읽기는 200 · 404, 쓰기는 200 · 201이 아니면 `GitHubError(status, rateLimited)`를 낸다. 403에 `x-ratelimit-remaining: 0`이 붙어 오면 `rateLimited`가 참이다. 가르는 일은 `StatusStore`와 `SettingsDialog`가 한다.
 
 #### TokenStore 토큰 보관
 
@@ -1052,7 +1064,7 @@ TokenStore
 
 ## 6. 미결사항
 
-2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11).
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 코드에서 지운다(사용자 결정, [[CCR-CODE-001]] 4장).
 
 - [ ] Kaggle 어댑터는 실측 전이다. 토큰이 생기면 [[CCR-API-001]] 5장대로 필드 이름 · 연습용 표기 · 쪽 크기를 실측하고 `kaggle.py`를 맞춘다. 그때까지는 토큰이 없어 설정 누락으로 건너뛴다
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
