@@ -49,6 +49,12 @@ uv run pytest                                 # 네트워크를 쓰지 않는다
 uv run ruff format --check && uv run ruff check
 uv run python -m collector collect --show     # 실제 소스에 수집만(OpenAI 없음)
 uv run python -m collector                    # 하루치 미리보기. 로컬은 목록에 쓰지 않는다
+
+cd ../frontend
+npm ci
+npm test && npm run lint && npm run build     # vitest · eslint · prettier · tsc + vite
 ```
+
+페이지의 와이어프레임 번호는 싱크독 `tools/check_ui.py --specs docs/specs --frontend frontend/src`로 대조합니다. 화면 컴포넌트의 파일 첫 주석은 `CCR-UI-001#UI-N`이고, 요소마다 `data-el`에 UI 명세의 번호를 붙입니다.
 
 테스트 픽스처(`batch/tests/fixtures/`)는 실측 응답을 줄인 것입니다. 개인 연락처가 든 필드는 넣지 않습니다.
