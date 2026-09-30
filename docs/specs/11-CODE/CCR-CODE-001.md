@@ -16,7 +16,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 
 **확인하는 법.** 배치는 `batch/`에서 `uv run pytest`(네트워크를 쓰지 않는다) · `uv run ruff check .` · `uv run ruff format --check .`. 실제 소스에 수집만 해 보려면 `uv run python -m collector collect --show`. 판별까지는 미리보기(`python -m collector`, 로컬은 늘 미리보기)로 본다. 페이지는 `frontend/`에서 `npm test`(vitest, 순수 모듈만) · `npm run build`. 명세와 코드의 대조는 싱크독 `tools/check_code.py`(MS 시그니처 · docstring ID)와 `tools/check_ui.py`(`data-el` 번호)로 한다(DEV-14).
 
-**아직 하지 않은 것.** D1 ~ D3 전부, Kaggle 실측(토큰이 없다), 실물로 한 번 돌려 보는 일(4장).
+**아직 하지 않은 것.** D2 · D3, Kaggle 실측(토큰이 없다), 실물로 한 번 돌려 보는 일(4장). D1은 2026-09-30에 병합했다.
 
 ## 1. 슬라이스
 
@@ -120,9 +120,9 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 구현 함수 | [[CCR-MS-001#ListEntry.id]] · [[CCR-MS-001#ListEntry.to_dict]] · [[CCR-MS-001#ListEntry.from_dict]] · [[CCR-MS-001#list.entry_of]] · [[CCR-MS-001#ListService.load]] · [[CCR-MS-001#ListFile.ids]] · [[CCR-MS-001#ListService.append]] · [[CCR-MS-001#ListService.appended_count]] · [[CCR-MS-001#ListCrud.read]] · [[CCR-MS-001#ListCrud.reset_appends]] · [[CCR-MS-001#ListCrud.write_appends]] · [[CCR-MS-001#matching.key_of_entry]] · [[CCR-MS-001#ScreenService.build_known]] · [[CCR-MS-001#Pipeline._run]] · [[CCR-MS-001#Pipeline._load]] · [[CCR-MS-001#__main__.run_batch]] · [[CCR-MS-001#RecordService.start]] · [[CCR-MS-001#RecordService.load]] · [[CCR-MS-001#record.export_main_state]] · [[CCR-MS-001#Secrets.from_env]] · [[CCR-MS-001#Settings.load]] · [[CCR-MS-001#logging.register_actions_masks]] · [[CCR-MS-001#finish.finish]] · [[CCR-MS-001#finish.read_additions]] · [[CCR-MS-001#finish.existing_ids]] · [[CCR-MS-001#Git.commit_and_push]] |
 | API | 없음(파일). 배치는 GitHub에 HTTP 요청을 보내지 않는다([[CCR-API-001]] 3.3) |
 | 화면 | 없음 |
-| 테스트 | `tests/domains/list`(구조 거울) — 첫 실행 · 깨진 줄 · 필수 필드 · 겹친 식별자 · 더하기 두 번 · 같은 식별자는 `None` · 미리보기는 쓰지 않음 · 임시 파일 없음. `tests/domains/screen` — `key_of_entry`(원천 ID 1단계 · 링크만 같고 연도 다름) · 목록 항목이 버림 기록을 이김. `tests/run/test_pipeline.py` — 목록 파일 읽기 실패 · 넣은 묶음마다 항목과 남김 줄 · 이미 있는 식별자 · 시크릿 없이 수집 · 실패 사유 넷. `tests/test_finish.py` — 세 파일 붙이기 · 이미 있는 식별자 건너뜀 · 상태 파일 그대로 · 세 경로만 커밋. `tests/domains/record` — 세 파일 꺼내기. 규약: `uv run ruff check .` · `uv run ruff format --check .` 0건, 싱크독 `check_code.py` 불일치 0(키워드 전용 인자 둘은 싱크독 이슈 #196으로 제외). 실측: 로컬 미리보기로 시크릿 없이 끝까지 돌고, 넣었을 대회가 로그에 남는다 |
+| 테스트 | `tests/domains/list`(구조 거울) — 첫 실행 · 깨진 줄 · 필수 필드 · 겹친 식별자 · 더하기 두 번 · 같은 식별자는 `None` · 미리보기는 쓰지 않음 · 임시 파일 없음. `tests/domains/screen` — `key_of_entry`(원천 ID 1단계 · 링크만 같고 연도 다름) · 목록 항목이 버림 기록을 이김. `tests/run/test_pipeline.py` — 목록 파일 읽기 실패 · 넣은 묶음마다 항목과 남김 줄 · 이미 있는 식별자 · 시크릿 없이 수집 · 실패 사유 넷. `tests/test_finish.py` — 세 파일 붙이기 · 이미 있는 식별자 건너뜀 · 상태 파일 그대로 · 세 경로만 커밋. `tests/domains/record` — 세 파일 꺼내기. 규약: `uv run ruff check .` · `uv run ruff format --check .` 0건(74 files), 싱크독 `check_code.py` 대상 135 · 일치 135 · 미완 0. 키워드 전용 인자 둘도 일치했다(싱크독 #196이 고쳐져 [[CCR-MS-001]] 3장의 그 미결은 지운다). pytest 182. 실측(2026-09-30): 로컬 미리보기가 시크릿 없이 끝까지 돌았다 — 다섯 소스 473건 · 마감 지남 143 · 묶음 263 · 키가 없어 판별 미룸(경고 `judge_deferred` / `missing_key`) · 오늘 마감 56건이 「넣었을 대회」로 로그에 남고 파일은 쓰지 않았다 |
 | 선행 | B6 |
-| 완료 | (미정) — 브랜치 `code/d1-list`, PR 하나. 병합 뒤 #5 · #6을 닫는다 |
+| 완료 | [#7](https://github.com/HoyoungParkme/competition-crawler/pull/7)(`code/d1-list` → `main`) · 병합 `d791197` · 2026-09-30. 커밋 12개(3장). #5 · #6을 닫았다. `daily.yml`의 노션 환경 줄과 `NOTION_*` 시크릿 줄은 카드대로 D3에 남겼다 |
 
 #### D2 대회 목록 페이지
 
@@ -180,14 +180,26 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | `fe8a3d7` | A · B1 · B2 | 검증 반영: 본문을 받는 동안에도 시간 예산으로 끊고, 대회명 다듬기를 명세에 맞췄다 |
 | `7d63b56` | fix(#3) · B4 | 선별: 같은 대회 판정 문턱을 0.90으로 올리고, 묶음은 모든 짝이 같을 때만 묶는다([[CCR-DOM-002]] 5장 결정 7). 이슈 #3 |
 | `0487ff4` | fix(#4) · B1 | 수집: wevity는 쪽의 마지막 공고가 마감일 때 분야를 멈춘다([[CCR-DOM-002]] 5장 결정 8). 이슈 #4 |
+| `5fe3d33` | D1 | `list.entry_of` — 목록 항목 모델과 대표에서 항목 만들기 |
+| `6d7c583` | D1 | `ListCrud.read` — 목록 파일 읽기와 추가분 통째로 쓰기 |
+| `e390051` | D1 | `ListService.load` — 목록 파일 읽기와 더하기, 테스트 |
+| `1e1d80d` | D1 | `matching.key_of_entry` — 목록 항목의 판정 값, 아는 대회를 목록 항목으로 |
+| `751f60b` | D1 | `RecordService.start` — 데이터 폴더 꺼내기(세 파일)와 기록 파일 필드 정리 |
+| `aea7779` | D1 | `Secrets.from_env` — 비밀값 둘, 노션 설정과 `secret_variants` 제거 |
+| `e895fdf` | D1 | `Pipeline._load` — 목록 파일에 더하고 곧바로 남김을 적는다, 실패 사유 넷, 노션 코드와 테스트 삭제 |
+| `abdfb21` | D1 | `__main__.run_batch` — 서비스 넷 조립 |
+| `478d90a` | D1 | `finish.existing_ids` — 목록 추가분을 세 파일과 함께 올린다, 있는 식별자는 건너뜀 |
+| `da8fda3` | D1 | 공개 함수 전부 — docstring 첫 줄에 `CCR-MS-001` 항목 ID, 따옴표 반환 주석 제거(#5) |
+| `b52d9c8` | D1 | ruff 도입 — line-length 100 · E F I UP B, format과 check 통과(#6) |
+| `1a2b725` | D1 | `AGENTS.md` · `README.md` — 노션 문구를 목록 파일과 페이지로, 코드 규약 절 |
 
 PR은 둘이다. [#1](https://github.com/HoyoungParkme/competition-crawler/pull/1)(`feat/batch` → `main`)은 A ~ C와 검증 반영을, [#2](https://github.com/HoyoungParkme/competition-crawler/pull/2)(`fix/matching-wevity` → `main`)는 fix(#3) · fix(#4)를 담았다. 위 커밋 해시를 그대로 남기려고 둘 다 병합 커밋으로 합쳤다. 이 둘은 규약 DEV-13 · DEV-15보다 앞서 만든 것이라 커밋 메시지의 꼴이 다르다. 이력은 고치지 않는다.
 
-D1 ~ D3은 카드마다 브랜치 · PR 하나이고, 커밋은 `code(D1): 함수 — 요약` 꼴로 함수 하나에 하나다. PR 번호와 커밋은 병합 뒤 이 표에 적는다. D1의 PR이 이슈 #5 · #6을 닫는다.
+D1 ~ D3은 카드마다 브랜치 · PR 하나이고, 커밋은 `code(D1): 함수 — 요약` 꼴로 함수 하나에 하나다. [#7](https://github.com/HoyoungParkme/competition-crawler/pull/7)(`code/d1-list` → `main`, 병합 커밋 `d791197`, 2026-09-30)이 D1이고 이슈 #5 · #6을 닫았다. D2 · D3의 PR 번호와 커밋은 병합 뒤 이 표에 적는다.
 
 ## 4. 미결사항
 
 - [ ] **사용자가 준비할 것.** (1) 페이지 토큰 — GitHub 설정에서 fine-grained 토큰을 이 저장소 하나 · Contents 읽기·쓰기만 · 만료 기한을 두고 만들어, 배포된 페이지의 설정(UI-2)에 넣는다. 저장소에는 넣지 않는다([[CCR-INFRA-001]] 5.8). (2) 저장소 설정 — Pages 배포 소스를 GitHub Actions로(D3 뒤), 환경 `notion-write` · `notion-read`와 시크릿 `NOTION_DATA_SOURCE_ID`를 지운다(2026-09-30 현재 둘 다 남아 있다). (3) 실패 알림(GitHub 알림 설정). (4) `KAGGLE_API_TOKEN`은 선택
-- [ ] **실물 확인 차례.** D1 병합 → `main`에서 미리보기(`dry_run`) 한 번(목록 파일 읽기 · 판별) → 수동 실행 한 번 → `data/competitions.jsonl` · `processed.jsonl` · `runs.jsonl`이 한 커밋으로 올라옴 → D2 · D3 병합과 Pages 배포 → 페이지에서 목록이 보이고 상태를 바꾸면 `data/status.json` 커밋이 생김 → 다음 실행이 지운 대회를 다시 넣지 않음. raw 캐시의 `?t=`가 CDN까지 피하는지도 이때 본다([[CCR-INFRA-001]] 9장)
+- [ ] **실물 확인 차례.** D1 병합(2026-09-30에 했다) → `main`에서 미리보기(`dry_run`) 한 번(목록 파일 읽기 · 판별) → 수동 실행 한 번 → `data/competitions.jsonl` · `processed.jsonl` · `runs.jsonl`이 한 커밋으로 올라옴 → D2 · D3 병합과 Pages 배포 → 페이지에서 목록이 보이고 상태를 바꾸면 `data/status.json` 커밋이 생김 → 다음 실행이 지운 대회를 다시 넣지 않음. raw 캐시의 `?t=`가 CDN까지 피하는지도 이때 본다([[CCR-INFRA-001]] 9장)
 - [ ] **Kaggle 실측.** 토큰이 생기면 [[CCR-API-001]] 5장대로 실측하고 `kaggle.py`와 테스트를 맞춘다
-- [ ] **예약 실행.** 2026-09-28 · 09-29의 예약 실행은 생겼다(각각 11:00 · 11:46 KST로 두세 시간 늦게, GitHub의 지연). 둘 다 실패인데 노션 설정이 없어 설정 누락으로 끝난 것이라 D1 뒤에는 사라진다. 지연은 [[CCR-INFRA-001]] 8.4의 받아들인 한계다
+- [ ] **예약 실행.** 2026-09-28 · 09-29의 예약 실행은 생겼다(각각 11:00 · 11:46 KST로 두세 시간 늦게, GitHub의 지연). 둘 다 실패인데 노션 설정이 없어 설정 누락으로 끝난 것이라 D1 뒤에는 사라진다. D1을 병합한 `main`의 다음 예약 실행(2026-10-01 08:50 KST)은 노션 없이 실제로 돌아 목록 파일을 만들 수 있다. 워크플로가 아직 `notion-write` 환경을 가리키지만 배치는 그 값을 쓰지 않는다. 미리보기를 먼저 보려면 그 전에 수동으로 `dry_run`을 누른다. 지연은 [[CCR-INFRA-001]] 8.4의 받아들인 한계다
