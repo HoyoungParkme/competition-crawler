@@ -1,7 +1,8 @@
 """마무리 단계. 이번 실행의 추가분을 기본 브랜치 최신 판 위에 다시 얹어 한 커밋으로 올린다.
 
 CCR-UC-001 UC-A1 9 · *a2 · CCR-INFRA-001 8.2. 러너에 있는 git과 파이썬 표준 라이브러리만 쓰고,
-배치 패키지를 불러오지 않는다. 두 상태 파일의 형식은 ERD(CCR-DOM-003)를 따라 여기서 따로 안다.
+배치 패키지를 불러오지 않는다. 세 파일(목록 · 처리 이력 · 실행 요약)의 형식은 ERD(CCR-DOM-003)를
+따라 여기서 따로 안다. 페이지가 쓰는 `data/status.json`은 읽지도 스테이징하지도 않는다.
 토큰은 받기와 push 명령에만 명령 줄 설정으로 주고, 명령을 그대로 찍지 않는다.
 """
 
@@ -18,8 +19,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Mapping
 
+LIST = "data/competitions.jsonl"
 HISTORY = "data/processed.jsonl"
 RUNS = "data/runs.jsonl"
+LIST_REQUIRED = ("id", "source", "source_id", "title", "link", "collected_on")
 HISTORY_REQUIRED = ("source", "source_id", "result", "run_id")
 RUN_REQUIRED = ("run_id", "base_date", "kind", "result")
 ATTEMPTS = 5
@@ -35,6 +38,7 @@ class GitError(Exception):
 
 @dataclass
 class Additions:
+    listed: list[str] = field(default_factory=list)  # 목록에 붙일 줄. 원문 그대로
     history: list[str] = field(default_factory=list)  # 붙일 줄. 원문 그대로
     run: dict | None = None  # 배치가 쓴 이 실행의 줄
     rejected: int = 0  # 형식이 맞지 않아 붙이지 않은 줄
@@ -52,18 +56,26 @@ def _valid(line: str, required: tuple[str, ...]) -> dict | None:
     return data
 
 
+def _read_valid(path: Path, required: tuple[str, ...], label: str, out: Additions) -> list[str]:
+    lines: list[str] = []
+    if not path.is_file():
+        return lines
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not raw.strip():
+            continue
+        if _valid(raw, required) is None:
+            print(f"{label} 추가분에서 형식이 맞지 않는 줄을 뺀다: {raw}")
+            out.rejected += 1
+            continue
+        lines.append(raw.strip())
+    return lines
+
+
 def read_additions(append_dir: Path, run_id: str) -> Additions:
+    """CCR-MS-001#finish.read_additions"""
     out = Additions()
-    history = append_dir / "processed.jsonl"
-    if history.is_file():
-        for raw in history.read_text(encoding="utf-8", errors="replace").splitlines():
-            if not raw.strip():
-                continue
-            if _valid(raw, HISTORY_REQUIRED) is None:
-                print(f"처리 이력 추가분에서 형식이 맞지 않는 줄을 뺀다: {raw}")
-                out.rejected += 1
-                continue
-            out.history.append(raw.strip())
+    out.listed = _read_valid(append_dir / "competitions.jsonl", LIST_REQUIRED, "목록", out)
+    out.history = _read_valid(append_dir / "processed.jsonl", HISTORY_REQUIRED, "처리 이력", out)
     runs = append_dir / "runs.jsonl"
     if runs.is_file():
         for raw in runs.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -79,6 +91,7 @@ def read_additions(append_dir: Path, run_id: str) -> Additions:
 
 
 def base_date_of(started_at: str | None) -> str:
+    """CCR-MS-001#finish.base_date_of"""
     if started_at:
         moment = datetime.fromisoformat(started_at.strip().replace("Z", "+00:00"))
         if moment.tzinfo is None:
@@ -95,6 +108,7 @@ def _lines(path: Path) -> list[str]:
 
 
 def has_run(runs_path: Path, run_id: str) -> bool:
+    """CCR-MS-001#finish.has_run"""
     for raw in _lines(runs_path):
         try:
             data = json.loads(raw)
@@ -106,6 +120,7 @@ def has_run(runs_path: Path, run_id: str) -> bool:
 
 
 def count_keep(history_path: Path) -> int:
+    """CCR-MS-001#finish.count_keep"""
     count = 0
     for raw in _lines(history_path):
         try:
@@ -117,7 +132,21 @@ def count_keep(history_path: Path) -> int:
     return count
 
 
+def existing_ids(list_path: Path) -> set[str]:
+    """CCR-MS-001#finish.existing_ids"""
+    ids: set[str] = set()
+    for raw in _lines(list_path):
+        try:
+            data = json.loads(raw)
+        except ValueError:
+            continue
+        if isinstance(data, dict) and data.get("id"):
+            ids.add(str(data["id"]))
+    return ids
+
+
 def append_lines(path: Path, lines: list[str]) -> None:
+    """CCR-MS-001#finish.append_lines"""
     if not lines:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -149,7 +178,7 @@ class Git:
         return done.stdout
 
     def fresh_main(self) -> None:
-        """`main` 최신 판을 얕게 받는다. 되풀이할 때는 받은 것을 최신 판으로 맞춘다."""
+        """CCR-MS-001#Git.fresh_main"""
         if (self.workdir / ".git").is_dir():
             self._run(["fetch", "--depth=1", "--no-tags", "origin", "main"], auth=True)
             self._run(["reset", "--hard", "FETCH_HEAD"])
@@ -165,8 +194,9 @@ class Git:
         )
 
     def commit_and_push(self, message: str) -> None:
-        # 첫 실행에는 처리 이력 파일이 아직 없을 수 있다. 있는 경로만 스테이징한다
-        paths = [path for path in (HISTORY, RUNS) if (self.workdir / path).exists()]
+        """CCR-MS-001#Git.commit_and_push"""
+        # 첫 실행에는 목록 파일과 처리 이력 파일이 아직 없을 수 있다. 있는 경로만 스테이징한다
+        paths = [path for path in (LIST, HISTORY, RUNS) if (self.workdir / path).exists()]
         self._run(["add", "--", *paths])
         self._run(["-c", f"user.name={BOT_NAME}", "-c", f"user.email={BOT_EMAIL}", "commit", "--quiet", "-m", message])
         self._run(["push", "origin", "HEAD:refs/heads/main"], auth=True)
@@ -178,7 +208,21 @@ class Outcome:
     note: str
 
 
+def _list_lines(list_path: Path, additions: Additions) -> list[str]:
+    known = existing_ids(list_path)
+    lines: list[str] = []
+    for raw in additions.listed:
+        entry_id = json.loads(raw).get("id")
+        if entry_id in known:
+            print(f"목록에 이미 있는 식별자라 건너뛴다: {entry_id}")
+            continue
+        known.add(entry_id)
+        lines.append(raw)
+    return lines
+
+
 def finish(env: Mapping[str, str], git: Git) -> Outcome:
+    """CCR-MS-001#finish.finish"""
     run_id = env["RUN_ID"]
     base_date = base_date_of(env.get("RUN_STARTED_AT"))
     kind = "schedule" if env.get("GITHUB_EVENT_NAME") == "schedule" else "manual"
@@ -195,10 +239,13 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
             git.fresh_main()
             runs_path = git.workdir / RUNS
             history_path = git.workdir / HISTORY
+            list_path = git.workdir / LIST
             if has_run(runs_path, run_id):
                 # 앞선 push가 응답만 끊기고 실제로 들어갔다
                 note = "앞선 올리기가 이미 들어가 있다" if pushed_before else "이 실행의 줄이 이미 있다"
                 return Outcome(1 if failed else 0, note)
+            list_lines = _list_lines(list_path, additions)
+            append_lines(list_path, list_lines)
             append_lines(history_path, additions.history)
             keep_count = count_keep(history_path)
             if additions.run is not None:
@@ -208,8 +255,11 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
                 run_line = {"run_id": run_id, "base_date": base_date, "kind": kind, "result": "aborted", "keep_count": keep_count}
             append_lines(runs_path, [json.dumps(run_line, ensure_ascii=False, separators=(",", ":"))])
             message = f"실행 기록 {run_line.get('base_date', base_date)} · {run_id} · {run_line.get('result')}"
-            print(f"올리는 추가분: 처리 이력 {len(additions.history)}줄 · 실행 요약 1줄(남김 기록 {keep_count})")
-            for raw in additions.history:
+            print(
+                f"올리는 추가분: 목록 {len(list_lines)}줄 · 처리 이력 {len(additions.history)}줄 · "
+                f"실행 요약 1줄(남김 기록 {keep_count})"
+            )
+            for raw in [*list_lines, *additions.history]:
                 print(f"  {raw}")
             print(f"  {json.dumps(run_line, ensure_ascii=False)}")
             pushed_before = True
@@ -222,6 +272,7 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
 
 
 def main() -> int:
+    """CCR-MS-001#finish.main"""
     env = os.environ
     for name in ("RUN_ID", "APPEND_DIR", "RUNNER_TEMP", "GITHUB_REPOSITORY"):
         if not env.get(name):
