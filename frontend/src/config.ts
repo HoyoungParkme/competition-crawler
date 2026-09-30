@@ -1,8 +1,15 @@
-/** 저장소 · 브랜치 · 데이터 파일 경로 · raw와 Contents API 주소. 비밀값은 없다(CCR-INFRA-001 4.1). */
+/** 저장소 · 브랜치 · 데이터 파일 경로 · raw와 Contents API 주소, 상태 커밋의 작성자. 비밀값은 없다(CCR-INFRA-001 4.1). */
 
 export const OWNER = 'HoyoungParkme'
 export const REPO = 'competition-crawler'
 export const BRANCH = 'main'
+
+/** 상태 커밋의 작성자와 커미터. 저장소 주인의 noreply 주소다. 빼면 GitHub가 토큰 주인 계정의 기본
+ * 이메일을 공개 커밋에 적는다(CCR-INFRA-001 8.11 · CCR-API-001 1.4). */
+export const COMMIT_AUTHOR = {
+  name: 'Hoyoung Park',
+  email: '144880634+HoyoungParkme@users.noreply.github.com',
+} as const
 export const LIST_PATH = 'data/competitions.jsonl'
 export const STATUS_PATH = 'data/status.json'
 
