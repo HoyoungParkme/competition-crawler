@@ -16,7 +16,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 
 **확인하는 법.** 배치는 `batch/`에서 `uv run pytest`(네트워크를 쓰지 않는다) · `uv run ruff check .` · `uv run ruff format --check .`. 실제 소스에 수집만 해 보려면 `uv run python -m collector collect --show`. 판별까지는 미리보기(`python -m collector`, 로컬은 늘 미리보기)로 본다. 페이지는 `frontend/`에서 `npm test`(vitest, 순수 모듈만) · `npm run build`. 명세와 코드의 대조는 싱크독 `tools/check_code.py`(MS 시그니처 · docstring ID)와 `tools/check_ui.py`(`data-el` 번호)로 한다(DEV-14).
 
-**아직 하지 않은 것.** Kaggle 실측(토큰이 없다), 페이지에서 상태를 바꿔 저장하는 실물 확인(토큰이 필요하다), 노션 설정 지우기(4장). D1 · D2 · D3은 2026-09-30에 병합했고, 같은 날 예약 실행이 처음으로 목록 파일을 만들었다.
+**아직 하지 않은 것.** Kaggle 실측(토큰이 없다), 페이지에서 상태를 바꿔 저장하는 실물 확인(토큰이 필요하다). D1 · D2 · D3은 2026-09-30에 병합했고, 같은 날 예약 실행이 처음으로 목록 파일을 만들었다. 노션 환경 둘과 시크릿도 같은 날 지웠다(4장).
 
 ## 1. 슬라이스
 
@@ -142,13 +142,13 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 항목 | 내용 |
 |---|---|
 | 근거 | [[CCR-INFRA-001#C12]] · [[CCR-INFRA-001#C14]] · [[CCR-INFRA-001]] 5.1 · 5.6 · 5.8 · 8.1 · 8.10 · 8.11 |
-| 구현 | `.github/workflows/pages.yml`(`frontend/**` push와 수동 실행 · `pages: write` · `id-token: write` · `contents: read` · Node 24 · `npm ci` · `npm run build` · `configure-pages` → `upload-pages-artifact(frontend/dist)` → `deploy-pages` · 액션 SHA 고정) · `daily.yml`에서 환경(`environment:`)을 빼고 마무리 스텝 조건을 `if: always() && github.ref == 'refs/heads/main' && env.DRY_RUN == 'false'`로, 시크릿은 `OPENAI_API_KEY` · `KAGGLE_API_TOKEN`만 · `dependabot.yml`에 npm · `README.md`(페이지 토큰 만드는 법 · Pages 켜기 · 시크릿 둘). 저장소 설정은 사용자가 한다: Pages 배포 소스를 GitHub Actions로, 환경 `notion-write` · `notion-read`와 시크릿 `NOTION_DATA_SOURCE_ID` 삭제(4장) |
+| 구현 | `.github/workflows/pages.yml`(`frontend/**` push와 수동 실행 · `pages: write` · `id-token: write` · `contents: read` · Node 24 · `npm ci` · `npm run build` · `configure-pages` → `upload-pages-artifact(frontend/dist)` → `deploy-pages` · 액션 SHA 고정) · `daily.yml`에서 환경(`environment:`)을 빼고 마무리 스텝 조건을 `if: always() && github.ref == 'refs/heads/main' && env.DRY_RUN == 'false'`로, 시크릿은 `OPENAI_API_KEY` · `KAGGLE_API_TOKEN`만 · `dependabot.yml`에 npm · `README.md`(페이지 토큰 만드는 법 · Pages 켜기 · 시크릿 둘). 저장소 설정: Pages 배포 소스를 GitHub Actions로 켜기, 환경 `notion-write` · `notion-read`와 시크릿 `NOTION_DATA_SOURCE_ID` 지우기 |
 | 구현 함수 | 없음 |
 | API | 없음 |
 | 화면 | 없음 |
 | 테스트 | actionlint · YAML 구문 · `pages.yml`이 `frontend/`만 바뀐 push에 돌고 `data/`만 바뀐 커밋에는 돌지 않음(첫 배포 뒤 실측) · 페이지가 `https://hoyoungparkme.github.io/competition-crawler/`에서 열림 · 수동 실행 한 번으로 미리보기 · 실제 실행이 환경 없이 돎. 결과(2026-09-30): actionlint 1.7.12로 `pages.yml` 0건, `daily.yml`은 C 때부터 알던 `concurrency.queue` 한 건. `git archive`로 꺼낸 깨끗한 `frontend/`에서 Node 24 · `npm ci` · `npm run build` 통과(자산 경로 `/competition-crawler/assets/…`). 병합 커밋이 돌린 첫 배포(실행 36660069757)가 모든 스텝 성공, 주소가 200을 내고 목록 49건을 그린다. 병합 뒤 `main`의 미리보기(실행 36660197145)가 환경 없이 성공했다 — 마무리 스텝은 건너뛰었고 노션 환경의 배포 기록이 새로 생기지 않았다. 후보 332건 · 묶음 264개가 모두 아는 대회라 판별 0건, 46.2초. `data/`만 바뀐 커밋에 `pages.yml`이 돌지 않는지와 환경 없는 실제 실행은 다음 예약 실행(2026-10-01)에서 본다 |
 | 선행 | D2 |
-| 완료 | [#9](https://github.com/HoyoungParkme/competition-crawler/pull/9)(`code/d3-pages` → `main`) · 병합 `2b820b6` · 2026-09-30. 커밋 4개(3장). Pages는 병합 전에 API로 켰다(소스 GitHub Actions). GitHub가 만든 배포 환경 `github-pages`는 `main`에서만 배포를 받는다. `pages.yml`의 잡은 이 환경으로 배포한다(deploy-pages의 요구. [[CCR-INFRA-001]] 8.11에는 적혀 있지 않다, 4장). 잡 시간 한도 10분을 더했다. 노션 환경 둘과 시크릿 `NOTION_DATA_SOURCE_ID`는 아직 남아 있다(4장) |
+| 완료 | [#9](https://github.com/HoyoungParkme/competition-crawler/pull/9)(`code/d3-pages` → `main`) · 병합 `2b820b6` · 2026-09-30. 커밋 4개(3장). Pages는 병합 전에 API로 켰다(소스 GitHub Actions). GitHub가 만든 배포 환경 `github-pages`는 `main`에서만 배포를 받는다. `pages.yml`의 잡은 이 환경으로 배포한다(deploy-pages의 요구). [[CCR-INFRA-001]] v6이 5.1의 예외와 8.11 표에 적었다. 잡 시간 한도 10분을 더했다. 노션 환경 둘과 시크릿 `NOTION_DATA_SOURCE_ID`는 사용자 결정으로 2026-09-30에 지웠다. 남은 환경은 `github-pages` 하나, 저장소 시크릿은 `OPENAI_API_KEY` 하나다 |
 
 ## 2. 통합 테스트
 
@@ -212,9 +212,10 @@ D1 ~ D3은 카드마다 브랜치 · PR 하나이고, 커밋은 `code(D1): 함�
 
 ## 4. 미결사항
 
-- [ ] **사용자가 준비할 것.** (1) 페이지 토큰 — GitHub 설정에서 fine-grained 토큰을 이 저장소 하나 · Contents 읽기·쓰기만 · 만료 기한을 두고 만들어, 배포된 페이지의 설정(UI-2)에 넣는다. 저장소에는 넣지 않는다([[CCR-INFRA-001]] 5.8). (2) 저장소 설정 — Pages는 2026-09-30에 켰다(소스 GitHub Actions). 환경 `notion-write` · `notion-read`(둘 다 시크릿 없음)와 저장소 시크릿 `NOTION_DATA_SOURCE_ID`를 지운다. D3 뒤로는 어느 워크플로도 읽지 않는다. (3) 실패 알림(GitHub 알림 설정). (4) `KAGGLE_API_TOKEN`은 선택
+2026-09-30에 세 가지를 마무리했다. 토큰 검증이 쓰기 권한까지 보지 못하는 것은 사용자 결정대로 명세를 코드에 맞췄다([[CCR-UC-001]] v9 · [[CCR-UI-001]] v2 · [[CCR-API-001]] v4 · [[CCR-DOM-002]] v6 · [[CCR-SEQ-001]] v4). `github-pages` 환경은 [[CCR-INFRA-001]] v6의 5.1과 8.11에 적었다. 노션 환경 둘과 시크릿은 지웠다(D3).
+
+- [ ] **사용자가 준비할 것.** (1) 페이지 토큰 — GitHub 설정에서 fine-grained 토큰을 이 저장소 하나 · Contents 읽기·쓰기만 · 만료 기한을 두고 만들어, 배포된 페이지의 설정(UI-2)에 넣는다. 저장소에는 넣지 않는다([[CCR-INFRA-001]] 5.8). (2) 실패 알림(GitHub 알림 설정). (3) `KAGGLE_API_TOKEN`은 선택
 - [ ] **실물 확인 차례.** 여기까지 했다(2026-09-30): D1 · D2 병합 → 그날 예약 실행(실행 36659861590, 08:50 예약이 11:26 KST에 시작)이 D1 · D2의 코드로 실제 적재 — 결과 성공, 목록 49건 · 버림 215 · 판별 실패 0 · 남김 기록 67, 144.1초. 세 파일이 커밋 `8c15cfa` 하나로 올라왔다 → D3 병합과 Pages 첫 배포 → 페이지에 목록 49건이 보인다 → 미리보기에서 그날 후보가 모두 아는 대회. 남은 것: 페이지에서 상태를 바꾸면 `data/status.json` 커밋이 생김(토큰이 필요하다) → 다음 실행이 지운 대회를 다시 넣지 않음 → `data/`만 바뀐 커밋에 `pages.yml`이 돌지 않음. raw 캐시의 `?t=`가 CDN까지 피하는지도 이때 본다([[CCR-INFRA-001]] 9장)
-- [ ] **토큰 검증이 쓰기 권한까지 보지 못한다.** 저장소가 공개라 fine-grained 토큰은 쓰기 권한이 없어도 상태 파일을 읽을 수 있다. 판 읽기로 하는 검증([[CCR-UC-001#UC-H2]] 4 · [[CCR-SEQ-001#SEQ-12]])은 토큰이 유효한지까지만 가르고, 쓰기 권한이 모자란 토큰은 첫 저장에서 저장 실패(12)로 드러난다. D2는 그대로 구현했다. UC-H2 4의 「읽히면 쓸 수 있는 토큰으로 본다」를 고칠지 사용자가 정한다
-- [ ] **`github-pages` 환경을 명세에 적을지.** [[CCR-INFRA-001]] 5.1은 「환경을 두지 않는다」고, 8.11은 배포 잡의 권한 · 스텝만 적었다. D3은 deploy-pages가 요구하는 대로 잡을 `github-pages` 환경에 두었다. 시크릿이 없고 Pages가 만든 환경이라 5.1의 뜻(시크릿을 환경에 나누지 않는다)과는 부딪히지 않는다. 8.11 표에 한 줄 더할지 사용자가 정한다
+- [ ] **D2 페이지 코드와 [[CCR-DOM-002]]가 다른 곳.** 사용자가 보는 동작은 같다. 다른 것은 이름과 값의 모양, 그리고 한쪽에만 있는 작은 것들이다. (1) `Change` — 명세는 `id · title · status? · hidden?`, 코드는 `kind · id · title · value? · before · at`이다. 되돌릴 값과 바꾼 시각을 함께 든다. (2) `SaveState.error` — 명세는 `{status, message}`, 코드는 `SaveError`(`status: number | null` · `rateLimited` · `change`)이고 알림 문구는 `saveFailureText`가 만든다. (3) `Filters` — 명세는 `'all'` · `showHidden`, 코드는 `''` · `showAll`이고 `components/FilterBar.tsx`에 있다. (4) 상태 표시 이름의 상수 — 명세는 `STATUS_LABELS`, 코드는 `STATUS_LABEL`. (5) `StatusStore.load(file)` — raw로 읽은 상태 파일을 화면의 기준으로 두는 공개 메서드가 명세에 없다. (6) 응답의 `content.sha` — 명세([[CCR-DOM-002]] 4.11 · [[CCR-API-001]] 2.3과 PUT 절)는 기억한다고 적었지만, 코드는 커밋마다 판 읽기부터 하므로 기억하지 않는다. (7) `tokenProblem`의 404 문구 — 판 읽기가 404를 파일 없음으로 받으므로 닿지 않는다. (8) `sortByDeadline`의 `today` 인자 — 코드는 쓰지 않는다(`_today`). 다음 DOM-002 개정에서 명세를 코드에 맞출지, fix 이슈로 코드를 고칠지 사용자가 정한다
 - [ ] **Kaggle 실측.** 토큰이 생기면 [[CCR-API-001]] 5장대로 실측하고 `kaggle.py`와 테스트를 맞춘다
 - [ ] **예약 실행.** 2026-09-28 · 09-29의 예약 실행은 생겼다(각각 11:00 · 11:46 KST로 두세 시간 늦게, GitHub의 지연). 둘 다 실패인데 노션 설정이 없어 설정 누락으로 끝난 것이다. 2026-09-30의 예약 실행은 11:26 KST에 시작해 D1 · D2의 코드로 성공했다(위 실물 확인). 이때까지는 워크플로가 `notion-write` 환경을 가리켰고, 환경 없는 첫 예약 실행은 2026-10-01이다. 지연은 [[CCR-INFRA-001]] 8.4의 받아들인 한계다
