@@ -1,6 +1,6 @@
 # competition-crawler
 
-AI·개발 대회를 매일 아침 여섯 곳에서 모아, 접수 중이고 관심 분야인 새 대회만 목록 파일에 더하는 배치입니다. 목록은 이 저장소의 GitHub Pages 페이지에서 봅니다.
+AI·개발 대회를 매일 아침 여섯 곳에서 모아, 접수 중이고 관심 분야인 새 대회만 목록 파일에 더하는 배치입니다. 목록은 이 저장소의 GitHub Pages 페이지(https://hoyoungparkme.github.io/competition-crawler/)에서 봅니다.
 
 - 소스: event-us · DACON · Kaggle · wevity · AI팩토리 · 콘테스트코리아
 - 매일 08:50 KST에 GitHub Actions가 돌립니다. 서버·DB가 없습니다.
@@ -17,7 +17,7 @@ data/              competitions.jsonl(목록) · processed.jsonl(처리 이력) 
                    status.json(진행 상태 · 지움)은 페이지만 쓴다
 frontend/          대회 목록 페이지(React + Vite + TypeScript). src/ · tests/(vitest)
 docs/specs/        명세 원본
-.github/           workflows/daily.yml · dependabot.yml
+.github/           workflows/daily.yml(배치) · workflows/pages.yml(페이지 배포) · dependabot.yml
 .env.example       로컬 실행에 필요한 환경 변수의 이름
 ```
 
@@ -25,7 +25,13 @@ docs/specs/        명세 원본
 
 ### 1. GitHub 설정
 
-**저장소 시크릿.** 환경(environment)은 두지 않습니다. 반드시 있어야 하는 시크릿은 없습니다.
+**GitHub Pages.** Settings → Pages → Build and deployment → Source를 **GitHub Actions**로 둡니다. `gh-pages` 브랜치는 만들지 않습니다. 켜면 GitHub가 배포 환경 `github-pages`를 만들고, `pages.yml`만 그 환경을 씁니다. 명령 줄로는 이렇게 켭니다.
+
+```bash
+gh api -X POST repos/HoyoungParkme/competition-crawler/pages -f build_type=workflow
+```
+
+**저장소 시크릿.** 시크릿을 담는 환경(environment)은 두지 않습니다. 반드시 있어야 하는 시크릿은 없습니다. 노션을 쓰던 때의 환경 `notion-write` · `notion-read`와 시크릿 `NOTION_DATA_SOURCE_ID`는 더 쓰지 않으니 지웁니다.
 
 | 이름 | 값 | 없으면 |
 |---|---|---|
@@ -48,6 +54,7 @@ docs/specs/        명세 원본
 ## 운영
 
 - **매일 08:50 KST**에 자동으로 돕니다. 목록 파일에 새 줄이 들어오고 `data/`에 `github-actions[bot]`의 커밋이 하나 생깁니다. 페이지는 그 파일을 읽어 보여 줍니다.
+- **페이지 배포**: `frontend/`가 바뀐 커밋이 `main`에 들어오면 `pages.yml`이 빌드해 올립니다. `data/`만 바뀐 커밋에는 돌지 않습니다. 다시 올리려면 Actions → pages → Run workflow를 누릅니다. 배포가 실패해도 앞선 배포가 그대로 보입니다.
 - **미리보기**: Actions → daily → Run workflow에서 `dry_run`을 켭니다. 목록과 상태 파일에 아무것도 쓰지 않고, 무엇이 들어갔을지를 로그에 남깁니다. `main`이 아닌 브랜치에서 누르면 늘 미리보기입니다.
 - **판별 기준을 바꿀 때**: 미리보기에 `ignore_discards`를 켜면 처리 이력의 버림 기록을 없는 것으로 보고 판별합니다. 기준을 바꾼 뒤 `data/processed.jsonl`에서 결과가 `discard`인 줄만 지우고 커밋합니다. `keep` 줄은 지우지 않습니다. 남김 줄이 줄면 다음 실행이 판별 전에 멈춥니다(처리 이력 감소).
 - **실패한 날**: Actions 로그와 `data/runs.jsonl`의 마지막 줄을 봅니다. 결과(`result`)와 실패 사유(`failure_reason`), 경고(`warnings`)가 있습니다. 원인을 고친 뒤 **새 수동 실행**으로 다시 돌립니다. Re-run은 워크플로 정의를 고친 뒤에는 멈춥니다.

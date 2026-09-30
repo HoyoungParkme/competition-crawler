@@ -1,4 +1,4 @@
-# 매일 08:50 KST에 대회를 모아 노션 대회목록에 넣는다. 근거: CCR-INFRA-001 8장
+# 매일 08:50 KST에 대회를 모아 목록 파일(data/competitions.jsonl)에 더한다. 근거: CCR-INFRA-001 8장
 name: daily
 
 on:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: '노션에 쓰지 않는다(미리보기). 기본 브랜치가 아니면 늘 미리보기다'
+        description: '목록에 쓰지 않는다(미리보기). 기본 브랜치가 아니면 늘 미리보기다'
         type: boolean
         default: false
       ignore_discards:
@@ -28,8 +28,7 @@ jobs:
   batch:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # 노션에 쓰는 실행만 쓰기 연결의 토큰을 받는다. 쓰기 여부와 같은 조건이다(CCR-INFRA-001 5.1)
-    environment: ${{ (github.ref == 'refs/heads/main' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)) && 'notion-write' || 'notion-read' }}
+    # 환경(environment)은 두지 않는다. main에 쓰는 것은 아래 마무리 스텝의 조건이 지킨다(CCR-INFRA-001 5.1)
     env:
       DRY_RUN: ${{ github.ref != 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     steps:
@@ -72,8 +71,6 @@ jobs:
         working-directory: batch
         timeout-minutes: 8
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATA_SOURCE_ID: ${{ secrets.NOTION_DATA_SOURCE_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
