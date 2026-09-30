@@ -16,7 +16,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 
 **확인하는 법.** 배치는 `batch/`에서 `uv run pytest`(네트워크를 쓰지 않는다) · `uv run ruff check .` · `uv run ruff format --check .`. 실제 소스에 수집만 해 보려면 `uv run python -m collector collect --show`. 판별까지는 미리보기(`python -m collector`, 로컬은 늘 미리보기)로 본다. 페이지는 `frontend/`에서 `npm test`(vitest, 순수 모듈만) · `npm run build`. 명세와 코드의 대조는 싱크독 `tools/check_code.py`(MS 시그니처 · docstring ID)와 `tools/check_ui.py`(`data-el` 번호)로 한다(DEV-14).
 
-**아직 하지 않은 것.** D2 · D3, Kaggle 실측(토큰이 없다), 실물로 한 번 돌려 보는 일(4장). D1은 2026-09-30에 병합했다.
+**아직 하지 않은 것.** D3, Kaggle 실측(토큰이 없다), 실물로 한 번 돌려 보는 일(4장). D1 · D2는 2026-09-30에 병합했다.
 
 ## 1. 슬라이스
 
@@ -133,9 +133,9 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 구현 함수 | MS 밖(TypeScript). 모듈과 시그니처는 [[CCR-DOM-002#CompetitionList]] · [[CCR-DOM-002#SettingsDialog]] · [[CCR-DOM-002#StatusStore]] · [[CCR-DOM-002#RepoFiles]] · [[CCR-DOM-002#TokenStore]] |
 | API | [[CCR-API-001#GET/raw.githubusercontent.com/…/data/{file}]] · [[CCR-API-001#GET/api.github.com/…/contents/data/status.json]] · [[CCR-API-001#PUT/api.github.com/…/contents/data/status.json]] |
 | 화면 | [[CCR-UI-001#UI-1]] 대회 목록 · [[CCR-UI-001#UI-2]] 설정 대화상자 |
-| 테스트 | `frontend/tests/`(vitest, 브라우저 없음) — `parseListFile`(깨진 줄 건너뜀 · 겹친 식별자는 앞의 것) · `parseStatusFile`(객체 아님 · 모양이 다른 값) · `sortByDeadline`(오름차순 · `null`은 맨 뒤 · 같은 날은 대회명) · `isExpired` · `mergeChange`(그 대회만 · 되살리기는 `hidden=false`) · `commitMessage`(세 꼴 · 60자) · `encodeStatusFile` · `decodeContent`(줄바꿈 섞인 Base64) · `tokenProblem`. `npm run build` 통과. 싱크독 `check_ui.py`로 `data-el` 번호와 요소 표 대조. 화면은 사용자가 브라우저에서 요소 번호대로 눌러 확인한다(DEV-14). 실측은 D3 배포 뒤(4장) |
+| 테스트 | `frontend/tests/`(vitest, 브라우저 없음) — `parseListFile`(깨진 줄 건너뜀 · 겹친 식별자는 앞의 것) · `parseStatusFile`(객체 아님 · 모양이 다른 값) · `sortByDeadline`(오름차순 · `null`은 맨 뒤 · 같은 날은 대회명) · `isExpired` · `mergeChange`(그 대회만 · 되살리기는 `hidden=false`) · `commitMessage`(세 꼴 · 60자) · `encodeStatusFile` · `decodeContent`(줄바꿈 섞인 Base64) · `tokenProblem`. `npm run build` 통과. 싱크독 `check_ui.py`로 `data-el` 번호와 요소 표 대조. 화면은 사용자가 브라우저에서 요소 번호대로 눌러 확인한다(DEV-14). 실측은 D3 배포 뒤(4장). 결과(2026-09-30): vitest 22 통과(위 관점에 `StatusStore`의 큐 · 판 어긋남에 한 번 다시 · 두 번째 어긋남은 포기 · 되돌리기와 다시 시도, `kstToday` · `dueLabel` · `saveFailureText`를 더했다). `npm run build` · `npm run lint`(eslint · prettier) 0건. `check_ui.py` UI-1 요소 27 · 일치 27, UI-2 요소 9 · 일치 9, 불일치 0(셀렉트 · 입력 칸에 배지가 안 그려진다는 알림 둘). 로컬 `npm run dev`에서 raw 응답을 가짜 파일로 바꿔 마감일 순 · 마감일 없음 맨 뒤 · 7일 안 강조 · 상태 색 · 토큰 없이 바꾸면 토큰 없음(11)과 값 유지 · 접힌 구역과 되살리기(9.1) · 설정 대화상자와 Esc를 봤다. TypeScript는 6.0에 묶었다(typescript-eslint가 6.1 미만을 요구한다) |
 | 선행 | D1(목록 파일의 형식은 ERD가 정하므로 코드 의존은 없다. D1이 먼저 병합돼야 실측할 파일이 생긴다) |
-| 완료 | (미정) — 브랜치 `code/d2-frontend`, PR 하나 |
+| 완료 | [#8](https://github.com/HoyoungParkme/competition-crawler/pull/8)(`code/d2-frontend` → `main`) · 병합 `bbd2d23` · 2026-09-30. 커밋 9개(3장). 요소 번호대로 눌러 보기와 실제 쓰기는 D3 배포 뒤(4장) |
 
 #### D3 배포와 저장소 설정
 
@@ -192,14 +192,24 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | `da8fda3` | D1 | 공개 함수 전부 — docstring 첫 줄에 `CCR-MS-001` 항목 ID, 따옴표 반환 주석 제거(#5) |
 | `b52d9c8` | D1 | ruff 도입 — line-length 100 · E F I UP B, format과 check 통과(#6) |
 | `1a2b725` | D1 | `AGENTS.md` · `README.md` — 노션 문구를 목록 파일과 페이지로, 코드 규약 절 |
+| `972ca00` | D2 | frontend 틀 — Vite · React · TypeScript, 설정 상수, 두 개념의 타입, 공통 틀 토큰 |
+| `54670a3` | D2 | `readListFile` — raw 읽기와 두 파일의 파싱(깨진 줄 건너뜀 · 겹친 식별자는 앞의 것) |
+| `c425b68` | D2 | `writeStatusFile` — Contents API 판 읽기 · 쓰기, 상태 파일 인코딩 |
+| `bbe6790` | D2 | `TokenStore` — localStorage의 페이지 토큰 |
+| `44fb8d1` | D2 | `StatusStore` — 화면 먼저, 요청 하나씩, 판 어긋남에 한 번 다시, 실패면 되돌림 |
+| `14dfd45` | D2 | `CompetitionTable` — 목록 표 · 접힌 구역 · 거르기 줄 · 알림 |
+| `71da19a` | D2 | `SettingsDialog` — UI-2, 판 읽기로 검증한 뒤 토큰 저장 |
+| `19c31c4` | D2 | `CompetitionList` — UI-1, 두 파일을 Row로 합쳐 마감일 순으로 |
+| `1346169` | D2 | `README.md` — 페이지 로컬 실행 |
 
 PR은 둘이다. [#1](https://github.com/HoyoungParkme/competition-crawler/pull/1)(`feat/batch` → `main`)은 A ~ C와 검증 반영을, [#2](https://github.com/HoyoungParkme/competition-crawler/pull/2)(`fix/matching-wevity` → `main`)는 fix(#3) · fix(#4)를 담았다. 위 커밋 해시를 그대로 남기려고 둘 다 병합 커밋으로 합쳤다. 이 둘은 규약 DEV-13 · DEV-15보다 앞서 만든 것이라 커밋 메시지의 꼴이 다르다. 이력은 고치지 않는다.
 
-D1 ~ D3은 카드마다 브랜치 · PR 하나이고, 커밋은 `code(D1): 함수 — 요약` 꼴로 함수 하나에 하나다. [#7](https://github.com/HoyoungParkme/competition-crawler/pull/7)(`code/d1-list` → `main`, 병합 커밋 `d791197`, 2026-09-30)이 D1이고 이슈 #5 · #6을 닫았다. D2 · D3의 PR 번호와 커밋은 병합 뒤 이 표에 적는다.
+D1 ~ D3은 카드마다 브랜치 · PR 하나이고, 커밋은 `code(D1): 함수 — 요약` 꼴로 함수 하나에 하나다. [#7](https://github.com/HoyoungParkme/competition-crawler/pull/7)(`code/d1-list` → `main`, 병합 커밋 `d791197`, 2026-09-30)이 D1이고 이슈 #5 · #6을 닫았다. [#8](https://github.com/HoyoungParkme/competition-crawler/pull/8)(`code/d2-frontend` → `main`, 병합 커밋 `bbd2d23`, 2026-09-30)이 D2다. 페이지 코드는 MS 밖(TypeScript)이라 커밋을 함수가 아니라 모듈 하나에 하나로 나눴다. D3의 PR 번호와 커밋은 병합 뒤 이 표에 적는다.
 
 ## 4. 미결사항
 
 - [ ] **사용자가 준비할 것.** (1) 페이지 토큰 — GitHub 설정에서 fine-grained 토큰을 이 저장소 하나 · Contents 읽기·쓰기만 · 만료 기한을 두고 만들어, 배포된 페이지의 설정(UI-2)에 넣는다. 저장소에는 넣지 않는다([[CCR-INFRA-001]] 5.8). (2) 저장소 설정 — Pages 배포 소스를 GitHub Actions로(D3 뒤), 환경 `notion-write` · `notion-read`와 시크릿 `NOTION_DATA_SOURCE_ID`를 지운다(2026-09-30 현재 둘 다 남아 있다). (3) 실패 알림(GitHub 알림 설정). (4) `KAGGLE_API_TOKEN`은 선택
-- [ ] **실물 확인 차례.** D1 병합(2026-09-30에 했다) → `main`에서 미리보기(`dry_run`) 한 번(목록 파일 읽기 · 판별) → 수동 실행 한 번 → `data/competitions.jsonl` · `processed.jsonl` · `runs.jsonl`이 한 커밋으로 올라옴 → D2 · D3 병합과 Pages 배포 → 페이지에서 목록이 보이고 상태를 바꾸면 `data/status.json` 커밋이 생김 → 다음 실행이 지운 대회를 다시 넣지 않음. raw 캐시의 `?t=`가 CDN까지 피하는지도 이때 본다([[CCR-INFRA-001]] 9장)
+- [ ] **실물 확인 차례.** D1 병합(2026-09-30에 했다) → `main`에서 미리보기(`dry_run`) 한 번(목록 파일 읽기 · 판별) → 수동 실행 한 번 → `data/competitions.jsonl` · `processed.jsonl` · `runs.jsonl`이 한 커밋으로 올라옴 → D2 병합(2026-09-30에 했다) · D3 병합과 Pages 배포 → 페이지에서 목록이 보이고 상태를 바꾸면 `data/status.json` 커밋이 생김 → 다음 실행이 지운 대회를 다시 넣지 않음. raw 캐시의 `?t=`가 CDN까지 피하는지도 이때 본다([[CCR-INFRA-001]] 9장)
+- [ ] **토큰 검증이 쓰기 권한까지 보지 못한다.** 저장소가 공개라 fine-grained 토큰은 쓰기 권한이 없어도 상태 파일을 읽을 수 있다. 판 읽기로 하는 검증([[CCR-UC-001#UC-H2]] 4 · [[CCR-SEQ-001#SEQ-12]])은 토큰이 유효한지까지만 가르고, 쓰기 권한이 모자란 토큰은 첫 저장에서 저장 실패(12)로 드러난다. D2는 그대로 구현했다. UC-H2 4의 「읽히면 쓸 수 있는 토큰으로 본다」를 고칠지 사용자가 정한다
 - [ ] **Kaggle 실측.** 토큰이 생기면 [[CCR-API-001]] 5장대로 실측하고 `kaggle.py`와 테스트를 맞춘다
 - [ ] **예약 실행.** 2026-09-28 · 09-29의 예약 실행은 생겼다(각각 11:00 · 11:46 KST로 두세 시간 늦게, GitHub의 지연). 둘 다 실패인데 노션 설정이 없어 설정 누락으로 끝난 것이라 D1 뒤에는 사라진다. D1을 병합한 `main`의 다음 예약 실행(2026-10-01 08:50 KST)은 노션 없이 실제로 돌아 목록 파일을 만들 수 있다. 워크플로가 아직 `notion-write` 환경을 가리키지만 배치는 그 값을 쓰지 않는다. 미리보기를 먼저 보려면 그 전에 수동으로 `dry_run`을 누른다. 지연은 [[CCR-INFRA-001]] 8.4의 받아들인 한계다
