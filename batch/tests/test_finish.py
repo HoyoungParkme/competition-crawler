@@ -162,10 +162,10 @@ def test_first_run_on_an_empty_repository(tmp_path: Path) -> None:
     git(seed, "push", "origin", "HEAD:main")
     env = env_for(tmp_path)
     (Path(env["APPEND_DIR"]) / "runs.jsonl").write_text(
-        json.dumps({"run_id": "9-1", "base_date": "2026-09-27", "kind": "manual", "result": "failure", "failure_reason": "missing_config"}) + "\n",
+        json.dumps({"run_id": "9-1", "base_date": "2026-09-27", "kind": "manual", "result": "failure", "failure_reason": "all_sources_failed"}) + "\n",
         encoding="utf-8",
     )
     outcome = finish.finish(env, finish.Git(tmp_path / "work", str(remote), None))
     assert outcome.code == 0
     runs = main_file(remote, tmp_path, "runs.jsonl")
-    assert runs[0]["keep_count"] == 0 and runs[0]["failure_reason"] == "missing_config"
+    assert runs[0]["keep_count"] == 0 and runs[0]["failure_reason"] == "all_sources_failed"

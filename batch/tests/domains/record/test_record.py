@@ -110,7 +110,7 @@ def test_run_line_shape(tmp_path: Path) -> None:
     assert data["warnings"] == [{"kind": "judge_deferred", "cause": "missing_key"}]
     assert set(data) == {
         "run_id", "base_date", "kind", "result", "failure_reason", "keep_count", "sources", "dropped",
-        "loaded", "judge_failed", "deferred", "create_failed", "warnings", "duration_s",
+        "loaded", "judge_failed", "deferred", "warnings", "duration_s",
     }
 
 
@@ -167,6 +167,7 @@ def test_export_main_state_reads_origin_main(tmp_path: Path) -> None:
     git(tmp_path, "clone", str(origin), str(work))
     (work / "data").mkdir()
     (work / "data" / "processed.jsonl").write_text(keep_line("1") + "\n", encoding="utf-8")
+    (work / "data" / "competitions.jsonl").write_text("{}\n", encoding="utf-8")
     git(work, "add", ".")
     git(work, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-m", "state")
     git(work, "push", "origin", "HEAD:main")
@@ -174,6 +175,7 @@ def test_export_main_state_reads_origin_main(tmp_path: Path) -> None:
     (work / "data" / "processed.jsonl").write_text("", encoding="utf-8")
     dest = export_main_state(work, tmp_path / "exported")
     assert (dest / "processed.jsonl").read_text(encoding="utf-8").strip() == keep_line("1")
+    assert (dest / "competitions.jsonl").read_text(encoding="utf-8") == "{}\n"  # 목록 파일도 꺼낸다
     assert not (dest / "runs.jsonl").exists()
 
 

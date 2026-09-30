@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class State:
-    """실행을 시작할 때 읽은 두 파일."""
+    """실행을 시작할 때 읽은 기록 파일 둘."""
 
     history: list[HistoryRecord] = field(default_factory=list)
     history_exists: bool = False
@@ -57,15 +57,22 @@ class RecordService:
         self._appended: list[dict[str, Any]] = []
 
     def start(self) -> None:
-        """노션에 쓰는 실행이면 추가분 파일을 비워 둔다."""
+        """CCR-MS-001#RecordService.start
+
+        데이터 폴더를 준비하고(기본 브랜치 밖이면 origin/main의 세 파일을 꺼낸다), 목록에 쓰는
+        실행이면 추가분 파일을 비워 둔다. 목록 경계가 읽기 전에 불려야 한다(CCR-DOM-002 5장 결정 5).
+        """
+        self._crud.prepare()
         if self._write:
             self._crud.reset_appends()
 
     def load(self) -> State:
-        """두 파일을 읽는다. 처리 이력을 읽지 못하면 history_error에 사유를 담는다(UC-S4 2b)."""
+        """CCR-MS-001#RecordService.load
+
+        두 파일을 읽는다. 처리 이력을 읽지 못하면 history_error에 사유를 담는다(UC-S4 2b).
+        """
         state = State()
         try:
-            self._crud.prepare()
             history = self._crud.read_history()
             state.runs = self._crud.read_runs()
         except HistoryReadFailed as exc:
@@ -90,7 +97,10 @@ class RecordService:
         return False
 
     def append(self, entries: list[HistoryEntry]) -> None:
-        """처리 이력 추가분에 곧바로 적는다. 노션에 쓰지 않는 실행은 적지 않는다(UC-A1 1b2)."""
+        """CCR-MS-001#RecordService.append
+
+        처리 이력 추가분에 곧바로 적는다. 목록에 쓰지 않는 실행은 적지 않는다(UC-A1 1b2).
+        """
         if not self._write or not entries:
             return
         for entry in entries:
@@ -113,7 +123,10 @@ class RecordService:
         return warnings
 
     def write_run(self, line: RunLine) -> None:
-        """실행 요약 추가분에 이 실행의 한 줄을 쓴다. 노션에 쓰지 않는 실행은 쓰지 않는다(UC-S7 8a)."""
+        """CCR-MS-001#RecordService.write_run
+
+        실행 요약 추가분에 이 실행의 한 줄을 쓴다. 목록에 쓰지 않는 실행은 쓰지 않는다(UC-S7 8a).
+        """
         if not self._write:
             return
         self._crud.write_run_append(line.to_dict())

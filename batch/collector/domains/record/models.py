@@ -1,6 +1,6 @@
 """기록 경계의 값. 도메인 개념 HistoryRecord · Run · Warning(CCR-DOM-001).
 
-두 상태 파일의 한 줄 형식은 ERD(CCR-DOM-003)가 정한다. 마무리 단계(`batch/finish.py`)는
+두 기록 파일의 한 줄 형식은 ERD(CCR-DOM-003)가 정한다. 마무리 단계(`batch/finish.py`)는
 이 모듈을 불러오지 않고 같은 형식을 따로 안다(CCR-INFRA-001 8.2).
 """
 
@@ -26,19 +26,15 @@ class RunResult(StrEnum):
 
 
 class FailureReason(StrEnum):
-    MISSING_CONFIG = "missing_config"
     ALL_SOURCES_FAILED = "all_sources_failed"
-    NOTION_READ_FAILED = "notion_read_failed"
+    LIST_READ_FAILED = "list_read_failed"
     HISTORY_READ_FAILED = "history_read_failed"
     HISTORY_SHRANK = "history_shrank"
-    DUE_TODAY_NOT_LOADED = "due_today_not_loaded"
 
 
 class WarningKind(StrEnum):
     ZERO_COUNT = "zero_count"
     JUDGE_DEFERRED = "judge_deferred"
-    CREATE_ALL_FAILED = "create_all_failed"
-    DUE_TODAY_NOT_LOADED = "due_today_not_loaded"
     SUMMARY_CORRUPT = "summary_corrupt"
 
 
@@ -167,7 +163,6 @@ class RunLine:
     loaded: int = 0
     judge_failed: int = 0
     deferred: int = 0
-    create_failed: int = 0
     warnings: list[RunWarning] = field(default_factory=list)
     duration_s: float = 0.0
 
@@ -188,7 +183,6 @@ class RunLine:
             "loaded": self.loaded,
             "judge_failed": self.judge_failed,
             "deferred": self.deferred,
-            "create_failed": self.create_failed,
             "warnings": [w.to_dict() for w in self.warnings],
             "duration_s": round(self.duration_s, 1),
         }

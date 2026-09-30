@@ -1,6 +1,6 @@
-"""두 상태 파일을 읽고, 이번 실행의 추가분 파일을 쓴다(CCR-INFRA-001 6.2).
+"""두 기록 파일을 읽고, 이번 실행의 추가분 파일을 쓴다(CCR-INFRA-001 6.2).
 
-배치는 작업 트리의 두 파일을 직접 고치지 않는다. 추가분은 작업 트리 밖의 파일에 쌓고, 쓸 때마다
+배치는 작업 트리의 데이터 파일을 직접 고치지 않는다. 추가분은 작업 트리 밖의 파일에 쌓고, 쓸 때마다
 새 이름의 임시 파일에 쓴 뒤 이름을 바꿔 통째로 교체한다. 저장소에 올리는 일은 마무리 단계가 한다.
 """
 
@@ -16,6 +16,7 @@ from typing import Any
 
 from collector.domains.record.models import HistoryRecord
 
+LIST_FILE = "competitions.jsonl"  # 목록 파일. 꺼내기만 하고 읽기는 목록 경계가 한다
 HISTORY_FILE = "processed.jsonl"
 RUNS_FILE = "runs.jsonl"
 
@@ -49,7 +50,9 @@ def _jsonl(lines: list[dict[str, Any]]) -> str:
 
 
 def export_main_state(repo_root: Path, dest: Path) -> Path:
-    """기본 브랜치 최신 판의 두 파일을 `dest`에 꺼낸다. 받지 못하면 HistoryReadFailed.
+    """CCR-MS-001#record.export_main_state
+
+    기본 브랜치 최신 판의 세 파일을 `dest`에 꺼낸다. 받지 못하면 HistoryReadFailed.
 
     기본 브랜치가 아닌 곳이나 Actions 밖에서 도는 실행은 작업 트리의 사본이 아니라 이것을 읽는다
     (CCR-UC-001 UC-A1 1b7 · CCR-INFRA-001 4.1).
@@ -68,7 +71,7 @@ def export_main_state(repo_root: Path, dest: Path) -> Path:
     if fetched.returncode != 0:
         raise HistoryReadFailed(f"origin/main을 받지 못했다: {fetched.stderr.decode(errors='replace').strip()}")
     dest.mkdir(parents=True, exist_ok=True)
-    for name in (HISTORY_FILE, RUNS_FILE):
+    for name in (LIST_FILE, HISTORY_FILE, RUNS_FILE):
         target = dest / name
         target.unlink(missing_ok=True)
         spec = f"origin/main:data/{name}"
@@ -85,7 +88,7 @@ class RecordCrud:
     def __init__(self, state_dir: Path, append_dir: Path, *, export_from: Path | None = None) -> None:
         """`export_from`(저장소 루트)이 있으면 읽기 전에 기본 브랜치 최신 판을 `state_dir`에 꺼낸다."""
         if state_dir.resolve() == append_dir.resolve():
-            raise ValueError("추가분 폴더가 상태 파일 폴더와 같다")
+            raise ValueError("추가분 폴더가 데이터 폴더와 같다")
         self._state_dir = state_dir
         self._append_dir = append_dir
         self._export_from = export_from
