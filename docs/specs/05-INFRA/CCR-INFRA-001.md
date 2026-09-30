@@ -217,7 +217,7 @@ competition-crawler/
 | `.env` | 로컬에서 돌릴 때만 쓰는 비밀값과 `OPENAI_MODEL`. 저장소 루트에 두고 커밋하지 않는다. 저장소에는 이름과 설명만 적은 `.env.example`만 둔다([[#C3]]) | 배치 |
 | `.github/workflows/pages.yml` | 페이지 배포 트리거(`frontend/**` push · 수동), 권한, 빌드·배포 스텝(8.11) | GitHub Actions |
 | `frontend/vite.config.ts` | Pages 하위 경로 `base: '/competition-crawler/'`. 저장소 이름이 바뀌면 여기만 고친다 | Vite |
-| `frontend/src/config.ts` | 저장소 소유자·이름·기본 브랜치·데이터 파일 경로·raw 주소·Contents API 주소. 비밀값은 없다 | 페이지 |
+| `frontend/src/config.ts` | 저장소 소유자·이름·기본 브랜치·데이터 파일 경로·raw 주소·Contents API 주소, 상태 커밋의 작성자(저장소 주인의 noreply 주소, 8.11). 비밀값은 없다 | 페이지 |
 | 브라우저 `localStorage` | 페이지 토큰(5.8)과 페이지의 보기 설정. 사용자의 브라우저에만 있다 | 페이지 |
 
 판정 규칙의 수치(유사도 0.90, 마감일 180일, 판별 실패 절반)는 조정값이 아니라 규칙이라 코드에 둔다. 바꾸려면 PRD부터 고친다. 유사도는 2026-09-28에 0.80에서 0.90으로 올렸다([[CCR-PRD-001]] 5.2).
@@ -536,9 +536,9 @@ GitHub 공식 문서에 따르면 공개 저장소에서 60일 동안 저장소 
 |---|---|---|
 | 목록·상태 파일 읽기(표시용) | `https://raw.githubusercontent.com/HoyoungParkme/competition-crawler/main/data/competitions.jsonl` · `…/status.json`, 캐시를 피하는 쿼리를 붙인다 | 없음. 공개 저장소 |
 | 상태 파일의 최신 판 읽기(쓰기 직전) | `GET https://api.github.com/repos/HoyoungParkme/competition-crawler/contents/data/status.json?ref=main` | 페이지 토큰 |
-| 상태 파일 쓰기 | `PUT` 같은 주소. 본문에 내용(Base64)·`sha`·커밋 메시지 | 페이지 토큰 |
+| 상태 파일 쓰기 | `PUT` 같은 주소. 본문에 내용(Base64)·`sha`·커밋 메시지·작성자 | 페이지 토큰 |
 
-Contents API의 `PUT`은 파일 하나를 한 커밋으로 `main`에 올린다. 브랜치 규칙셋은 사용자의 push를 막지 않는다(5.5). 커밋 작성자는 토큰의 주인(사용자)이고, 메시지는 `status: <대회명> → <상태>` 꼴로 페이지가 만든다([[CCR-API-001]]). 배치의 커밋(`github-actions[bot]`)과 git log에서 구분된다.
+Contents API의 `PUT`은 파일 하나를 한 커밋으로 `main`에 올린다. 브랜치 규칙셋은 사용자의 push를 막지 않는다(5.5). 커밋 작성자는 저장소 주인(사용자)이다. 페이지는 설정 파일에 적힌 저장소 주인의 noreply 주소(`<id>+<login>@users.noreply.github.com` 꼴)를 작성자로 적어 보낸다. 적지 않으면 GitHub가 토큰 주인 계정의 기본 이메일을 적는데, 이메일 비공개 설정이 꺼진 계정이면 개인 주소가 공개 커밋에 남는다. 이 저장소의 다른 커밋처럼 noreply 주소를 쓴다(2026-09-30 사용자 결정). 메시지는 `status: <대회명> → <상태>` 꼴로 페이지가 만든다([[CCR-API-001]]). 배치의 커밋(`github-actions[bot]`)과 git log에서 구분된다.
 
 로컬에서는 `frontend/`에서 `npm run dev`로 띄운다. 이때도 데이터는 `origin/main`의 raw 파일을 읽고, 쓰기는 같은 Contents API다. 로컬 페이지가 브랜치의 데이터를 보는 길은 두지 않는다. 페이지가 보는 것은 늘 기본 브랜치다([[#C12]]).
 
