@@ -1401,4 +1401,3 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 - [ ] Kaggle의 필드 이름 · 연습용 표기 · 쪽 크기는 실측 전이다([[#kaggle.normalize]] · [[#KaggleSource.collect]])
 - [ ] 페이지의 순수 함수(`parseListFile` · `mergeChange` · `commitMessage` 등)를 이 문서에 둘지. 지금은 [[CCR-DOM-002]] 4.11의 시그니처만 있다
-- [ ] 키워드 전용 인자가 있는 [[#RunContext.from_env]] · [[#SourceHttp.fetch]]는 시그니처가 코드와 글자 그대로여도 싱크독 `tools/check_code.py`가 불일치로 본다. 검사기가 `kwonlyargs`를 세지 않아서다(싱크독 이슈 #196)
