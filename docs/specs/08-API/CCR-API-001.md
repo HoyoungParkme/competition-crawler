@@ -113,7 +113,8 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 - **읽는 길은 둘이다.** 화면에 보여 줄 때는 `raw.githubusercontent.com`에서 목록 파일과 상태 파일을 인증 없이 받는다([[#GET/raw.githubusercontent.com/…/data/{file}]]). 상태 파일을 쓰기 직전에는 Contents API로 같은 파일을 다시 읽어 판(`sha`)을 얻는다([[#GET/api.github.com/…/contents/data/status.json]]). raw는 CDN이 몇 분 캐시하므로 쓰기의 기준으로 쓰지 않는다([[CCR-INFRA-001]] 6.4).
 - **캐시를 피하는 쿼리.** raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. 같은 주소가 반복되지 않아 브라우저 캐시를 피한다. CDN 캐시까지 늘 피하는지는 실측이 남았다([[CCR-INFRA-001]] 9장).
 - **API 헤더.** `Accept: application/vnd.github+json` · `X-GitHub-Api-Version: 2022-11-28` · `Authorization: Bearer <페이지 토큰>`. 토큰은 fine-grained personal access token이고 이 저장소의 Contents 읽기·쓰기만 있다([[CCR-INFRA-001]] 5.8).
-- **쓰기는 파일 하나를 한 커밋으로 올린다**([[#PUT/api.github.com/…/contents/data/status.json]]). 본문에 새 내용(UTF-8 JSON을 Base64로), 읽어 둔 `sha`, 커밋 메시지, `branch: main`을 넣는다. `committer`·`author`는 보내지 않아 토큰 주인이 작성자가 된다. 파일이 아직 없으면 `sha` 없이 보내 만든다.
+- **쓰기는 파일 하나를 한 커밋으로 올린다**([[#PUT/api.github.com/…/contents/data/status.json]]). 본문에 새 내용(UTF-8 JSON을 Base64로), 읽어 둔 `sha`, 커밋 메시지, `branch: main`, 커밋 작성자(`author`·`committer`)를 넣는다. 파일이 아직 없으면 `sha` 없이 보내 만든다.
+- **커밋 작성자.** `author`와 `committer`에 같은 값, 저장소 주인의 이름과 noreply 주소(`<id>+<login>@users.noreply.github.com`)를 넣는다. 페이지 설정 파일의 상수다([[CCR-INFRA-001]] 4.1 · 8.11). GitHub 문서대로 `committer`를 빼면 인증한 사용자(토큰 주인)가, `author`를 빼면 `committer`가 그 자리에 들어간다. 인증한 사용자의 정보에는 계정의 기본 이메일이 쓰여, 이메일 비공개 설정이 꺼진 계정이면 개인 주소가 공개 커밋에 남는다. 그래서 둘 다 보낸다. 둘 다 `name`과 `email`이 있어야 하고, 빠지면 422다.
 - **커밋 메시지**는 페이지가 만든다. 상태를 바꾸면 `status: <대회명> → <상태 이름>`, 지우면 `status: <대회명> 지움`, 되살리면 `status: <대회명> 되살림`이다. 대회명은 60자에서 자른다.
 - **한 번에 요청 하나.** 앞 쓰기의 응답이 오기 전에 다음 바꿈이 생기면 줄 세워 차례로 보낸다. 같은 `sha`로 두 번 보내면 둘째가 409로 거절되기 때문이다. 화면은 먼저 바뀐다([[CCR-UC-001#UC-H1]] 2).
 - **판이 어긋나면**(409 · 422) 최신 판을 다시 읽고, 이번 바꿈만 그 위에 얹어 한 번 더 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다(2.3).
@@ -768,7 +769,7 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 
 유스케이스 [[CCR-UC-001#UC-H1]] 4 · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
 
-**요청.** 읽어 둔 내용에 이번 바꿈을 얹어 만든 객체를 JSON 문자열로 만들고(키는 식별자 순으로 정렬, 두 칸 들여쓰기, 끝에 줄바꿈), UTF-8 바이트를 Base64로 넣는다. `sha`는 읽어 둔 판이다. 파일이 없으면 `sha`를 빼 새로 만든다. `branch`는 `main`이다. 커밋 메시지는 1.4의 꼴이다.
+**요청.** 읽어 둔 내용에 이번 바꿈을 얹어 만든 객체를 JSON 문자열로 만들고(키는 식별자 순으로 정렬, 두 칸 들여쓰기, 끝에 줄바꿈), UTF-8 바이트를 Base64로 넣는다. `sha`는 읽어 둔 판이다. 파일이 없으면 `sha`를 빼 새로 만든다. `branch`는 `main`이다. 커밋 메시지는 1.4의 꼴이다. `author`와 `committer`는 저장소 주인의 이름과 noreply 주소다(1.4).
 
 **응답 읽기.** 201(새 파일)이나 200(고침)이 오면 성공이다. 응답의 `content.sha`는 기억하지 않는다. 다음 쓰기도 판 읽기부터 하기 때문이다([[CCR-DOM-002#StatusStore]]). `commit.sha`는 로그에도 남기지 않는다. 409 · 422 · 401 · 403 · 404 · 5xx는 2.3대로 다룬다.
 
@@ -788,6 +789,8 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
             content: "<UTF-8 JSON의 Base64>"
             sha: "3d21e0e4a7f0c2b3c1e6a8f9d4b2c1a0e5f6d7c8"   # 파일이 없으면 뺀다
             branch: "main"
+            author: {name: "<저장소 주인 이름>", email: "<id>+<login>@users.noreply.github.com"}   # 페이지 설정 파일의 상수(1.4)
+            committer: {name: "<저장소 주인 이름>", email: "<id>+<login>@users.noreply.github.com"}   # author와 같다
     responses:
       "200":
         description: "고쳤다. content.sha가 새 판이다"
