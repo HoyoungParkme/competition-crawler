@@ -92,9 +92,9 @@ function writeFilters(filters: Filters): void {
   }
 }
 
-/** 두 파일을 함께 받는다(SEQ-11 2 · 3) */
-function readFiles(): Promise<[ListEntry[], StatusFile]> {
-  return Promise.all([readListFile(), readStatusFile()])
+/** 두 파일을 함께 받는다(SEQ-11 2 · 3). 목록 파일은 raw, 상태 파일은 토큰이 있으면 판 읽기다 */
+function readFiles(token: string | null): Promise<[ListEntry[], StatusFile]> {
+  return Promise.all([readListFile(), readStatusForView(token)])
 }
 
 function formatTime(date: Date): string {
@@ -150,12 +150,12 @@ export function CompetitionList() {
   /** 새로 고침(2). 읽는 동안을 표시하고 두 파일을 다시 읽는다 */
   const refresh = () => {
     setLoading(true)
-    readFiles().then(applyFiles, applyError)
+    readFiles(tokens.get()).then(applyFiles, applyError)
   }
 
   useEffect(() => {
-    readFiles().then(applyFiles, applyError)
-  }, [applyFiles, applyError])
+    readFiles(tokens.get()).then(applyFiles, applyError)
+  }, [applyFiles, applyError, tokens])
 
   useEffect(() => {
     writeFilters(filters)
