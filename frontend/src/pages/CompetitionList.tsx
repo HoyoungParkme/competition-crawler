@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DataReadError, readListFile, readStatusFile } from '../api/data'
+import { readStatusVersion, type StatusVersion } from '../api/github'
 import { CompetitionTable } from '../components/CompetitionTable'
 import { DEFAULT_FILTERS, FilterBar, type Filters } from '../components/FilterBar'
 import {
@@ -44,6 +45,22 @@ export function isExpired(entry: ListEntry, today: string): boolean {
   return entry.deadline !== null && entry.deadline < today
 }
 
+/** 화면에 보일 상태 파일. 토큰이 있으면 Contents API의 판 읽기로 받는다. raw는 CDN이 5분 캐시해
+ * 방금 바꾼 값이 옛 값으로 보이기 때문이다(CCR-INFRA-001 6.4). 판 읽기가 실패하면 raw로 받고,
+ * 토큰 문제는 저장할 때 드러난다 */
+export async function readStatusForView(
+  token: string | null,
+  readVersion: (token: string) => Promise<StatusVersion> = readStatusVersion,
+  readRaw: () => Promise<StatusFile> = readStatusFile,
+): Promise<StatusFile> {
+  if (token === null) return readRaw()
+  try {
+    return (await readVersion(token)).file
+  } catch {
+    return readRaw()
+  }
+}
+
 /** 접수마감일 오름차순. 없으면 맨 뒤. 같은 마감일이면 대회명 순. 원본은 바꾸지 않는다 */
 export function sortByDeadline(rows: Row[]): Row[] {
   return [...rows].sort((a, b) => {
@@ -75,9 +92,9 @@ function writeFilters(filters: Filters): void {
   }
 }
 
-/** 두 파일을 함께 받는다(SEQ-11 2 · 3) */
-function readFiles(): Promise<[ListEntry[], StatusFile]> {
-  return Promise.all([readListFile(), readStatusFile()])
+/** 두 파일을 함께 받는다(SEQ-11 2 · 3). 목록 파일은 raw, 상태 파일은 토큰이 있으면 판 읽기다 */
+function readFiles(token: string | null): Promise<[ListEntry[], StatusFile]> {
+  return Promise.all([readListFile(), readStatusForView(token)])
 }
 
 function formatTime(date: Date): string {
@@ -133,12 +150,12 @@ export function CompetitionList() {
   /** 새로 고침(2). 읽는 동안을 표시하고 두 파일을 다시 읽는다 */
   const refresh = () => {
     setLoading(true)
-    readFiles().then(applyFiles, applyError)
+    readFiles(tokens.get()).then(applyFiles, applyError)
   }
 
   useEffect(() => {
-    readFiles().then(applyFiles, applyError)
-  }, [applyFiles, applyError])
+    readFiles(tokens.get()).then(applyFiles, applyError)
+  }, [applyFiles, applyError, tokens])
 
   useEffect(() => {
     writeFilters(filters)
