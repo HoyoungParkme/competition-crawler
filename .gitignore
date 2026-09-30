@@ -11,6 +11,10 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 
+# 페이지
+frontend/node_modules/
+frontend/dist/
+
 # 응답 덤프 · 로그. 개발 중에 받은 원본이 저장소에 들어가지 않게 한다
 dumps/
 logs/
