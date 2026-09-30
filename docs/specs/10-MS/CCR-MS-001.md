@@ -12,24 +12,25 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 클래스 명세([[CCR-DOM-002]])의 메서드와 모듈 함수 하나하나가 무엇을 받아 무엇을 하는지다. 시간순 흐름은 [[CCR-SEQ-001]], 타입은 [[CCR-DOM-002]] 2.4, 줄 형식은 [[CCR-DOM-003]]에서만 찾는다.
 
-- 항목 ID는 `클래스.메서드` 또는 `접두어.함수`다. 접두어는 모듈이 있는 곳이다. 파일 이름과 같으면 그 파일(`matching` · `eventus` · `dacon` · `kaggle` · `wevity` · `aifactory` · `contestkorea` · `openai_judge` · `settings` · `logging` · `dates` · `text` · `http` · `robots` · `finish`), 그 밖은 경계 이름이다. `screen` = `domains/screen/service.py`, `notion` = `domains/notion/service.py`, `record` = `domains/record/crud.py`, `__main__` = `collector/__main__.py`.
+- 항목 ID는 `클래스.메서드` 또는 `접두어.함수`다. 접두어는 모듈이 있는 곳이다. 파일 이름과 같으면 그 파일(`matching` · `eventus` · `dacon` · `kaggle` · `wevity` · `aifactory` · `contestkorea` · `openai_judge` · `settings` · `logging` · `dates` · `text` · `http` · `robots` · `finish`), 그 밖은 경계 이름이다. `screen` = `domains/screen/service.py`, `list` = `domains/list/`(`models.py`의 `entry_of`), `record` = `domains/record/crud.py`, `__main__` = `collector/__main__.py`. 2026-09-29에 노션 경계의 함수 열넷과 `NotionHttp` · `secret_variants`를 지우고 목록 경계의 함수 열하나를 더했다.
 - 처리가 몇 줄이면 간략형(시그니처 · 처리 · 테스트 관점)으로 쓴다.
 - 시그니처는 코드와 글자 그대로 적는다. 이름은 함수 이름만(점 없이), `self` · `cls`는 빼고, 타입과 기본값까지. 코드의 함수 docstring 첫 줄은 `CCR-MS-001#항목`이고, 싱크독 `tools/check_code.py`가 둘을 대조한다(싱크독 개발 규약 SYNC-STD-004 DEV-3 · DEV-14).
 - 날짜는 모두 KST 날짜(`date`)다. 기준일은 `RunContext.base_date` 하나다.
 - 테스트 관점은 `batch/tests/`에 있는 테스트가 확인하는 것이다. 테스트가 아니라 손으로 재 본 것은 (실측)이라 적는다.
+- 대회 목록 페이지(`frontend/`)의 함수는 이 문서에 두지 않는다. 모듈과 시그니처는 [[CCR-DOM-002]] 4.11이 정했고, TypeScript라 `check_code.py`의 대상이 아니다. 순수 함수의 테스트는 `frontend/tests/`가 본다([[CCR-DOM-002]] 5장 결정 11).
 
 ## 1. 함수 목록
 
 | 모듈 | 함수 |
 |---|---|
-| core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#Secrets.values]] · [[#settings.read_dotenv]] · [[#logging.secret_variants]] · [[#logging.register_actions_masks]] · [[#SecretFilter.filter]] · [[#logging.setup_logging]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
-| infra | [[#SourceHttp.fetch]] · [[#SourceHttp.remaining]] · [[#SourceHttp.close]] · [[#http.parse_retry_after]] · [[#robots.ensure_allowed]] · [[#NotionHttp.read]] · [[#NotionHttp.write]] · [[#NotionHttp.close]] |
+| core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#Secrets.values]] · [[#settings.read_dotenv]] · [[#logging.register_actions_masks]] · [[#SecretFilter.filter]] · [[#logging.setup_logging]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
+| infra | [[#SourceHttp.fetch]] · [[#SourceHttp.remaining]] · [[#SourceHttp.close]] · [[#http.parse_retry_after]] · [[#robots.ensure_allowed]] |
 | 수집 | [[#Competition.dates_filled]] · [[#SourceResult.normalized]] · [[#SourceResult.failed]] · [[#Source.collect]] · [[#Source.missing_config]] · [[#CollectService.collect_all]] · [[#CollectService._collect_one]] · [[#eventus.build_query]] · [[#eventus.parse_page]] · [[#eventus.normalize]] · [[#EventUsSource.collect]] · [[#EventUsSource.missing_config]] · [[#dacon.parse_page]] · [[#dacon.normalize]] · [[#dacon.link_for]] · [[#DaconSource.collect]] · [[#DaconSource.missing_config]] · [[#kaggle.parse_page]] · [[#kaggle.normalize]] · [[#kaggle.is_practice]] · [[#KaggleSource.collect]] · [[#KaggleSource.missing_config]] · [[#wevity.parse_list]] · [[#wevity.parse_detail_end]] · [[#wevity.deadline_of]] · [[#WevitySource.collect]] · [[#WevitySource._calibrate]] · [[#WevitySource.missing_config]] · [[#aifactory.extract_payload]] · [[#aifactory.parse_tasks]] · [[#aifactory.parse_page]] · [[#aifactory.group_tasks]] · [[#aifactory.competition_name]] · [[#aifactory.to_competition]] · [[#AiFactorySource.collect]] · [[#AiFactorySource.missing_config]] · [[#contestkorea.parse_list]] · [[#contestkorea.resolve_dates]] · [[#ContestKoreaSource.collect]] · [[#ContestKoreaSource.missing_config]] |
-| 선별 | [[#matching.normalize_title]] · [[#matching.extract_marks]] · [[#matching.normalize_link]] · [[#matching.key_of_competition]] · [[#matching.key_of_notion]] · [[#matching.key_of_history]] · [[#matching.similarity]] · [[#matching.judge_pair]] · [[#matching.group]] · [[#matching.representative_order]] · [[#Bundle.deadline]] · [[#ScreenService.drop_expired]] · [[#ScreenService.bundle]] · [[#ScreenService.build_known]] · [[#KnownSet.add]] · [[#ScreenService.split_known]] · [[#ScreenService._matches]] · [[#ScreenService._record_known]] · [[#screen.entries_for]] · [[#ScreenService.judge]] · [[#ScreenService._ask_all]] · [[#Judge.judge]] · [[#OpenAiJudge.judge]] · [[#openai_judge.build_input]] |
-| 노션 | [[#NotionService.read_rows]] · [[#notion.row_of]] · [[#NotionService.check_columns]] · [[#notion.check_schema]] · [[#NotionService.create_row]] · [[#notion.properties_of]] · [[#NotionCrud.query_pages]] · [[#NotionCrud.get_data_source]] · [[#NotionCrud.add_properties]] · [[#NotionCrud.create_page]] |
+| 선별 | [[#matching.normalize_title]] · [[#matching.extract_marks]] · [[#matching.normalize_link]] · [[#matching.key_of_competition]] · [[#matching.key_of_entry]] · [[#matching.key_of_history]] · [[#matching.similarity]] · [[#matching.judge_pair]] · [[#matching.group]] · [[#matching.representative_order]] · [[#Bundle.deadline]] · [[#ScreenService.drop_expired]] · [[#ScreenService.bundle]] · [[#ScreenService.build_known]] · [[#KnownSet.add]] · [[#ScreenService.split_known]] · [[#ScreenService._matches]] · [[#ScreenService._record_known]] · [[#screen.entries_for]] · [[#ScreenService.judge]] · [[#ScreenService._ask_all]] · [[#Judge.judge]] · [[#OpenAiJudge.judge]] · [[#openai_judge.build_input]] |
+| 목록 | [[#ListEntry.id]] · [[#ListEntry.to_dict]] · [[#ListEntry.from_dict]] · [[#list.entry_of]] · [[#ListService.load]] · [[#ListFile.ids]] · [[#ListService.append]] · [[#ListService.appended_count]] · [[#ListCrud.read]] · [[#ListCrud.reset_appends]] · [[#ListCrud.write_appends]] |
 | 기록 | [[#HistoryRecord.of]] · [[#HistoryRecord.to_dict]] · [[#HistoryRecord.from_dict]] · [[#SourceLine.to_dict]] · [[#RunWarning.to_dict]] · [[#RunLine.fail]] · [[#RunLine.to_dict]] · [[#RecordService.start]] · [[#RecordService.load]] · [[#State.keep_count]] · [[#State.last_keep_count]] · [[#RecordService.history_shrank]] · [[#RecordService.append]] · [[#RecordService.appended_count]] · [[#RecordService.zero_count_warnings]] · [[#RecordService.write_run]] · [[#RecordCrud.read_history]] · [[#RecordCrud.read_runs]] · [[#RecordCrud.prepare]] · [[#RecordCrud.reset_appends]] · [[#RecordCrud.write_history_appends]] · [[#RecordCrud.write_run_append]] · [[#record._atomic_write]] · [[#record.export_main_state]] |
 | 실행의 흐름 | [[#__main__.main]] · [[#__main__.run_batch]] · [[#__main__.run_collect]] · [[#__main__.sources_of]] · [[#Pipeline.run]] · [[#Pipeline._run]] · [[#Pipeline._load]] · [[#Pipeline._finish]] |
-| 마무리 단계 | [[#finish.finish]] · [[#finish.read_additions]] · [[#finish.base_date_of]] · [[#finish.has_run]] · [[#finish.count_keep]] · [[#Git.fresh_main]] · [[#Git.commit_and_push]] · [[#finish.append_lines]] · [[#finish.main]] |
+| 마무리 단계 | [[#finish.finish]] · [[#finish.read_additions]] · [[#finish.base_date_of]] · [[#finish.has_run]] · [[#finish.count_keep]] · [[#finish.existing_ids]] · [[#Git.fresh_main]] · [[#Git.commit_and_push]] · [[#finish.append_lines]] · [[#finish.main]] |
 
 ## 2. 함수
 
@@ -64,16 +65,16 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 **시그니처** `load(env: Mapping[str, str], path: Path | None = None) -> Settings`
 
 **처리**
-1. `batch/settings.toml`(또는 `path`)을 읽어 `source` · `notion` · `judge` · `warning` 표를 타입에 맞춰 옮긴다.
+1. `batch/settings.toml`(또는 `path`)을 읽어 `source` · `judge` · `warning` 표를 타입에 맞춰 옮긴다.
 2. 판별 모델 = `OPENAI_MODEL`(앞뒤 공백을 뗀 값) if 비어 있지 않음 · else `settings.toml`의 기본값.
 
-**테스트 관점** 쪽 상한 20 · 예산 120 · 쓰기 타임아웃 70 · 동시 4 · 0건 연속 3일 · `OPENAI_MODEL`이 덮고 공백은 무시
+**테스트 관점** 쪽 상한 20 · 예산 120 · 동시 4 · 0건 연속 3일 · `OPENAI_MODEL`이 덮고 공백은 무시
 
 #### Secrets.from_env 비밀값 읽기
 
 **시그니처** `from_env(env: Mapping[str, str]) -> Secrets`
 
-**처리** 네 이름(`NOTION_TOKEN` · `NOTION_DATA_SOURCE_ID` · `OPENAI_API_KEY` · `KAGGLE_API_TOKEN`)을 읽고 앞뒤 공백을 뗀다. 빈 문자열은 `None`이다. 등록되지 않은 시크릿은 빈 문자열로 들어오기 때문이다([[CCR-INFRA-001]] 5장).
+**처리** 두 이름(`OPENAI_API_KEY` · `KAGGLE_API_TOKEN`)을 읽고 앞뒤 공백을 뗀다. 빈 문자열은 `None`이다. 등록되지 않은 시크릿은 빈 문자열로 들어오기 때문이다([[CCR-INFRA-001]] 5장).
 
 **테스트 관점** 빈 값 · 공백만 있는 값이 `None`
 
@@ -81,7 +82,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `values() -> list[str]`
 
-**처리** 네 비밀값 가운데 있는 값만 차례대로 돌려준다. 로그 가리기와 Actions 가릴 값 알리기가 쓴다([[#logging.secret_variants]]).
+**처리** 두 비밀값 가운데 있는 값만 차례대로 돌려준다. 로그 가리기와 Actions 가릴 값 알리기가 쓴다([[#logging.register_actions_masks]] · [[#SecretFilter.filter]]).
 
 **테스트 관점** [[#Secrets.from_env]]의 테스트가 함께 본다
 
@@ -93,35 +94,24 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 주석 · 따옴표 · `export` · 빈 값 · 깨진 줄
 
-#### logging.secret_variants 가릴 문자열
-
-**시그니처** `secret_variants(values: Iterable[str]) -> list[str]`
-
-**처리**
-1. 값마다 그대로 넣는다.
-2. if 32자리 16진 → 하이픈을 넣은 UUID 꼴도 · else if UUID 꼴 → 하이픈을 뺀 소문자 꼴도. 노션은 오류 메시지에 ID를 하이픈 꼴로 싣는다([[CCR-INFRA-001]] 5.4).
-3. 겹친 것을 빼고 긴 것부터 둔다. 짧은 값이 긴 값의 일부를 먼저 지우지 않게.
-
-**테스트 관점** 노션 ID의 두 꼴이 모두 나온다
-
 #### logging.register_actions_masks Actions에 가릴 값 알리기
 
 **시그니처** `register_actions_masks(values: Iterable[str], emit: Callable[[str], None] | None = None) -> None`
 
-**처리** `secret_variants`의 값마다 `::add-mask::값`을 표준 출력에 찍는다. 어떤 로그보다 먼저 부른다. Actions 안에서만 부른다.
+**처리** 값마다 `::add-mask::값`을 표준 출력에 찍는다. 노션 ID의 두 표기를 만들던 `secret_variants`는 노션과 함께 없앴다([[CCR-DOM-002]] 4.9). 어떤 로그보다 먼저 부른다. Actions 안에서만 부른다.
 
-**테스트 관점** 변형마다 한 줄
+**테스트 관점** 값마다 한 줄
 
 #### SecretFilter.filter 로그 가리기
 
 **시그니처** `filter(record: logging.LogRecord) -> bool`
 
 **처리**
-1. 메시지를 완성한 뒤(`getMessage`) 변형마다 `***`로 바꾸고 `args`를 비운다.
+1. 메시지를 완성한 뒤(`getMessage`) 값마다 `***`로 바꾸고 `args`를 비운다. 긴 값부터 바꾼다.
 2. if 예외가 붙음 → 예외 원문을 미리 만들어(`exc_text`) 같이 가린다. 포매터는 이미 만든 원문을 다시 만들지 않는다.
 3. 늘 참을 돌려준다(기록은 버리지 않는다).
 
-**테스트 관점** 메시지와 예외 원문 모두에서 UUID 꼴이 사라진다
+**테스트 관점** 메시지와 예외 원문 모두에서 키 값이 사라진다
 
 #### logging.setup_logging 로그 설정
 
@@ -238,49 +228,6 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 4. 5xx · 연결 오류로 끝내 받지 못하면 `fetch`의 `HttpFailure`가 그대로 나간다(목록을 요청하지 않는다).
 
 **테스트 관점** 허용 · 막힘 · 에이전트 이름 규칙 · 404는 제한 없음 · 503은 실패
-
-#### NotionHttp.read 노션 읽기 요청
-
-**시그니처** `read(method: str, path: str, json: Any = None) -> dict[str, Any]`
-
-**근거** [[CCR-API-001]] 2.3 · [[CCR-INFRA-001]] 8.5
-
-**처리** 최대 1 + 3번.
-1. 앞 요청과 1/3초 간격(읽기 · 쓰기 합쳐 초당 3회). 멈춤 표시면 `Stopped`.
-2. 헤더 `Authorization: Bearer` · `Notion-Version: 2025-09-03` · User-Agent로 보낸다. 타임아웃 20초.
-3. if 연결 오류 · 타임아웃 → 1 · 2 · 4초 쉬고 다시.
-4. if 200 → JSON 객체면 돌려준다 · 아니면 쉬고 다시.
-5. if 429 · 529 → `Retry-After`가 60초보다 길면 곧바로 `NotionFailure` · 있으면 그만큼 · 없으면 간격만큼 기다려 다시.
-6. if 5xx → 쉬고 다시 · else(그 밖의 4xx) → `NotionFailure(status)`. 다시 보내지 않는다.
-7. 다 쓰면 `NotionFailure(마지막 사유)`.
-
-**예외** 끝내 실패 · 4xx → `NotionFailure`
-
-**테스트 관점** 헤더 · 429 뒤 502 뒤 성공 · 404는 한 번만 · `Retry-After: 90`은 기다리지 않음 · 초당 3회 간격
-
-#### NotionHttp.write 노션 쓰기 요청
-
-**시그니처** `write(method: str, path: str, json: Any) -> WriteResponse`
-
-**근거** [[CCR-API-001]] 2.3 · [[CCR-UC-001#UC-S6]] 2a · 2c · 2d
-
-**처리** 최대 1 + 3번. 간격과 헤더는 `read`와 같고 타임아웃은 70초다.
-1. if 연결을 맺기 전 오류(연결 거부 · 연결 타임아웃 · 풀 타임아웃) → 요청이 닿지 않았다. 쉬고 다시.
-2. if 그 밖의 연결 오류(읽기 타임아웃 · 끊김) → `NotionFailure(maybe_written=True)`. 다시 보내지 않는다.
-3. if 200 → `WriteResponse(본문)`.
-4. if 429 · 529 → `read`와 같이 기다려 다시.
-5. if 503 이고 본문에 `additional_data.committed_resource_id` → `WriteResponse(committed_id=그 id)`.
-6. else → `NotionFailure(status, maybe_written = 5xx인가)`. 다시 보내지 않는다.
-
-**테스트 관점** 연결 거부 · 529 뒤 성공 · 500 · 502 · 503 · 409 · 400은 한 번만(5xx는 `maybe_written`) · 읽기 타임아웃은 한 번만 · 503과 새 행 id는 성공
-
-#### NotionHttp.close 연결 닫기
-
-**시그니처** `close() -> None`
-
-**처리** 안의 httpx 클라이언트를 닫는다. 지금은 부르는 곳이 없다. 한 번 돌고 끝나는 배치라 프로세스가 끝날 때 함께 닫힌다.
-
-**테스트 관점** 없음(닫기만 한다)
 
 ### 2.3 수집
 
@@ -692,23 +639,23 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `key_of_competition(competition: Competition) -> MatchKey`
 
-**처리** 출처 · 원천 ID · 정규화한 링크와, 대회명에서 뽑은 정규화 대회명 · 연도 · 회차 · 글자 집합, 접수시작일 · 마감일을 담는다. 노션 행이 아니다.
+**처리** 출처 · 원천 ID · 정규화한 링크와, 대회명에서 뽑은 정규화 대회명 · 연도 · 회차 · 글자 집합, 접수시작일 · 마감일을 담는다. 목록 항목이 아니다(`from_list=False`).
 
 **테스트 관점** [[#matching.judge_pair]]의 테스트가 함께 본다
 
-#### matching.key_of_notion 노션 행의 판정 값
+#### matching.key_of_entry 목록 항목의 판정 값
 
-**시그니처** `key_of_notion(row: NotionRow) -> MatchKey`
+**시그니처** `key_of_entry(entry: ListEntry) -> MatchKey`
 
-**처리** 원천 ID 없이 링크를 싣고 노션 행으로 표시한다. 나머지는 [[#matching.key_of_competition]]과 같다.
+**처리** 출처 · 원천 ID와 정규화한 링크를 싣고 목록 항목으로 표시한다(`from_list=True`). 나머지는 [[#matching.key_of_competition]]과 같다. 링크는 소스 개편으로 원천 ID가 바뀐 공고를 잇는 예비다([[CCR-DOM-001#ListEntry]]).
 
-**테스트 관점** 노션 링크가 같아도 연도가 다르면 다름([[#matching.judge_pair]])
+**테스트 관점** 원천 ID가 같으면 1단계 · 링크만 같고 연도가 다르면 다름([[#matching.judge_pair]])
 
 #### matching.key_of_history 처리 이력 기록의 판정 값
 
 **시그니처** `key_of_history(record: HistoryRecord) -> MatchKey`
 
-**처리** 출처 · 원천 ID를 싣고 링크는 싣지 않는다. 링크는 노션 행과 견줄 때만 쓴다.
+**처리** 출처 · 원천 ID를 싣고 링크는 싣지 않는다. 링크는 목록 항목과 견줄 때만 쓴다.
 
 **테스트 관점** 작년 공고를 3단계로 가름([[#matching.judge_pair]])
 
@@ -733,7 +680,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **처리** 앞 단계에서 결론이 나면 뒤는 보지 않는다.
 1. if 원천 ID가 있고 출처 · 원천 ID가 같음 → 같음(1단계, 확실).
-2. if 한쪽이 노션 행이고 두 링크(정규화)가 같음 → 둘 다 연도가 있는데 겹치지 않거나 둘 다 회차가 있는데 겹치지 않으면 다름(2단계) · else 같음(1단계, 확실). 이 경우 3단계는 보지 않는다.
+2. if 한쪽이 목록 항목이고 두 링크(정규화)가 같음 → 둘 다 연도가 있는데 겹치지 않거나 둘 다 회차가 있는데 겹치지 않으면 다름(2단계) · else 같음(1단계, 확실). 이 경우 3단계는 보지 않는다.
 3. 2단계: if 둘 다 연도가 있음 → 맞대 봄 표시, 겹치지 않으면 다름. 회차도 같다.
 4. 3단계: if `a.start`와 `b.deadline`이 있음 → 맞대 봄, `a.start > b.deadline`이면 다름. 반대 방향도 같다. if 두 마감일이 있음 → 맞대 봄, 180일 넘게 떨어지면 다름.
 5. if 한쪽 정규화 대회명이 비었음 → 판단하지 않음.
@@ -744,7 +691,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **출력** `PairResult`
 
-**테스트 관점** 2단계로 가르는 PRD 예 · 작년 공고를 3단계로 가름 · 마감 180일 · 마감 연장은 같음(4단계 · 확실) · 1단계는 날짜가 바뀌어도 같음 · 노션 링크가 같아도 연도가 다르면 다름 · 이름만으로 같으면 확실하지 않음 · 문턱 미만은 판단하지 않음 · PRD의 0.82 짝은 판단하지 않음 · 0.90 경계
+**테스트 관점** 2단계로 가르는 PRD 예 · 작년 공고를 3단계로 가름 · 마감 180일 · 마감 연장은 같음(4단계 · 확실) · 1단계는 날짜가 바뀌어도 같음 · 목록 항목의 링크가 같아도 연도가 다르면 다름 · 이름만으로 같으면 확실하지 않음 · 문턱 미만은 판단하지 않음 · PRD의 0.82 짝은 판단하지 않음 · 0.90 경계
 
 #### matching.group 후보끼리 묶기
 
@@ -795,22 +742,22 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### ScreenService.build_known 아는 대회 모으기
 
-**시그니처** `build_known(rows: list[NotionRow], history: list[HistoryRecord]) -> KnownSet`
+**시그니처** `build_known(entries: list[ListEntry], history: list[HistoryRecord]) -> KnownSet`
 
 **근거** [[CCR-UC-001#UC-S4]] 3 · [[CCR-UC-001#UC-A1]] 1b6
 
 **처리**
-1. 노션 행마다 `Known(notion, key_of_notion, keep)`.
+1. 목록 항목마다 `Known(list, key_of_entry, keep)`. 참가자가 지운 항목도 파일에 남아 있어 그대로 아는 대회다([[CCR-UC-001#UC-S4]] 3).
 2. 처리 이력 기록마다 `(출처, 원천 ID)`를 `history_ids`에 넣는다. if 버림을 없는 것으로 봄 이고 버림 → 넣지 않음 · else `Known(history, key_of_history, 그 결과)`.
-3. 넣을 때 색인 셋(`by_id` · `by_link`(노션 행만) · `by_title`)을 채운다.
+3. 넣을 때 색인 셋(`by_id` · `by_link`(목록 항목만) · `by_title`)을 채운다.
 
-**테스트 관점** 버림 무시면 버림 기록과 같은 공고가 아는 대회가 아님
+**테스트 관점** 버림 무시면 버림 기록과 같은 공고가 아는 대회가 아님 · 목록 항목은 원천 ID로도 링크로도 찾힘
 
 #### KnownSet.add 아는 대회 하나 넣기
 
 **시그니처** `add(known: Known) -> None`
 
-**처리** 목록에 붙이고 색인 셋을 채운다. 출처 · 원천 ID가 있으면 `by_id`, 노션 행이고 링크가 있으면 `by_link`, 정규화 대회명이 있으면 `by_title`.
+**처리** 목록에 붙이고 색인 셋을 채운다. 출처 · 원천 ID가 있으면 `by_id`, 목록 항목이고 링크가 있으면 `by_link`, 정규화 대회명이 있으면 `by_title`.
 
 **테스트 관점** [[#ScreenService.build_known]]의 테스트가 함께 본다
 
@@ -824,7 +771,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **출력** (모르는 묶음, 아는 대회로 빠진 묶음의 수)
 
-**테스트 관점** 원천 ID가 같은 기록 · 노션 행이 버림 기록을 이겨 남김으로 적힘 · 이름만 같으면 빼되 적지 않음 · 작년 기록은 올해 공고를 막지 않음
+**테스트 관점** 원천 ID가 같은 기록 · 목록 항목이 버림 기록을 이겨 남김으로 적힘 · 이름만 같으면 빼되 적지 않음 · 작년 기록은 올해 공고를 막지 않음
 
 #### ScreenService._matches 묶음과 같은 아는 대회 찾기
 
@@ -848,10 +795,10 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 **처리**
 1. 1단계가 아닌 짝이면 무엇과 같았는지(단계 · 유사도)를 로그에.
 2. 확실한 짝만 모은다. if 없음 → 적지 않음(이름만으로 같음).
-3. 결과 = 남김 if 확실한 짝 가운데 남김(노션 행 · 남김 기록)이 있음 · else 버림.
+3. 결과 = 남김 if 확실한 짝 가운데 남김(목록 항목 · 남김 기록)이 있음 · else 버림.
 4. `history_ids`에 없는 구성원만 `entries_for(묶음, 결과, 그 구성원)`으로 `RecordService.append`.
 
-**테스트 관점** 자기 기록이 없는 구성원만 적고 날짜는 대표의 것으로 채움 · 노션 행과 버림 기록이 함께면 남김
+**테스트 관점** 자기 기록이 없는 구성원만 적고 날짜는 대표의 것으로 채움 · 목록 항목과 버림 기록이 함께면 남김
 
 #### screen.entries_for 처리 이력에 적을 값
 
@@ -927,100 +874,110 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 긴 부가 정보가 잘림
 
-### 2.5 노션
+### 2.5 목록
 
-#### NotionService.read_rows 노션 행 읽기
+#### ListEntry.id 식별자
 
-**시그니처** `read_rows() -> list[NotionRow]`
+**시그니처** `id() -> str`
 
-**근거** [[CCR-UC-001#UC-S4]] 1 · 1a · [[CCR-API-001#POST/api.notion.com/v1/data_sources/{id}/query]]
+**처리** 속성. `f"{source}:{source_id}"`. 파일에 적힌 `id`를 믿지 않고 두 값에서 만든다([[CCR-DOM-003#competitions]] · [[CCR-DOM-002#ListEntry]]).
 
-**처리** `NotionCrud.query_pages`로 모든 행을 받아 `row_of`. if `NotionFailure` → `NotionReadFailed`.
+**테스트 관점** [[#ListEntry.from_dict]]의 테스트가 함께 본다(적힌 `id`가 달라도 두 값으로)
 
-**예외** 끝내 실패 · incomplete → `NotionReadFailed`
+#### ListEntry.to_dict 목록 항목 한 줄
 
-**테스트 관점** 커서를 따라 두 쪽 · incomplete는 읽기 실패
+**시그니처** `to_dict() -> dict[str, Any]`
 
-#### notion.row_of 행 하나 읽기
+**처리** [[CCR-DOM-003#competitions]]의 필드 아홉. `id`는 속성에서, 날짜는 ISO, 없으면 `null`.
 
-**시그니처** `row_of(page: dict[str, Any]) -> NotionRow`
+**테스트 관점** [[#ListService.append]]의 테스트가 함께 본다(줄의 필드 아홉과 `id`)
 
-**처리** `기타`의 `title` 조각들의 `plain_text`를 잇는다. `링크`는 `url`. `시작일` · `마감일`은 `date.start`를 KST 날짜로. 컬럼이 없으면 빈 값.
+#### ListEntry.from_dict 목록 항목 한 줄 읽기
 
-**테스트 관점** 조각 잇기 · UTC 시각이 붙은 날짜 · 빈 속성
+**시그니처** `from_dict(data: dict[str, Any]) -> ListEntry`
 
-#### NotionService.check_columns 컬럼 확인
+**처리** if 필수 다섯(`source` · `source_id` · `title` · `link` · `collected_on`) 가운데 없거나 빈 것이 있음 → `ValueError`. 날짜가 `YYYY-MM-DD`가 아니면 `ValueError`([[CCR-DOM-003#competitions]]). `reason`은 없으면 `""`. 적힌 `id`는 읽지 않는다.
 
-**시그니처** `check_columns() -> SchemaCheck`
+**테스트 관점** [[#ListService.load]]의 테스트가 함께 본다(필수 필드 없음 · 날짜 깨짐)
 
-**근거** [[CCR-UC-001#UC-S6]] 1 · 1a · 1b · [[CCR-API-001]] 1.4
+#### list.entry_of 대표에서 항목 만들기
+
+**시그니처** `entry_of(competition: Competition, base_date: date, reason: str) -> ListEntry`
+
+**근거** [[CCR-UC-001#UC-S6]] 1 · [[CCR-DOM-001#ListEntry]]
+
+**처리** 대표의 출처 · 원천 ID · 대회명 · 링크 · 접수시작일 · 접수마감일에 기준일(`collected_on`)과 판별 근거를 붙인다. 근거는 앞뒤 공백을 떼고 300자에서 자른다. `domains/list/models.py`에 있다.
+
+**테스트 관점** 값 여덟이 대표와 기준일에서 옴 · 근거가 없으면 `""`
+
+#### ListService.load 목록 파일 읽기
+
+**시그니처** `load() -> ListFile`
+
+**근거** [[CCR-UC-001#UC-S4]] 1 · 1a · 1b · [[CCR-SEQ-001#SEQ-3]]
 
 **처리**
-1. `get_data_source`. if 실패 → `ok=False`(스키마를 읽지 못함).
-2. `check_schema(properties)`. if 문제 → `ok=False`.
-3. if 만들 컬럼이 없음 → `ok=True`.
-4. if 쓰지 않는 실행 → 만들지 않고 `ok=True`(로그).
-5. `add_properties`(없는 것만: `출처` select · `수집일` date). if 실패 → `ok=False` · else `ok=True`, 만든 것.
+1. if 쓰는 실행 → `ListCrud.reset_appends`.
+2. `ListCrud.read`. if `None`(파일 없음) → 빈 목록, `exists=False` · if `ListReadFailed` → `error`에 사유를 담고 돌려준다(로그) · else 항목들. 식별자가 겹친 줄이 있으면 로그.
+3. 읽은 식별자 집합을 기억해 `append`가 쓴다.
 
-**테스트 관점** 없는 컬럼만 보냄 · 미리보기는 보내지 않음 · 스키마를 읽지 못하면 막되 예외를 내지 않음
+**출력** `ListFile`
 
-#### notion.check_schema 스키마 맞춰 보기
+**테스트 관점** 첫 실행 · 깨진 줄 · 필수 필드 없음 · 식별자가 겹친 줄은 모두 아는 대회 · 미리보기는 추가분 폴더를 만들지 않음
 
-**시그니처** `check_schema(properties: dict[str, Any]) -> tuple[list[str], str | None]`
+#### ListFile.ids 식별자 집합
 
-**처리** 일곱 컬럼마다: if 없음 → `출처` · `수집일`이면 만들 목록에 · 아니면 문제 · if 종류가 다름 → 문제. 그다음 `상태`의 선택지에 `시작 전`이 없으면 문제.
+**시그니처** `ids() -> set[str]`
 
-**테스트 관점** 문제 없음 · 둘만 없음 · 링크 없음 · 종류 다름 · 선택지 없음
+**처리** 읽은 항목의 `id` 집합. `append`의 중복 확인이 쓴다.
 
-#### NotionService.create_row 행 만들기
+**테스트 관점** [[#ListService.append]]의 테스트가 함께 본다
 
-**시그니처** `create_row(competition: Competition, base_date: date) -> CreateOutcome`
+#### ListService.append 목록 파일에 더하기
 
-**근거** [[CCR-UC-001#UC-S6]] 2 · 3 · 2a · 2c · 2d · [[CCR-API-001#POST/api.notion.com/v1/pages]]
+**시그니처** `append(competition: Competition, base_date: date, reason: str) -> ListEntry | None`
 
-**처리** `create_page(properties_of(대회, 기준일))`. if `NotionFailure` → `created=False`(사유) · if 503이 새 행 id를 줌 → `created=True`, `via_committed` · else `created=True`, 행 id.
+**근거** [[CCR-UC-001#UC-S6]] 1 · 2 · 2a · 4 · 4a · [[CCR-SEQ-001#SEQ-5]]
 
-**테스트 관점** 성공 · 503과 새 행 id · 400
+**처리**
+1. `entry_of`로 항목을 만든다.
+2. if 식별자가 읽은 목록이나 이번 추가분에 있음 → `None`(로그).
+3. if 쓰지 않는 실행 → 항목만 돌려준다.
+4. 추가분에 쌓고 쌓인 전부를 `write_appends`로 통째로 바꿔 쓴다. 항목을 돌려준다.
 
-#### notion.properties_of 행 값
+**테스트 관점** 두 번 더하면 두 줄 · 같은 식별자는 두 번째에 `None` · 읽은 목록에 있으면 `None` · 임시 파일이 남지 않음 · 미리보기는 쓰지 않고 항목만
 
-**시그니처** `properties_of(competition: Competition, base_date: date) -> dict[str, Any]`
+#### ListService.appended_count 이번 실행에 더한 항목 수
 
-**처리** [[CCR-API-001]] 4.2 그대로. `기타` 대회명(2,000자에서 자름) · `링크` · `시작일` · `마감일`(모르면 `{"date": null}`) · `상태` `시작 전` · `출처` 소스 이름 · `수집일` 기준일. `결과날`은 보내지 않는다.
+**시그니처** `appended_count() -> int`
 
-**테스트 관점** 일곱 컬럼의 모양 · 2,000자 자르기
+**처리** 속성. 이번 실행에 추가분에 쌓은 항목의 수. `RunLine.loaded`와 같다.
 
-#### NotionCrud.query_pages 모든 행 받기
+**테스트 관점** 미리보기는 0
 
-**시그니처** `query_pages() -> list[dict[str, Any]]`
+#### ListCrud.read 목록 파일 읽기
 
-**처리** `page_size` 100으로 `POST query`. if `request_status.type == incomplete` → `NotionFailure` · if `results`가 배열이 아님 → `NotionFailure`. `has_more`이고 `next_cursor`가 있는 동안 `start_cursor`로 넘긴다. 거르거나 정렬하지 않는다.
+**시그니처** `read() -> list[ListEntry] | None`
 
-**테스트 관점** 첫 요청에 커서 없음 · 둘째에 커서
+**처리** if 파일이 없음 → `None`. 바이트로 읽고 줄마다(빈 줄은 건너뜀) UTF-8 · JSON 객체 · `ListEntry.from_dict`. 하나라도 실패하면 `ListReadFailed(몇 번째 줄)`. 열지 못해도 같다. 식별자가 겹친 줄은 그대로 돌려준다.
 
-#### NotionCrud.get_data_source 데이터 소스 읽기
+**테스트 관점** `load`의 테스트가 함께 본다
 
-**시그니처** `get_data_source() -> dict[str, Any]`
+#### ListCrud.reset_appends 추가분 비우기
 
-**처리** `GET /v1/data_sources/{id}`. 읽기 요청이다([[#NotionHttp.read]]). 컬럼 확인이 쓴다.
+**시그니처** `reset_appends() -> None`
 
-**테스트 관점** [[#NotionService.check_columns]]의 테스트가 함께 본다
+**처리** 목록 추가분(`competitions.jsonl`)을 빈 파일로 통째로 바꿔 쓴다([[#record._atomic_write]]와 같은 방법). 추가분 폴더가 데이터 폴더와 같으면 만들 때 거부한다.
 
-#### NotionCrud.add_properties 컬럼 만들기 요청
+**테스트 관점** [[#ListService.load]]의 테스트가 함께 본다
 
-**시그니처** `add_properties(properties: dict[str, Any]) -> None`
+#### ListCrud.write_appends 목록 추가분 쓰기
 
-**처리** `PATCH /v1/data_sources/{id}`로 없는 컬럼만 보낸다. 쓰기 요청이다([[#NotionHttp.write]]). 있는 컬럼을 보내면 그 설정이 바뀐다([[CCR-API-001#PATCH/api.notion.com/v1/data_sources/{id}]]).
+**시그니처** `write_appends(lines: list[dict[str, Any]]) -> None`
 
-**테스트 관점** [[#NotionService.check_columns]]의 테스트가 함께 본다(없는 컬럼만 보냄)
+**처리** 받은 줄 전부를 JSON Lines로 목록 추가분에 통째로 바꿔 쓴다.
 
-#### NotionCrud.create_page 행 만들기 요청
-
-**시그니처** `create_page(properties: dict[str, Any]) -> WriteResponse`
-
-**처리** `POST /v1/pages`에 부모(`data_source_id`)와 행 값을 보낸다. 쓰기 요청이다.
-
-**테스트 관점** [[#NotionService.create_row]]의 테스트가 함께 본다
+**테스트 관점** [[#ListService.append]]의 테스트가 함께 본다
 
 ### 2.6 기록
 
@@ -1076,26 +1033,28 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `to_dict() -> dict[str, Any]`
 
-**처리** [[CCR-DOM-003#runs]]의 필드 열넷. 소스는 이름마다 `SourceLine.to_dict`, 경고는 `RunWarning.to_dict`의 목록이다.
+**처리** [[CCR-DOM-003#runs]]의 필드 열셋. 소스는 이름마다 `SourceLine.to_dict`, 경고는 `RunWarning.to_dict`의 목록이다.
 
-**테스트 관점** [[#RecordService.write_run]]의 테스트가 함께 본다(줄의 필드 열넷)
+**테스트 관점** [[#RecordService.write_run]]의 테스트가 함께 본다(줄의 필드 열셋)
 
-#### RecordService.start 추가분 비우기
+#### RecordService.start 데이터 폴더 준비와 추가분 비우기
 
 **시그니처** `start() -> None`
 
-**처리** if 노션에 쓰는 실행 → 추가분 두 파일을 빈 파일로 바꿔 쓴다 · else 아무것도 하지 않는다.
+**근거** [[CCR-INFRA-001]] 6.2 · [[CCR-DOM-002]] 5장 결정 5 · [[CCR-SEQ-001#SEQ-1]]
 
-**테스트 관점** 미리보기는 추가분 폴더를 만들지 않음
+**처리** `RecordCrud.prepare`(기본 브랜치 밖이면 origin/main의 세 파일을 꺼냄). 그다음 if 목록에 쓰는 실행 → 추가분 두 파일을 빈 파일로 바꿔 쓴다 · else 아무것도 하지 않는다. `Pipeline`이 `ListService.load`보다 먼저 부르므로 목록 파일도 꺼내진 뒤에 읽힌다.
 
-#### RecordService.load 상태 파일 읽기
+**테스트 관점** 미리보기는 추가분 폴더를 만들지 않음 · 브랜치 실행은 main 판을 꺼냄
+
+#### RecordService.load 기록 파일 읽기
 
 **시그니처** `load() -> State`
 
 **근거** [[CCR-UC-001#UC-S4]] 2 · 2a · 2b · [[CCR-SEQ-001#SEQ-3]]
 
 **처리**
-1. `RecordCrud.prepare`(기본 브랜치 밖이면 origin/main의 두 파일을 꺼냄) → `read_history` → `read_runs`.
+1. `read_history` → `read_runs`. 데이터 폴더는 `start`가 이미 준비했다.
 2. if `HistoryReadFailed` → `history_error`에 사유를 담고 돌려준다(로그).
 3. 처리 이력(없으면 빈 것과 `history_exists=False`) · 실행 요약. 읽히지 않는 줄이 있으면 로그.
 
@@ -1167,7 +1126,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **처리** if 쓰지 않는 실행 → 아무것도 하지 않음 · else `line.to_dict()`를 추가분 `runs.jsonl`에 한 줄로 바꿔 쓴다. `keep_count`는 `null`이다.
 
-**테스트 관점** 줄의 필드 열넷 · `keep_count`가 비어 있음 · 경고의 빈 속성은 없음
+**테스트 관점** 줄의 필드 열셋 · `keep_count`가 비어 있음 · 경고의 빈 속성은 없음
 
 #### RecordCrud.read_history 처리 이력 읽기
 
@@ -1185,7 +1144,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 깨진 줄 둘을 세고 하나를 읽음
 
-#### RecordCrud.prepare 상태 폴더 준비
+#### RecordCrud.prepare 데이터 폴더 준비
 
 **시그니처** `prepare() -> None`
 
@@ -1234,9 +1193,9 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 **처리**
 1. if 저장소가 얕게 받은 것 → `--depth=1`을 붙인다(개발자 PC의 저장소는 얕게 만들지 않는다).
 2. `git fetch origin +refs/heads/main:refs/remotes/origin/main`. if 실패(git이 없거나 60초 안에 끝나지 않음 포함) → `HistoryReadFailed`.
-3. 두 파일마다: 대상 파일을 지우고, if `origin/main:data/{파일}`이 있음 → `git show`로 꺼내 쓴다 · else 없는 채로 둔다.
+3. 세 파일(`competitions.jsonl` · `processed.jsonl` · `runs.jsonl`)마다: 대상 파일을 지우고, if `origin/main:data/{파일}`이 있음 → `git show`로 꺼내 쓴다 · else 없는 채로 둔다.
 
-**테스트 관점** 작업 트리에 다른 사본이 있어도 main 판을 읽음 · 원격이 없으면 읽기 실패 · git이 없으면 읽기 실패
+**테스트 관점** 작업 트리에 다른 사본이 있어도 main 판을 읽음 · 목록 파일도 꺼냄 · 원격이 없으면 읽기 실패 · git이 없으면 읽기 실패
 
 ### 2.7 실행의 흐름
 
@@ -1256,13 +1215,13 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **출력** 종료 코드
 
-**테스트 관점** 로컬에서 노션 설정 없이 돌리면 설정 누락으로 1(실측) · Actions에서 `DRY_RUN`이 비면 2(실측)
+**테스트 관점** Actions에서 `DRY_RUN`이 비면 2(실측) · 시크릿이 없어도 설정 누락으로 끝내지 않음
 
 #### __main__.run_batch 하루치
 
 **시그니처** `run_batch(env: dict[str, str], stop: threading.Event) -> int`
 
-**처리** `RunContext` · `Settings` · `Secrets`를 만들고 서비스를 조립한다. 소스 여섯(Kaggle에 토큰), `NotionService`(토큰과 대상 DB 식별자가 모두 있을 때만, 아니면 없음), `RecordCrud`(main 판을 꺼내야 하면 저장소 루트), `OpenAiJudge`(키가 있을 때만). `Pipeline.run`의 결과가 성공이면 0 · else 1.
+**처리** `RunContext` · `Settings` · `Secrets`를 만들고 서비스를 조립한다. 소스 여섯(Kaggle에 토큰), `ListService`(`ListCrud`에 데이터 폴더 · 추가분 폴더), `RecordCrud`(main 판을 꺼내야 하면 저장소 루트), `OpenAiJudge`(키가 있을 때만). 반드시 있어야 하는 시크릿은 없다([[CCR-UC-001#UC-A1]] 1d1). `Pipeline.run`의 결과가 성공이면 0 · else 1.
 
 **테스트 관점** `Pipeline`의 테스트가 조립된 흐름을 본다
 
@@ -1270,7 +1229,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `run_collect(env: dict[str, str], stop: threading.Event, only: str | None, show: bool) -> int`
 
-**처리** 소스를 (이름이 주어지면 그 하나만) `CollectService`로 돌리고 소스마다 결과 한 줄, `--show`면 대회마다 한 줄(원천 ID · 접수 기간 · 대회명 · 링크)을 찍는다. 노션 · OpenAI를 부르지 않고 아무것도 쓰지 않는다. 하나라도 성공하면 0. 사이트 개편을 가를 때 쓴다([[CCR-UC-001#UC-A3]]).
+**처리** 소스를 (이름이 주어지면 그 하나만) `CollectService`로 돌리고 소스마다 결과 한 줄, `--show`면 대회마다 한 줄(원천 ID · 접수 기간 · 대회명 · 링크)을 찍는다. OpenAI를 부르지 않고 파일에 아무것도 쓰지 않는다. 하나라도 성공하면 0. 사이트 개편을 가를 때 쓴다([[CCR-UC-001#UC-A3]]).
 
 **테스트 관점** 실측으로 다섯 소스 성공 · Kaggle 설정 누락(2026-09-27)
 
@@ -1303,34 +1262,33 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 **근거** [[CCR-UC-001#UC-A1]] 1d1 · 2 ~ 7 · 2b · 5a · [[CCR-SEQ-001#SEQ-9]]
 
 **처리** 단계 사이마다 멈춤 표시를 본다.
-1. if 노션 서비스가 없음 → `fail(missing_config)`, 끝.
-2. `collect_all` → 줄의 `sources`, `dropped.normalize`(소스 탈락의 합).
-3. `RecordService.load`.
-4. if 모든 소스가 실패 → `fail(all_sources_failed)`, 끝.
-5. `drop_expired` → `dropped.expired`.
-6. `read_rows`. if `NotionReadFailed` → `fail(notion_read_failed)`, 끝.
-7. if 처리 이력 읽기 오류 → `fail(history_read_failed)`, 끝 · if `history_shrank` → `fail(history_shrank)`, 끝.
-8. `build_known` → `bundle` → `split_known` → `dropped.known`.
-9. `judge` → `dropped.discarded` · `judge_failed` · `deferred`. if 미룸 → 경고 `judge_deferred`(원인).
-10. `_load(넣을 묶음)`.
+1. `collect_all` → 줄의 `sources`, `dropped.normalize`(소스 탈락의 합).
+2. `ListService.load` → `RecordService.load`.
+3. if 모든 소스가 실패 → `fail(all_sources_failed)`, 끝.
+4. `drop_expired` → `dropped.expired`.
+5. if 목록 파일 읽기 오류 → `fail(list_read_failed)`, 끝 · if 처리 이력 읽기 오류 → `fail(history_read_failed)`, 끝 · if `history_shrank` → `fail(history_shrank)`, 끝.
+6. `build_known(목록 항목, 처리 이력)` → `bundle` → `split_known` → `dropped.known`.
+7. `judge` → `dropped.discarded` · `judge_failed` · `deferred`. if 미룸 → 경고 `judge_deferred`(원인).
+8. `_load(넣을 묶음)`.
 
-**테스트 관점** 정상 흐름의 건수 · 설정 누락은 수집하지 않음 · 전 소스 실패 · 노션 읽기 실패와 처리 이력 읽기 실패는 판별하지 않음 · 처리 이력 감소 · 실패한 소스가 있어도 성공
+실패 사유는 넷뿐이다. 반드시 있어야 하는 시크릿이 없어 설정 누락은 없다([[CCR-DOM-003#runs]]).
 
-#### Pipeline._load 노션에 넣기
+**테스트 관점** 정상 흐름의 건수 · 전 소스 실패 · 목록 파일 읽기 실패와 처리 이력 읽기 실패는 판별하지 않음 · 처리 이력 감소 · 실패한 소스가 있어도 성공 · 시크릿 없이도 수집함
+
+#### Pipeline._load 목록 파일에 더하기
 
 **시그니처** `_load(line: RunLine, bundles: list[Bundle]) -> None`
 
-**근거** [[CCR-UC-001#UC-S6]] · [[CCR-UC-001#UC-A1]] 7a · [[CCR-SEQ-001#SEQ-5]]
+**근거** [[CCR-UC-001#UC-S6]] · [[CCR-UC-001#UC-A1]] 7 · 1b3 · [[CCR-SEQ-001#SEQ-5]]
 
 **처리**
 1. if 넣을 묶음이 없음 → 끝.
-2. `check_columns`.
-3. if 쓰지 않는 실행 → 컬럼 문제가 있으면 로그, 넣었을 대회를 한 줄씩 로그, 끝.
-4. if 컬럼 문제 → 묶음 모두 `create_failed`, 오늘 마감 묶음이 있으면 표시 · else 묶음마다(멈춤 표시 확인) `create_row(대표)`: if 만듦 → 처리 결과 `loaded`, `append(entries_for(묶음, 남김))`, `loaded` +1, 로그(503이 알려 준 것인지) · else `create_failed` +1, 로그, if 묶음의 접수마감일 = 기준일 → 표시.
-5. if `loaded` = 0 이고 `create_failed` > 0 → 경고 `create_all_failed`.
-6. if 표시 → 경고 `due_today_not_loaded`, `fail(due_today_not_loaded)`.
+2. 묶음마다(멈춤 표시 확인) `ListService.append(대표, 기준일, 묶음의 판별 근거)`: if 항목 → 처리 결과 `loaded`, `loaded` +1 · if `None`(이미 있음) → 처리 결과 `known`, 로그. 어느 쪽이든 곧바로 `RecordService.append(entries_for(묶음, 남김))`.
+3. 넣은(또는 미리보기라면 넣었을) 대회의 이름 · 출처 · 근거를 한 줄씩 로그.
 
-**테스트 관점** 오늘 마감 행 실패는 실패 · 컬럼 문제는 모두 실패와 전면 실패 경고 · OpenAI 키가 없으면 오늘 마감만 넣음 · 미리보기는 행을 만들지 않음
+넣는 일에는 실패가 없다. 노션 때의 컬럼 확인 · 행 생성 실패 · 오늘 마감 미적재는 없어졌다([[CCR-DOM-001#Warning]]).
+
+**테스트 관점** 넣은 묶음마다 항목 한 줄과 남김 줄 · 이미 있는 식별자는 항목 없이 남김만 · OpenAI 키가 없으면 오늘 마감만 넣음 · 미리보기는 파일에 쓰지 않음
 
 #### Pipeline._finish 실행 기록
 
@@ -1357,21 +1315,21 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 2. 다섯 번까지:
    1. `fresh_main`.
    2. if `runs.jsonl`에 이 실행 식별자의 줄이 있음 → 끝(표시에 따라 0 · 1). 앞선 push가 응답만 끊기고 들어간 것이다.
-   3. 처리 이력 추가분을 붙인다. 남김 줄을 센다.
+   3. 목록 추가분을 붙인다(`existing_ids`에 있는 식별자의 줄은 건너뛰고 로그). 처리 이력 추가분을 붙인다. 남김 줄을 센다.
    4. 붙일 줄 = 배치의 줄에 `keep_count`를 채운 것 · 없으면 `{run_id, base_date, kind, result: aborted, keep_count}`.
-   5. 올리는 추가분을 로그에 찍고 `commit_and_push(실행 기록 {기준일} · {실행 식별자} · {결과})`.
+   5. 올리는 추가분을 로그에 찍고 `commit_and_push(실행 기록 {기준일} · {실행 식별자} · {결과})`. `data/status.json`은 읽지도 스테이징하지도 않는다.
    6. if 성공 → 끝(표시에 따라 0 · 1) · if `GitError` → 로그, 처음부터.
 3. 다섯 번 모두 실패 → 1.
 
 **출력** `Outcome(종료 코드, 설명)`
 
-**테스트 관점** 처리 이력과 줄을 붙이고 남김 수를 채움 · 작성자 봇 · 메시지 · 줄이 없으면 중단 줄과 1 · 형식이 틀린 줄은 빼고 1 · 이미 올린 실행은 다시 붙이지 않음 · 그사이 올라온 관리자 커밋 위에 다시 얹고 그 수정이 남음 · 빈 저장소의 첫 실행
+**테스트 관점** 목록 · 처리 이력과 줄을 붙이고 남김 수를 채움 · 이미 있는 식별자는 건너뜀 · 상태 파일은 건드리지 않음 · 작성자 봇 · 메시지 · 줄이 없으면 중단 줄과 1 · 형식이 틀린 줄은 빼고 1 · 이미 올린 실행은 다시 붙이지 않음 · 그사이 올라온 관리자 커밋 위에 다시 얹고 그 수정이 남음 · 빈 저장소의 첫 실행
 
 #### finish.read_additions 추가분 읽기
 
 **시그니처** `read_additions(append_dir: Path, run_id: str) -> Additions`
 
-**처리** 처리 이력 추가분의 줄마다: if JSON 객체이고 필수 넷(`source` · `source_id` · `result` · `run_id`)이 비어 있지 않음 → 붙일 줄 · else 로그와 거절 +1. 실행 요약 추가분의 줄마다: if JSON 객체이고 `run_id` · `base_date` · `kind` · `result`가 있고 `run_id`가 이 실행 → 배치의 줄 · else 거절 +1.
+**처리** 목록 추가분의 줄마다: if JSON 객체이고 필수 여섯(`id` · `source` · `source_id` · `title` · `link` · `collected_on`)이 비어 있지 않음 → 붙일 줄 · else 로그와 거절 +1([[CCR-DOM-003#competitions]]). 처리 이력 추가분의 줄마다: if JSON 객체이고 필수 넷(`source` · `source_id` · `result` · `run_id`)이 비어 있지 않음 → 붙일 줄 · else 로그와 거절 +1. 실행 요약 추가분의 줄마다: if JSON 객체이고 `run_id` · `base_date` · `kind` · `result`가 있고 `run_id`가 이 실행 → 배치의 줄 · else 거절 +1.
 
 **테스트 관점** `finish`의 테스트가 함께 본다
 
@@ -1399,6 +1357,14 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** [[#finish.finish]]의 테스트가 함께 본다(남김 수를 채움)
 
+#### finish.existing_ids 목록에 이미 있는 식별자
+
+**시그니처** `existing_ids(list_path: Path) -> set[str]`
+
+**처리** 목록 파일의 줄마다 JSON으로 읽어 `id`를 모은다. 읽히지 않는 줄과 `id`가 없는 줄은 건너뛴다. 파일이 없으면 빈 집합([[CCR-INFRA-001]] 8.2 3).
+
+**테스트 관점** [[#finish.finish]]의 테스트가 함께 본다(이미 있는 식별자는 건너뜀)
+
 #### Git.fresh_main main 최신 판 받기
 
 **시그니처** `fresh_main() -> None`
@@ -1411,7 +1377,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `commit_and_push(message: str) -> None`
 
-**처리** 두 경로 가운데 있는 것만 `add`한다(첫 실행에는 처리 이력 파일이 없을 수 있다). 작성자 `github-actions[bot]`으로 커밋하고 `push origin HEAD:refs/heads/main`(토큰은 이 명령에만).
+**처리** 세 경로(`data/competitions.jsonl` · `data/processed.jsonl` · `data/runs.jsonl`) 가운데 있는 것만 `add`한다(첫 실행에는 목록 파일과 처리 이력 파일이 없을 수 있다). 작성자 `github-actions[bot]`으로 커밋하고 `push origin HEAD:refs/heads/main`(토큰은 이 명령에만).
 
 **테스트 관점** 빈 저장소의 첫 실행
 
@@ -1434,4 +1400,5 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 ## 3. 미결사항
 
 - [ ] Kaggle의 필드 이름 · 연습용 표기 · 쪽 크기는 실측 전이다([[#kaggle.normalize]] · [[#KaggleSource.collect]])
+- [ ] 페이지의 순수 함수(`parseListFile` · `mergeChange` · `commitMessage` 등)를 이 문서에 둘지. 지금은 [[CCR-DOM-002]] 4.11의 시그니처만 있다
 - [ ] 키워드 전용 인자가 있는 [[#RunContext.from_env]] · [[#SourceHttp.fetch]]는 시그니처가 코드와 글자 그대로여도 싱크독 `tools/check_code.py`가 불일치로 본다. 검사기가 `kwonlyargs`를 세지 않아서다(싱크독 이슈 #196)
