@@ -16,6 +16,7 @@ URL = "https://app.dacon.io/api/v1/competition/list"
 
 
 def parse_page(response: httpx.Response) -> list[dict[str, Any]]:
+    """CCR-MS-001#dacon.parse_page"""
     try:
         data = response.json()
     except ValueError as exc:
@@ -26,12 +27,14 @@ def parse_page(response: httpx.Response) -> list[dict[str, Any]]:
 
 
 def link_for(cpt_id: str, is_landing: Any) -> str:
+    """CCR-MS-001#dacon.link_for"""
     if str(is_landing) == "1":
         return f"https://dacon.io/competition/{cpt_id}/overview"
     return f"https://dacon.io/competitions/official/{cpt_id}/overview/description"
 
 
 def normalize(item: dict[str, Any]) -> Competition | None:
+    """CCR-MS-001#dacon.normalize"""
     cpt_id = str(item.get("cpt_id") or "").strip()
     title = clean_text(item.get("name"))
     if not cpt_id or not title:
@@ -56,9 +59,11 @@ class DaconSource:
     robots_paths = ("/api/v1/competition/list",)
 
     def missing_config(self) -> bool:
+        """CCR-MS-001#DaconSource.missing_config"""
         return False
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
+        """CCR-MS-001#DaconSource.collect"""
         competitions: list[Competition] = []
         collected = dropped = 0
         for offset in range(page_cap):

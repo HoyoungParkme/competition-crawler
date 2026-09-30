@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import threading
 import time
-from datetime import datetime, timezone
+from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
-from typing import Any, Callable, Mapping, TypeVar
+from typing import Any, TypeVar
 
 import httpx
 
@@ -45,7 +46,10 @@ class HttpFailure(Exception):
 
 
 def parse_retry_after(value: str | None, now: datetime | None = None) -> float | None:
-    """`Retry-After`를 초로 읽는다. 초 수와 HTTP 날짜를 모두 받는다. 읽지 못하면 None."""
+    """CCR-MS-001#http.parse_retry_after
+
+    `Retry-After`를 초로 읽는다. 초 수와 HTTP 날짜를 모두 받는다. 읽지 못하면 None.
+    """
     if not value:
         return None
     value = value.strip()
@@ -58,8 +62,8 @@ def parse_retry_after(value: str | None, now: datetime | None = None) -> float |
     except (TypeError, ValueError):
         return None
     if when.tzinfo is None:
-        when = when.replace(tzinfo=timezone.utc)
-    return max(0.0, (when - (now or datetime.now(timezone.utc))).total_seconds())
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, (when - (now or datetime.now(UTC))).total_seconds())
 
 
 class SourceHttp:
@@ -85,9 +89,11 @@ class SourceHttp:
         self.requests = 0
 
     def close(self) -> None:
+        """CCR-MS-001#SourceHttp.close"""
         self._client.close()
 
     def remaining(self) -> float:
+        """CCR-MS-001#SourceHttp.remaining"""
         return self._deadline - self._clock()
 
     def _check(self) -> None:
@@ -132,7 +138,9 @@ class SourceHttp:
         follow_redirects: bool,
     ) -> httpx.Response:
         """요청하고 본문을 끝까지 받는다. 받는 동안에도 멈춤 표시와 시간 예산의 기한을 본다."""
-        request = self._client.build_request(method, url, params=params, json=json, headers=headers, timeout=timeout)
+        request = self._client.build_request(
+            method, url, params=params, json=json, headers=headers, timeout=timeout
+        )
         response = self._client.send(request, stream=True, follow_redirects=follow_redirects)
         body = bytearray()
         try:
@@ -144,7 +152,9 @@ class SourceHttp:
                     raise HttpFailure("budget", "응답을 받는 중에 소스의 시간 예산을 넘겼다")
         finally:
             response.close()
-        kept = [(k, v) for k, v in response.headers.multi_items() if k.lower() not in _DECODED_HEADERS]
+        kept = [
+            (k, v) for k, v in response.headers.multi_items() if k.lower() not in _DECODED_HEADERS
+        ]
         return httpx.Response(
             response.status_code,
             headers=kept,
@@ -165,7 +175,10 @@ class SourceHttp:
         follow_redirects: bool = False,
         accept_client_errors: bool = False,
     ) -> T:
-        """요청하고 `parse`로 읽는다. `parse`가 FormatError를 내면 다시 보낸다."""
+        """CCR-MS-001#SourceHttp.fetch
+
+        요청하고 `parse`로 읽는다. `parse`가 FormatError를 내면 다시 보낸다.
+        """
         attempts = 1 + max(0, self._settings.retries)
         for attempt in range(attempts):
             last = attempt == attempts - 1

@@ -18,7 +18,11 @@ def test_html_text_collapses_spaces_like_a_browser() -> None:
 
 def test_matching_sees_through_invisible_characters() -> None:
     # event-us · 콘테스트코리아의 대회명 앞에 BOM이 여러 개 붙어 온다(2026-09-27 실측)
-    assert normalize_title(RAW) == normalize_title("[외교부] 국제개발협력 청년 공모전 (~9/30)") == "국제개발협력청년공모전"
+    assert (
+        normalize_title(RAW)
+        == normalize_title("[외교부] 국제개발협력 청년 공모전 (~9/30)")
+        == "국제개발협력청년공모전"
+    )
 
 
 def test_none_is_empty() -> None:

@@ -1,6 +1,6 @@
 """기록 경계의 값. 도메인 개념 HistoryRecord · Run · Warning(CCR-DOM-001).
 
-두 상태 파일의 한 줄 형식은 ERD(CCR-DOM-003)가 정한다. 마무리 단계(`batch/finish.py`)는
+두 기록 파일의 한 줄 형식은 ERD(CCR-DOM-003)가 정한다. 마무리 단계(`batch/finish.py`)는
 이 모듈을 불러오지 않고 같은 형식을 따로 안다(CCR-INFRA-001 8.2).
 """
 
@@ -26,19 +26,15 @@ class RunResult(StrEnum):
 
 
 class FailureReason(StrEnum):
-    MISSING_CONFIG = "missing_config"
     ALL_SOURCES_FAILED = "all_sources_failed"
-    NOTION_READ_FAILED = "notion_read_failed"
+    LIST_READ_FAILED = "list_read_failed"
     HISTORY_READ_FAILED = "history_read_failed"
     HISTORY_SHRANK = "history_shrank"
-    DUE_TODAY_NOT_LOADED = "due_today_not_loaded"
 
 
 class WarningKind(StrEnum):
     ZERO_COUNT = "zero_count"
     JUDGE_DEFERRED = "judge_deferred"
-    CREATE_ALL_FAILED = "create_all_failed"
-    DUE_TODAY_NOT_LOADED = "due_today_not_loaded"
     SUMMARY_CORRUPT = "summary_corrupt"
 
 
@@ -80,7 +76,8 @@ class HistoryRecord:
     run_id: str
 
     @classmethod
-    def of(cls, entry: HistoryEntry, base_date: date, run_id: str) -> "HistoryRecord":
+    def of(cls, entry: HistoryEntry, base_date: date, run_id: str) -> HistoryRecord:
+        """CCR-MS-001#HistoryRecord.of"""
         return cls(
             source=entry.source,
             source_id=entry.source_id,
@@ -94,6 +91,7 @@ class HistoryRecord:
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#HistoryRecord.to_dict"""
         return {
             "source": self.source,
             "source_id": self.source_id,
@@ -107,7 +105,8 @@ class HistoryRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "HistoryRecord":
+    def from_dict(cls, data: dict[str, Any]) -> HistoryRecord:
+        """CCR-MS-001#HistoryRecord.from_dict"""
         missing = [k for k in HISTORY_REQUIRED if data.get(k) in (None, "")]
         if missing:
             raise ValueError(f"필수 필드가 없다: {missing}")
@@ -132,6 +131,7 @@ class RunWarning:
     cause: str | None = None  # 판별 미룸일 때 missing_key · call_failed
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#RunWarning.to_dict"""
         out: dict[str, Any] = {"kind": str(self.kind)}
         if self.source is not None:
             out["source"] = self.source
@@ -149,6 +149,7 @@ class SourceLine:
     failure: str | None
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#SourceLine.to_dict"""
         return {"collected": self.collected, "normalized": self.normalized, "failure": self.failure}
 
 
@@ -163,19 +164,22 @@ class RunLine:
     failure_reason: FailureReason | None = None
     keep_count: int | None = None  # 배치는 비워 두고 마무리 단계가 올린 뒤 세어 채운다
     sources: dict[str, SourceLine] = field(default_factory=dict)
-    dropped: dict[str, int] = field(default_factory=lambda: {"normalize": 0, "expired": 0, "known": 0, "discarded": 0})
+    dropped: dict[str, int] = field(
+        default_factory=lambda: {"normalize": 0, "expired": 0, "known": 0, "discarded": 0}
+    )
     loaded: int = 0
     judge_failed: int = 0
     deferred: int = 0
-    create_failed: int = 0
     warnings: list[RunWarning] = field(default_factory=list)
     duration_s: float = 0.0
 
     def fail(self, reason: FailureReason) -> None:
+        """CCR-MS-001#RunLine.fail"""
         self.result = RunResult.FAILURE
         self.failure_reason = reason
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#RunLine.to_dict"""
         return {
             "run_id": self.run_id,
             "base_date": self.base_date.isoformat(),
@@ -188,7 +192,6 @@ class RunLine:
             "loaded": self.loaded,
             "judge_failed": self.judge_failed,
             "deferred": self.deferred,
-            "create_failed": self.create_failed,
             "warnings": [w.to_dict() for w in self.warnings],
             "duration_s": round(self.duration_s, 1),
         }

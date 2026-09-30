@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class State:
-    """실행을 시작할 때 읽은 두 파일."""
+    """실행을 시작할 때 읽은 기록 파일 둘."""
 
     history: list[HistoryRecord] = field(default_factory=list)
     history_exists: bool = False
@@ -37,10 +37,14 @@ class State:
 
     @property
     def keep_count(self) -> int:
+        """CCR-MS-001#State.keep_count"""
         return sum(1 for r in self.history if r.result is Result.KEEP)
 
     def last_keep_count(self) -> int | None:
-        """실행 요약에 마지막으로 적힌 남김 기록의 수. 적힌 줄이 없으면 None."""
+        """CCR-MS-001#State.last_keep_count
+
+        실행 요약에 마지막으로 적힌 남김 기록의 수. 적힌 줄이 없으면 None.
+        """
         for line in reversed(self.runs.lines):
             value = line.get("keep_count")
             if isinstance(value, int) and not isinstance(value, bool):
@@ -57,15 +61,22 @@ class RecordService:
         self._appended: list[dict[str, Any]] = []
 
     def start(self) -> None:
-        """노션에 쓰는 실행이면 추가분 파일을 비워 둔다."""
+        """CCR-MS-001#RecordService.start
+
+        데이터 폴더를 준비하고(기본 브랜치 밖이면 origin/main의 세 파일을 꺼낸다), 목록에 쓰는
+        실행이면 추가분 파일을 비워 둔다. 목록 경계가 읽기 전에 불려야 한다(CCR-DOM-002 5장 결정 5).
+        """
+        self._crud.prepare()
         if self._write:
             self._crud.reset_appends()
 
     def load(self) -> State:
-        """두 파일을 읽는다. 처리 이력을 읽지 못하면 history_error에 사유를 담는다(UC-S4 2b)."""
+        """CCR-MS-001#RecordService.load
+
+        두 파일을 읽는다. 처리 이력을 읽지 못하면 history_error에 사유를 담는다(UC-S4 2b).
+        """
         state = State()
         try:
-            self._crud.prepare()
             history = self._crud.read_history()
             state.runs = self._crud.read_runs()
         except HistoryReadFailed as exc:
@@ -79,7 +90,10 @@ class RecordService:
         return state
 
     def history_shrank(self, state: State) -> bool:
-        """남김 기록이 실행 요약에 마지막으로 적힌 수보다 적은가(UC-S4 2c · 2a)."""
+        """CCR-MS-001#RecordService.history_shrank
+
+        남김 기록이 실행 요약에 마지막으로 적힌 수보다 적은가(UC-S4 2c · 2a).
+        """
         last = state.last_keep_count()
         if last is None:
             return False  # 첫 실행이거나 적힌 줄이 없다(UC-S4 2a1)
@@ -90,7 +104,10 @@ class RecordService:
         return False
 
     def append(self, entries: list[HistoryEntry]) -> None:
-        """처리 이력 추가분에 곧바로 적는다. 노션에 쓰지 않는 실행은 적지 않는다(UC-A1 1b2)."""
+        """CCR-MS-001#RecordService.append
+
+        처리 이력 추가분에 곧바로 적는다. 목록에 쓰지 않는 실행은 적지 않는다(UC-A1 1b2).
+        """
         if not self._write or not entries:
             return
         for entry in entries:
@@ -99,21 +116,34 @@ class RecordService:
 
     @property
     def appended_count(self) -> int:
+        """CCR-MS-001#RecordService.appended_count"""
         return len(self._appended)
 
-    def zero_count_warnings(self, results: list[SourceResult], state: State, days: int) -> list[RunWarning]:
-        """꾸준히 건수를 내던 소스가 오류 없이 0건을 냈는가(UC-S7 2)."""
+    def zero_count_warnings(
+        self, results: list[SourceResult], state: State, days: int
+    ) -> list[RunWarning]:
+        """CCR-MS-001#RecordService.zero_count_warnings
+
+        꾸준히 건수를 내던 소스가 오류 없이 0건을 냈는가(UC-S7 2).
+        """
         warnings: list[RunWarning] = []
         for result in results:
             if result.failure is not None or result.normalized > 0:
                 continue
-            last = _nonzero_streak_before_zero(str(result.source), state.runs.lines, self._base_date, days)
+            last = _nonzero_streak_before_zero(
+                str(result.source), state.runs.lines, self._base_date, days
+            )
             if last is not None:
-                warnings.append(RunWarning(WarningKind.ZERO_COUNT, source=str(result.source), last_nonzero=last))
+                warnings.append(
+                    RunWarning(WarningKind.ZERO_COUNT, source=str(result.source), last_nonzero=last)
+                )
         return warnings
 
     def write_run(self, line: RunLine) -> None:
-        """실행 요약 추가분에 이 실행의 한 줄을 쓴다. 노션에 쓰지 않는 실행은 쓰지 않는다(UC-S7 8a)."""
+        """CCR-MS-001#RecordService.write_run
+
+        실행 요약 추가분에 이 실행의 한 줄을 쓴다. 목록에 쓰지 않는 실행은 쓰지 않는다(UC-S7 8a).
+        """
         if not self._write:
             return
         self._crud.write_run_append(line.to_dict())
@@ -138,7 +168,9 @@ def _day_counts(source: str, lines: list[dict[str, Any]]) -> dict[date, bool]:
     return days
 
 
-def _nonzero_streak_before_zero(source: str, lines: list[dict[str, Any]], today: date, need: int) -> date | None:
+def _nonzero_streak_before_zero(
+    source: str, lines: list[dict[str, Any]], today: date, need: int
+) -> date | None:
     """0건이 시작되기 바로 앞까지 연속 `need`일 1건 이상이었으면 마지막으로 건수를 낸 기준일."""
     days = _day_counts(source, lines)
     if days.get(today):

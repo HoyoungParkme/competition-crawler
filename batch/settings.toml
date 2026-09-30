@@ -20,11 +20,3 @@ retry_after_cap_seconds = 30
 interval_seconds = 1.0
 page_cap = 20
 budget_seconds = 120
-
-[notion]
-read_timeout_seconds = 20
-write_timeout_seconds = 70
-retries = 3
-backoff_seconds = [1, 2, 4]
-retry_after_cap_seconds = 60
-requests_per_second = 3.0

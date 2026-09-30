@@ -17,22 +17,28 @@
 |---|---|
 | `domains/collect` | 여섯 소스에서 목록을 받아 공통 형식으로 맞춘다. `adapters/`에 소스마다 하나 |
 | `domains/screen` | 마감 판정 · 같은 대회 묶기 · 아는 대회 가르기 · 관심 분야 판별 |
-| `domains/notion` | 노션 행 읽기 · 컬럼 확인 · 행 만들기. 기존 행을 고치거나 지우는 호출은 두지 않는다 |
+| `domains/list` | 목록 파일(`data/competitions.jsonl`) 읽기와 더하기. 항목을 고치거나 지우는 길은 없고, 페이지가 쓰는 `status.json`은 열지 않는다 |
 | `domains/record` | 처리 이력과 실행 요약. 읽기와 덧붙이기만 한다 |
-| `run/pipeline.py` | 하루치 흐름(UC-A1). 네 경계를 차례로 부른다 |
-| `infra/` | 소스 · 노션에 거는 요청(재시도 · 시간 예산 · 요청 간격) |
+| `run/pipeline.py` | 하루치 흐름(UC-A1). 네 경계를 차례로 부르고, 목록에 항목 하나를 더할 때마다 기록 경계에 남김을 적는다 |
+| `infra/` | 소스에 거는 요청(재시도 · 시간 예산 · 요청 간격) · robots.txt |
 | `core/` · `shared/` | 설정 · 로그 가리기 · KST 날짜 · 글자 다듬기 |
 
-의존은 한 방향입니다. 선별 → 수집 · 노션 · 기록, 노션 · 기록 → 수집. `batch/finish.py`는 표준 라이브러리만 쓰고 `collector`를 불러오지 않습니다.
+의존은 한 방향입니다. 선별 → 수집 · 목록 · 기록, 목록 · 기록 → 수집. 경계 사이에서 `_`로 시작하는 이름을 불러오지 않습니다. `batch/finish.py`는 표준 라이브러리만 쓰고 `collector`를 불러오지 않습니다. 페이지(`frontend/`)는 배치 코드를 쓰지 않고 `data/`의 파일만 읽습니다.
 
 ## 지킬 것
 
 - **비밀값을 저장소 파일 · 로그 · 대화에 남기지 않습니다.** 저장소가 공개입니다. `data/*.jsonl`에는 정해진 값만 쓰고 예외 메시지 · URL · 응답 본문을 넣지 않습니다.
-- 노션 데이터 소스 ID나 개인 페이지 이름을 명세 · 코드 · 커밋에 적지 않습니다.
+- 페이지가 쓰는 GitHub 토큰은 사용자의 브라우저에만 있습니다. Actions 시크릿 · 저장소 파일 · 로그에 두지 않습니다.
 - 대회 소스에 요청할 때는 robots.txt를 지키고, 같은 소스 안에서 요청 사이 1초를 둡니다. 개발 중 실측도 같습니다.
 - 커밋 메시지와 PR 본문에 에이전트 표시(Co-Authored-By · Claude-Session · "Generated with …")를 넣지 않습니다. 작성자는 사람의 계정입니다.
 - 스케줄을 살려 두려는 빈 커밋(keepalive)을 만들지 않습니다.
 - 워크플로의 `uses:`는 40자 커밋 SHA로 고정하고 태그를 주석으로 답니다.
+
+## 코드 규약(SYNC-STD-004)
+
+- 공개 함수의 docstring 첫 줄은 클래스 명세 항목 ID 하나입니다(`CCR-MS-001#ListService.append`). 싱크독 `tools/check_code.py --specs docs/specs --backend <collector와 finish.py를 모은 폴더>`가 시그니처까지 대조합니다. 새 함수는 MS 문서에 항목을 먼저 두고 만듭니다.
+- `uv run ruff format` · `uv run ruff check`가 0건이어야 합니다. 설정은 `batch/pyproject.toml`에 있습니다(줄 길이 100 · E F I UP B). 한글은 두 칸으로 셉니다.
+- 커밋은 `spec(DOC): …` · `fix(#이슈): …` · `code(카드): 함수 — 요약`. 카드마다 브랜치와 PR 하나. 이력을 다시 쓰지 않습니다.
 
 ## 확인
 
@@ -40,7 +46,9 @@
 cd batch
 uv sync
 uv run pytest                                 # 네트워크를 쓰지 않는다
-uv run python -m collector collect --show     # 실제 소스에 수집만(노션 · OpenAI 없음)
+uv run ruff format --check && uv run ruff check
+uv run python -m collector collect --show     # 실제 소스에 수집만(OpenAI 없음)
+uv run python -m collector                    # 하루치 미리보기. 로컬은 목록에 쓰지 않는다
 ```
 
 테스트 픽스처(`batch/tests/fixtures/`)는 실측 응답을 줄인 것입니다. 개인 연락처가 든 필드는 넣지 않습니다.

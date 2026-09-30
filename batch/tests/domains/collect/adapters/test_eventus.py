@@ -16,7 +16,9 @@ def test_query_filters_open_contests_from_kst_midnight() -> None:
     query = eventus.build_query(BASE, 2)
     assert query["page"] == {"current": 2, "size": 100}
     assert {"event_type": ["대회/공모전"]} in query["filters"]["all"]
-    assert query["filters"]["any"][0] == {"register_due_date": {"from": "2026-09-22T15:00:00+00:00"}}
+    assert query["filters"]["any"][0] == {
+        "register_due_date": {"from": "2026-09-22T15:00:00+00:00"}
+    }
     assert query["sort"] == [{"register_due_date": "asc"}]
 
 
@@ -45,7 +47,9 @@ def test_collect_reads_every_page(clock: FakeClock) -> None:
         body = json.loads(request.content)
         pages.append(body["page"]["current"])
         page = dict(data, meta={"page": {"current": body["page"]["current"], "total_pages": 2}})
-        page["results"] = data["results"][:20] if body["page"]["current"] == 1 else data["results"][20:]
+        page["results"] = (
+            data["results"][:20] if body["page"]["current"] == 1 else data["results"][20:]
+        )
         return httpx.Response(200, json=page)
 
     collected = eventus.EventUsSource().collect(make_http(handler, clock=clock), BASE, page_cap=20)

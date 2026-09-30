@@ -20,11 +20,20 @@ def test_parses_saved_list() -> None:
 
 
 def test_dates_use_the_printed_period() -> None:
-    assert contestkorea.resolve_dates(BASE, (8, 18, 9, 27), 0) == (date(2026, 8, 18), date(2026, 9, 27))
+    assert contestkorea.resolve_dates(BASE, (8, 18, 9, 27), 0) == (
+        date(2026, 8, 18),
+        date(2026, 9, 27),
+    )
     # 날수가 하루 어긋나도 찍힌 마감일을 쓴다
-    assert contestkorea.resolve_dates(BASE, (9, 1, 10, 5), 9) == (date(2026, 9, 1), date(2026, 10, 5))
+    assert contestkorea.resolve_dates(BASE, (9, 1, 10, 5), 9) == (
+        date(2026, 9, 1),
+        date(2026, 10, 5),
+    )
     # 해를 넘기는 접수 기간
-    assert contestkorea.resolve_dates(date(2026, 12, 20), (12, 1, 1, 15), 26) == (date(2026, 12, 1), date(2027, 1, 15))
+    assert contestkorea.resolve_dates(date(2026, 12, 20), (12, 1, 1, 15), 26) == (
+        date(2026, 12, 1),
+        date(2027, 1, 15),
+    )
     # 날수를 읽지 못하면 연도를 정할 수 없다
     assert contestkorea.resolve_dates(BASE, (8, 18, 9, 27), None) == (None, None)
 
@@ -38,8 +47,15 @@ def test_collect_walks_both_categories(clock: FakeClock) -> None:
             return httpx.Response(200, content=fixture_bytes("ck_idea_0927.html"))
         return httpx.Response(200, text="<div class='list_style_2'><ul></ul></div>")
 
-    collected = contestkorea.ContestKoreaSource().collect(make_http(handler, clock=clock), BASE, page_cap=20)
-    assert requested == [("030310001", "1"), ("030310001", "2"), ("031410001", "1"), ("031410001", "2")]
+    collected = contestkorea.ContestKoreaSource().collect(
+        make_http(handler, clock=clock), BASE, page_cap=20
+    )
+    assert requested == [
+        ("030310001", "1"),
+        ("030310001", "2"),
+        ("031410001", "1"),
+        ("031410001", "2"),
+    ]
     # 두 분야가 같은 쪽을 돌려주므로 str_no로 합쳐 12건이다
     assert collected.collected == 12
     first = next(c for c in collected.competitions if c.source_id == "202608190005")

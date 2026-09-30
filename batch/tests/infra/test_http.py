@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+from datetime import UTC
 
 import httpx
 import pytest
@@ -71,7 +72,11 @@ def test_retry_after_within_cap_is_honoured(clock: FakeClock) -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         calls.append(1)
-        return httpx.Response(429, headers={"Retry-After": "7"}) if len(calls) == 1 else httpx.Response(200, text="ok")
+        return (
+            httpx.Response(429, headers={"Retry-After": "7"})
+            if len(calls) == 1
+            else httpx.Response(200, text="ok")
+        )
 
     http = make_http(handler, clock=clock)
     assert http.fetch("GET", "https://src.test/list", parse=text) == "ok"
@@ -139,7 +144,9 @@ def test_user_agent_identifies_the_crawler(clock: FakeClock) -> None:
         SOURCE_SETTINGS,
         deadline=clock() + 100,
         stop=threading.Event(),
-        client=httpx.Client(transport=httpx.MockTransport(handler), headers={"User-Agent": USER_AGENT}),
+        client=httpx.Client(
+            transport=httpx.MockTransport(handler), headers={"User-Agent": USER_AGENT}
+        ),
         sleep=clock.sleep,
         clock=clock,
     )
@@ -148,11 +155,11 @@ def test_user_agent_identifies_the_crawler(clock: FakeClock) -> None:
 
 
 def test_parse_retry_after_reads_seconds_and_dates() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     assert parse_retry_after("12") == 12
     assert parse_retry_after(None) is None
-    now = datetime(2026, 9, 27, 0, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 9, 27, 0, 0, 0, tzinfo=UTC)
     assert parse_retry_after("Sun, 27 Sep 2026 00:00:30 GMT", now=now) == pytest.approx(30)
     assert parse_retry_after("soon") is None
 
@@ -175,7 +182,11 @@ def test_compressed_body_is_decoded_once(clock: FakeClock) -> None:
 
     body = gzip.compress("한글 목록".encode())
     http = make_http(
-        lambda r: httpx.Response(200, content=body, headers={"content-encoding": "gzip", "content-type": "text/plain; charset=utf-8"}),
+        lambda r: httpx.Response(
+            200,
+            content=body,
+            headers={"content-encoding": "gzip", "content-type": "text/plain; charset=utf-8"},
+        ),
         clock=clock,
     )
     assert http.fetch("GET", "https://src.test/list", parse=text) == "한글 목록"

@@ -22,7 +22,13 @@ from collector.shared.text import html_text
 log = logging.getLogger(__name__)
 
 LIST_URL = "https://www.wevity.com/"
-CATEGORIES = (20, 21, 22, 3, 1)  # 웹/모바일/IT · 게임/소프트웨어 · 과학/공학 · 논문/리포트 · 기획/아이디어
+CATEGORIES = (
+    20,
+    21,
+    22,
+    3,
+    1,
+)  # 웹/모바일/IT · 게임/소프트웨어 · 과학/공학 · 논문/리포트 · 기획/아이디어
 OPEN_STATES = {"접수중", "마감임박"}
 CLOSED_STATE = "마감"
 _DAY = re.compile(r"D\s*([-+])\s*(\d+)")
@@ -55,6 +61,7 @@ def _title_without_badges(anchor: Node) -> str:
 
 
 def parse_list(response: httpx.Response) -> list[WevityItem]:
+    """CCR-MS-001#wevity.parse_list"""
     tree = HTMLParser(response.text)
     ul = tree.css_first("ul.list")
     if ul is None:
@@ -95,6 +102,7 @@ def parse_list(response: httpx.Response) -> list[WevityItem]:
 
 
 def parse_detail_end(response: httpx.Response) -> date:
+    """CCR-MS-001#wevity.parse_detail_end"""
     text = HTMLParser(response.text).text(separator=" ")
     at = text.find("접수기간")
     match = _PERIOD.search(text, at) if at >= 0 else None
@@ -104,6 +112,7 @@ def parse_detail_end(response: httpx.Response) -> date:
 
 
 def deadline_of(item: WevityItem, base_date: date, offset: int) -> date | None:
+    """CCR-MS-001#wevity.deadline_of"""
     if item.days is None or item.sign is None:
         return None
     if item.sign == "-":
@@ -117,9 +126,11 @@ class WevitySource:
     robots_paths = ("/?c=find&s=1&gub=1", "/?c=find&s=1&gbn=view", "/?c=find&s=1&gbn=viewok")
 
     def missing_config(self) -> bool:
+        """CCR-MS-001#WevitySource.missing_config"""
         return False
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
+        """CCR-MS-001#WevitySource.collect"""
         merged: dict[str, WevityItem] = {}
         order: list[str] = []
         collected = dropped = 0
@@ -183,8 +194,18 @@ class WevitySource:
             )
         return Collected(competitions, collected, dropped, page_cap_hit=cap_hit, notes=[note])
 
-    def _calibrate(self, http: SourceHttp, items: list[WevityItem], base_date: date) -> tuple[int, str]:
-        pick = next((i for i in items if i.status in OPEN_STATES and i.sign == "-" and i.days is not None and i.ix), None)
+    def _calibrate(
+        self, http: SourceHttp, items: list[WevityItem], base_date: date
+    ) -> tuple[int, str]:
+        """CCR-MS-001#WevitySource._calibrate"""
+        pick = next(
+            (
+                i
+                for i in items
+                if i.status in OPEN_STATES and i.sign == "-" and i.days is not None and i.ix
+            ),
+            None,
+        )
         if pick is None:
             return -1, "날수 맞춰 보기: 고를 공고가 없어 보정값 −1"
         try:
@@ -201,4 +222,7 @@ class WevitySource:
         offset = (end - base_date).days - (pick.days or 0)
         if offset not in (0, -1):
             return -1, f"날수 맞춰 보기: 차이 {offset}가 0 · −1이 아니라 보정값 −1"
-        return offset, f"날수 맞춰 보기: ix={pick.ix} 마감 {end} · 목록 D-{pick.days} → 보정값 {offset}"
+        return (
+            offset,
+            f"날수 맞춰 보기: ix={pick.ix} 마감 {end} · 목록 D-{pick.days} → 보정값 {offset}",
+        )

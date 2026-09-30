@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from collector.domains.collect.models import Competition
-from collector.domains.notion.models import NotionRow
+from collector.domains.list.models import ListEntry
 from collector.domains.record.models import HistoryEntry, HistoryRecord, Result
 from collector.domains.record.service import RecordService
 from collector.domains.screen.matching import (
@@ -22,11 +22,19 @@ from collector.domains.screen.matching import (
     group,
     judge_pair,
     key_of_competition,
+    key_of_entry,
     key_of_history,
-    key_of_notion,
     representative_order,
 )
-from collector.domains.screen.models import Bundle, Known, KnownKind, MatchKey, Outcome, PairResult, Verdict
+from collector.domains.screen.models import (
+    Bundle,
+    Known,
+    KnownKind,
+    MatchKey,
+    Outcome,
+    PairResult,
+    Verdict,
+)
 from collector.domains.screen.ports import Answer, Judge, JudgeError
 from collector.infra.http import Stopped
 
@@ -38,7 +46,7 @@ CAUSE_CALL_FAILED = "call_failed"
 
 @dataclass
 class KnownSet:
-    """아는 대회(UC-S4 3). 노션 현재 행과 처리 이력을 합친 것이다."""
+    """아는 대회(UC-S4 3). 목록 항목과 처리 이력을 합친 것이다."""
 
     items: list[Known] = field(default_factory=list)
     by_id: dict[tuple[str, str], list[int]] = field(default_factory=lambda: defaultdict(list))
@@ -47,12 +55,13 @@ class KnownSet:
     history_ids: set[tuple[str, str]] = field(default_factory=set)
 
     def add(self, known: Known) -> None:
+        """CCR-MS-001#KnownSet.add"""
         index = len(self.items)
         self.items.append(known)
         key = known.key
         if key.source is not None and key.source_id is not None:
             self.by_id[(key.source, key.source_id)].append(index)
-        if key.from_notion and key.link:
+        if key.from_list and key.link:
             self.by_link[key.link].append(index)
         if key.title_norm:
             self.by_title[key.title_norm].append(index)
@@ -67,8 +76,13 @@ class JudgeOutcome:
     cause: str | None = None  # 미뤘을 때 missing_key · call_failed
 
 
-def entries_for(bundle: Bundle, result: Result, members: list[Competition] | None = None) -> list[HistoryEntry]:
-    """구성원마다 한 줄. 구성원에게 없는 접수 날짜는 대표의 날짜로 채운다(UC-S4 0.1 · CCR-PRD-001 5.2)."""
+def entries_for(
+    bundle: Bundle, result: Result, members: list[Competition] | None = None
+) -> list[HistoryEntry]:
+    """CCR-MS-001#screen.entries_for
+
+    구성원마다 한 줄. 구성원에게 없는 접수 날짜는 대표의 날짜로 채운다(UC-S4 0.1 · CCR-PRD-001 5.2).
+    """
     rep = bundle.representative
     seen: set[tuple[str, str]] = set()
     entries: list[HistoryEntry] = []
@@ -122,7 +136,10 @@ class ScreenService:
 
     # UC-S3
     def drop_expired(self, competitions: list[Competition]) -> tuple[list[Competition], int]:
-        """접수마감일이 기준일보다 이른 대회와 Kaggle 상시 연습용 대회를 버린다. 마감일이 비면 남긴다."""
+        """CCR-MS-001#ScreenService.drop_expired
+
+        접수마감일이 기준일보다 이른 대회와 Kaggle 상시 연습용 대회를 버린다. 마감일이 비면 남긴다.
+        """
         kept = [
             c
             for c in competitions
@@ -132,21 +149,38 @@ class ScreenService:
 
     # UC-S4 4
     def bundle(self, competitions: list[Competition]) -> list[Bundle]:
+        """CCR-MS-001#ScreenService.bundle"""
         keys = [key_of_competition(c) for c in competitions]
         bundles: list[Bundle] = []
         for indexes in group(competitions, keys):
             members = [competitions[i] for i in indexes]
             rep = min(members, key=representative_order)
-            bundles.append(Bundle(members=members, representative=rep, keys=[keys[i] for i in indexes]))
+            bundles.append(
+                Bundle(members=members, representative=rep, keys=[keys[i] for i in indexes])
+            )
         merged = sum(1 for b in bundles if len(b.members) > 1)
-        log.info("후보 대회 %d건을 묶음 %d개로 묶었다(구성원 둘 이상 %d개)", len(competitions), len(bundles), merged)
+        log.info(
+            "후보 대회 %d건을 묶음 %d개로 묶었다(구성원 둘 이상 %d개)",
+            len(competitions),
+            len(bundles),
+            merged,
+        )
         return bundles
 
     # UC-S4 3
-    def build_known(self, rows: list[NotionRow], history: list[HistoryRecord]) -> KnownSet:
+    def build_known(self, entries: list[ListEntry], history: list[HistoryRecord]) -> KnownSet:
+        """CCR-MS-001#ScreenService.build_known"""
         known = KnownSet()
-        for row in rows:
-            known.add(Known(KnownKind.NOTION, key_of_notion(row), Result.KEEP, f"노션 행 {row.title}"))
+        for entry in entries:
+            # 참가자가 지운 항목도 파일에 남아 있어 그대로 아는 대회다(UC-S4 3)
+            known.add(
+                Known(
+                    KnownKind.LIST,
+                    key_of_entry(entry),
+                    Result.KEEP,
+                    f"목록 항목 {entry.id} {entry.title}",
+                )
+            )
         skipped = 0
         for record in history:
             known.history_ids.add((record.source, record.source_id))
@@ -161,7 +195,11 @@ class ScreenService:
 
     # UC-S4 5 · 6 · 7
     def split_known(self, bundles: list[Bundle], known: KnownSet) -> tuple[list[Bundle], int]:
-        """아는 대회와 같은 묶음을 빼고 나머지를 돌려준다. 확실하게 같았으면 구성원을 처리 이력에 적는다."""
+        """CCR-MS-001#ScreenService.split_known
+
+        아는 대회와 같은 묶음을 빼고 나머지를 돌려준다.
+        확실하게 같았으면 구성원을 처리 이력에 적는다.
+        """
         unknown: list[Bundle] = []
         known_count = 0
         for bundle in bundles:
@@ -176,6 +214,7 @@ class ScreenService:
         return unknown, known_count
 
     def _matches(self, bundle: Bundle, known: KnownSet) -> list[tuple[Known, PairResult]]:
+        """CCR-MS-001#ScreenService._matches"""
         keys = bundle.keys or [key_of_competition(m) for m in bundle.members]
         shortlist: set[int] = set()
         for key in keys:
@@ -200,10 +239,20 @@ class ScreenService:
                 continue
             same = [r for r in results if r.verdict is Verdict.SAME]
             if same:
-                matches.append((item, max(same, key=lambda r: (r.certain, -r.step if r.step else 0, r.similarity))))
+                matches.append(
+                    (
+                        item,
+                        max(
+                            same, key=lambda r: (r.certain, -r.step if r.step else 0, r.similarity)
+                        ),
+                    )
+                )
         return matches
 
-    def _record_known(self, bundle: Bundle, matches: list[tuple[Known, PairResult]], known: KnownSet) -> None:
+    def _record_known(
+        self, bundle: Bundle, matches: list[tuple[Known, PairResult]], known: KnownSet
+    ) -> None:
+        """CCR-MS-001#ScreenService._record_known"""
         certain = [item for item, result in matches if result.certain]
         best = min(matches, key=lambda m: (m[1].step or 9, -m[1].similarity))
         if best[1].step != 1:
@@ -219,13 +268,18 @@ class ScreenService:
         if not certain:
             return  # 연도 · 날짜 없이 이름만으로 같았다(UC-S4 6 · 5b)
         # 결과가 다른 둘과 함께 같으면 남김을 따른다. 남김은 버림을 비울 때도 지워지지 않는다
-        result = Result.KEEP if any(item.result == Result.KEEP for item in certain) else Result.DISCARD
-        missing = [m for m in bundle.members if (str(m.source), m.source_id) not in known.history_ids]
+        result = (
+            Result.KEEP if any(item.result == Result.KEEP for item in certain) else Result.DISCARD
+        )
+        missing = [
+            m for m in bundle.members if (str(m.source), m.source_id) not in known.history_ids
+        ]
         if missing:
             self._record.append(entries_for(bundle, result, missing))
 
     # UC-S5
     def judge(self, bundles: list[Bundle]) -> JudgeOutcome:
+        """CCR-MS-001#ScreenService.judge"""
         outcome = JudgeOutcome()
         if not bundles:
             return outcome
@@ -250,11 +304,17 @@ class ScreenService:
                 outcome.to_load.append(bundle)  # UC-S5 2b · 2c1. 남김으로 본다
         if outcome.deferred:
             outcome.cause = cause
-            log.warning("판별 실패 %d / %d로 묶음 %d개를 다음 실행으로 미룬다", len(failed), len(ordered), outcome.deferred)
+            log.warning(
+                "판별 실패 %d / %d로 묶음 %d개를 다음 실행으로 미룬다",
+                len(failed),
+                len(ordered),
+                outcome.deferred,
+            )
         outcome.to_load.sort(key=_deadline_first)
         return outcome
 
     def _ask_all(self, bundles: list[Bundle], outcome: JudgeOutcome) -> list[Bundle]:
+        """CCR-MS-001#ScreenService._ask_all"""
         fatal = threading.Event()
         judge = self._judge
         assert judge is not None

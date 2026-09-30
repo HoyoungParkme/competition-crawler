@@ -9,9 +9,9 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
-from typing import Callable, Sequence
 
 from collector.core.settings import SourceSettings
 from collector.domains.collect.models import FailureKind, SourceResult
@@ -49,15 +49,23 @@ class CollectService:
         self._http_factory = http_factory
 
     def collect_all(self, base_date: date) -> list[SourceResult]:
-        """소스 순서대로 결과를 돌려준다. 신호를 받으면 Stopped를 낸다."""
-        with ThreadPoolExecutor(max_workers=max(1, len(self._sources)), thread_name_prefix="source") as pool:
-            futures = [pool.submit(self._collect_one, source, base_date) for source in self._sources]
+        """CCR-MS-001#CollectService.collect_all
+
+        소스 순서대로 결과를 돌려준다. 신호를 받으면 Stopped를 낸다.
+        """
+        with ThreadPoolExecutor(
+            max_workers=max(1, len(self._sources)), thread_name_prefix="source"
+        ) as pool:
+            futures = [
+                pool.submit(self._collect_one, source, base_date) for source in self._sources
+            ]
             results = [future.result() for future in futures]
         if self._stop.is_set():
             raise Stopped()
         return results
 
     def _collect_one(self, source: Source, base_date: date) -> SourceResult:
+        """CCR-MS-001#CollectService._collect_one"""
         if source.missing_config():
             log.warning("%s: 자격증명이 설정에 없어 요청하지 않는다", source.name)
             return SourceResult.failed(source.name, FailureKind.MISSING_CONFIG, "자격증명 없음")
@@ -80,7 +88,9 @@ class CollectService:
             return SourceResult.failed(source.name, FailureKind.FORMAT, str(exc))
         except Exception as exc:  # 파서의 예상하지 못한 오류도 소스 실패로 가둔다(CCR-INFRA-001 C7)
             log.exception("%s: 예상하지 못한 오류", source.name)
-            return SourceResult.failed(source.name, FailureKind.FORMAT, f"{type(exc).__name__}: {exc}")
+            return SourceResult.failed(
+                source.name, FailureKind.FORMAT, f"{type(exc).__name__}: {exc}"
+            )
         finally:
             http.close()
         elapsed = time.monotonic() - started

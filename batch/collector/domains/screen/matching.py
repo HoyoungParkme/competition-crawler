@@ -14,7 +14,7 @@ from difflib import SequenceMatcher
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from collector.domains.collect.models import SOURCE_PRIORITY, Competition, SourceName
-from collector.domains.notion.models import NotionRow
+from collector.domains.list.models import ListEntry
 from collector.domains.record.models import HistoryRecord
 from collector.domains.screen.models import MatchKey, PairResult, Verdict
 from collector.shared.text import clean_text
@@ -61,7 +61,10 @@ def _strip_head(text: str) -> str:
 
 
 def normalize_title(title: str) -> str:
-    """판정 4 · 5단계가 견주는 대회명. 꼬리말 · 대괄호 머리말 · 괄호 날짜를 떼고 공백과 기호를 없앤다."""
+    """CCR-MS-001#matching.normalize_title
+
+    판정 4 · 5단계가 견주는 대회명. 꼬리말 · 대괄호 머리말 · 괄호 날짜를 떼고 공백과 기호를 없앤다.
+    """
     text = unicodedata.normalize("NFKC", clean_text(title))
     text = _strip_head(text)
     for _ in range(4):
@@ -79,7 +82,10 @@ def normalize_title(title: str) -> str:
 
 
 def extract_marks(title: str) -> tuple[frozenset[int], frozenset[int]]:
-    """(연도, 회차). 회차는 제N회 · N회 · N회차 · 제N차 · N기 · 영문 서수(2nd)다."""
+    """CCR-MS-001#matching.extract_marks
+
+    (연도, 회차). 회차는 제N회 · N회 · N회차 · 제N차 · N기 · 영문 서수(2nd)다.
+    """
     text = unicodedata.normalize("NFKC", clean_text(title))
     years = frozenset(int(y) for y in _YEAR.findall(text))
     rounds: set[int] = set()
@@ -89,7 +95,10 @@ def extract_marks(title: str) -> tuple[frozenset[int], frozenset[int]]:
 
 
 def normalize_link(link: str | None) -> str | None:
-    """추적용 매개변수(`utm_…` · `fbclid`)만 뗀다. 쿼리 문자열을 통째로 떼지 않는다."""
+    """CCR-MS-001#matching.normalize_link
+
+    추적용 매개변수(`utm_…` · `fbclid`)만 뗀다. 쿼리 문자열을 통째로 떼지 않는다.
+    """
     if not link or not link.strip():
         return None
     try:
@@ -105,7 +114,9 @@ def normalize_link(link: str | None) -> str | None:
     ]
     scheme = "https" if parts.scheme.lower() in ("http", "https") else parts.scheme.lower()
     path = parts.path.rstrip("/") if len(parts.path) > 1 else parts.path
-    return urlunsplit((scheme, parts.netloc.lower(), path, urlencode(query, doseq=True), parts.fragment))
+    return urlunsplit(
+        (scheme, parts.netloc.lower(), path, urlencode(query, doseq=True), parts.fragment)
+    )
 
 
 def _key(
@@ -113,7 +124,7 @@ def _key(
     source: str | None,
     source_id: str | None,
     link: str | None,
-    from_notion: bool,
+    from_list: bool,
     title: str,
     start: date | None,
     deadline: date | None,
@@ -124,7 +135,7 @@ def _key(
         source=source,
         source_id=source_id,
         link=normalize_link(link),
-        from_notion=from_notion,
+        from_list=from_list,
         title_norm=norm,
         years=years,
         rounds=rounds,
@@ -135,35 +146,40 @@ def _key(
 
 
 def key_of_competition(competition: Competition) -> MatchKey:
+    """CCR-MS-001#matching.key_of_competition"""
     return _key(
         source=str(competition.source),
         source_id=competition.source_id,
         link=competition.link,
-        from_notion=False,
+        from_list=False,
         title=competition.title,
         start=competition.start_date,
         deadline=competition.deadline,
     )
 
 
-def key_of_notion(row: NotionRow) -> MatchKey:
+def key_of_entry(entry: ListEntry) -> MatchKey:
+    """CCR-MS-001#matching.key_of_entry"""
+    # 원천 ID로 1단계를 보고, 링크는 소스 개편으로 원천 ID가 바뀐 공고를 잇는 예비다
+    # (CCR-DOM-001 ListEntry)
     return _key(
-        source=None,
-        source_id=None,
-        link=row.link,
-        from_notion=True,
-        title=row.title,
-        start=row.start_date,
-        deadline=row.deadline,
+        source=entry.source,
+        source_id=entry.source_id,
+        link=entry.link,
+        from_list=True,
+        title=entry.title,
+        start=entry.start_date,
+        deadline=entry.deadline,
     )
 
 
 def key_of_history(record: HistoryRecord) -> MatchKey:
+    """CCR-MS-001#matching.key_of_history"""
     return _key(
         source=record.source,
         source_id=record.source_id,
-        link=None,  # 링크는 노션 행과 견줄 때만 쓴다
-        from_notion=False,
+        link=None,  # 링크는 목록 항목과 견줄 때만 쓴다
+        from_list=False,
         title=record.title,
         start=record.start_date,
         deadline=record.deadline,
@@ -171,7 +187,10 @@ def key_of_history(record: HistoryRecord) -> MatchKey:
 
 
 def similarity(a: MatchKey, b: MatchKey) -> float:
-    """정규화한 대회명의 유사도. 0.90에 닿을 수 없으면 계산하지 않고 0을 돌려준다."""
+    """CCR-MS-001#matching.similarity
+
+    정규화한 대회명의 유사도. 0.90에 닿을 수 없으면 계산하지 않고 0을 돌려준다.
+    """
     la, lb = len(a.title_norm), len(b.title_norm)
     total = la + lb
     if total == 0 or 2 * min(la, lb) < SIMILARITY * total:
@@ -194,11 +213,14 @@ def _marks_differ(a: MatchKey, b: MatchKey) -> bool:
 
 
 def judge_pair(a: MatchKey, b: MatchKey) -> PairResult:
-    """두 판정 값을 다섯 단계로 견준다(CCR-UC-001 UC-S4 판정표)."""
-    # 1단계. 출처와 원천 ID. 노션 행과는 링크로 견주되 2단계를 더 본다
+    """CCR-MS-001#matching.judge_pair
+
+    두 판정 값을 다섯 단계로 견준다(CCR-UC-001 UC-S4 판정표).
+    """
+    # 1단계. 출처와 원천 ID. 목록 항목과는 링크로도 견주되 2단계를 더 본다
     if a.source_id is not None and a.source == b.source and a.source_id == b.source_id:
         return PairResult(Verdict.SAME, step=1, similarity=1.0, certain=True)
-    if (a.from_notion or b.from_notion) and a.link and a.link == b.link:
+    if (a.from_list or b.from_list) and a.link and a.link == b.link:
         if _marks_differ(a, b):
             return PairResult(Verdict.DIFFERENT, step=2)
         return PairResult(Verdict.SAME, step=1, similarity=1.0, certain=True)
@@ -240,12 +262,23 @@ def judge_pair(a: MatchKey, b: MatchKey) -> PairResult:
 
 
 def representative_order(competition: Competition) -> tuple[int, int, str]:
-    """대표를 고르는 차례. 접수 날짜가 더 채워진 쪽, 같으면 소스 우선순위가 앞선 쪽(UC-S4 4a)."""
-    return (-competition.dates_filled(), SOURCE_PRIORITY[SourceName(competition.source)], competition.source_id)
+    """CCR-MS-001#matching.representative_order
+
+    대표를 고르는 차례. 접수 날짜가 더 채워진 쪽, 같으면 소스 우선순위가 앞선 쪽(UC-S4 4a).
+    """
+    return (
+        -competition.dates_filled(),
+        SOURCE_PRIORITY[SourceName(competition.source)],
+        competition.source_id,
+    )
 
 
 def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[int]]:
-    """후보끼리 같은 대회를 묶는다(UC-S4 4). 합친 묶음 안의 모든 짝이 같음일 때만 합친다(CCR-DOM-002 5장 결정 7)."""
+    """CCR-MS-001#matching.group
+
+    후보끼리 같은 대회를 묶는다(UC-S4 4). 합친 묶음 안의 모든 짝이 같음일 때만 합친다
+    (CCR-DOM-002 5장 결정 7).
+    """
     n = len(competitions)
     same: list[tuple[tuple, int, int]] = []
     for i in range(n):
@@ -269,7 +302,8 @@ def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[in
         if gi == gj:
             continue
         if any((min(x, y), max(x, y)) not in same_pairs for x in members[gi] for y in members[gj]):
-            continue  # UC-S4 4b. 다름이나 판단하지 않음이 하나라도 있으면 먼저 본 짝 쪽 묶음에 남는다
+            # UC-S4 4b. 다름이나 판단하지 않음이 하나라도 있으면 먼저 본 짝 쪽 묶음에 남는다
+            continue
         if len(members[gi]) < len(members[gj]):
             gi, gj = gj, gi
         for x in members[gj]:
@@ -279,4 +313,8 @@ def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[in
 
 
 def _order_of(competition: Competition) -> tuple[int, str, str]:
-    return (SOURCE_PRIORITY[SourceName(competition.source)], competition.source_id, competition.title)
+    return (
+        SOURCE_PRIORITY[SourceName(competition.source)],
+        competition.source_id,
+        competition.title,
+    )

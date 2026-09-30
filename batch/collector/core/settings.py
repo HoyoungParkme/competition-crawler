@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import tempfile
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Mapping
 
 from collector.shared.dates import kst_date_of
 
@@ -35,16 +35,6 @@ class SourceSettings:
 
 
 @dataclass(frozen=True)
-class NotionSettings:
-    read_timeout_seconds: float
-    write_timeout_seconds: float
-    retries: int
-    backoff_seconds: tuple[float, ...]
-    retry_after_cap_seconds: float
-    requests_per_second: float
-
-
-@dataclass(frozen=True)
 class JudgeSettings:
     model: str
     timeout_seconds: float
@@ -57,14 +47,14 @@ class JudgeSettings:
 @dataclass(frozen=True)
 class Settings:
     source: SourceSettings
-    notion: NotionSettings
     judge: JudgeSettings
     zero_count_days: int
 
     @classmethod
-    def load(cls, env: Mapping[str, str], path: Path | None = None) -> "Settings":
+    def load(cls, env: Mapping[str, str], path: Path | None = None) -> Settings:
+        """CCR-MS-001#Settings.load"""
         data = tomllib.loads((path or BATCH_DIR / "settings.toml").read_text(encoding="utf-8"))
-        s, n, j = data["source"], data["notion"], data["judge"]
+        s, j = data["source"], data["judge"]
         model = (env.get("OPENAI_MODEL") or "").strip() or j["model"]
         return cls(
             source=SourceSettings(
@@ -75,14 +65,6 @@ class Settings:
                 interval_seconds=float(s["interval_seconds"]),
                 page_cap=int(s["page_cap"]),
                 budget_seconds=float(s["budget_seconds"]),
-            ),
-            notion=NotionSettings(
-                read_timeout_seconds=float(n["read_timeout_seconds"]),
-                write_timeout_seconds=float(n["write_timeout_seconds"]),
-                retries=int(n["retries"]),
-                backoff_seconds=tuple(float(x) for x in n["backoff_seconds"]),
-                retry_after_cap_seconds=float(n["retry_after_cap_seconds"]),
-                requests_per_second=float(n["requests_per_second"]),
             ),
             judge=JudgeSettings(
                 model=model,
@@ -104,22 +86,22 @@ def _secret(env: Mapping[str, str], name: str) -> str | None:
 
 @dataclass(frozen=True)
 class Secrets:
-    notion_token: str | None
-    notion_data_source_id: str | None
+    """비밀값 둘. 반드시 있어야 하는 것은 없다(CCR-UC-001 UC-A1 1d1)."""
+
     openai_api_key: str | None
     kaggle_api_token: str | None
 
     @classmethod
-    def from_env(cls, env: Mapping[str, str]) -> "Secrets":
+    def from_env(cls, env: Mapping[str, str]) -> Secrets:
+        """CCR-MS-001#Secrets.from_env"""
         return cls(
-            notion_token=_secret(env, "NOTION_TOKEN"),
-            notion_data_source_id=_secret(env, "NOTION_DATA_SOURCE_ID"),
             openai_api_key=_secret(env, "OPENAI_API_KEY"),
             kaggle_api_token=_secret(env, "KAGGLE_API_TOKEN"),
         )
 
     def values(self) -> list[str]:
-        return [v for v in (self.notion_token, self.notion_data_source_id, self.openai_api_key, self.kaggle_api_token) if v]
+        """CCR-MS-001#Secrets.values"""
+        return [v for v in (self.openai_api_key, self.kaggle_api_token) if v]
 
 
 @dataclass(frozen=True)
@@ -130,35 +112,38 @@ class RunContext:
     started_at: datetime
     base_date: date
     kind: str  # schedule · manual
-    write: bool  # 노션에 쓰는 실행인가
+    write: bool  # 목록에 쓰는 실행인가
     ignore_discards: bool
     ignore_discards_requested: bool
     in_actions: bool
     state_dir: Path
-    state_from_main: bool  # 상태 파일을 기본 브랜치 최신 판에서 꺼내 읽는가
+    state_from_main: bool  # 데이터 파일을 기본 브랜치 최신 판에서 꺼내 읽는가
     append_dir: Path
 
     @classmethod
-    def from_env(cls, env: Mapping[str, str], *, now: datetime | None = None) -> "RunContext":
+    def from_env(cls, env: Mapping[str, str], *, now: datetime | None = None) -> RunContext:
+        """CCR-MS-001#RunContext.from_env"""
         in_actions = env.get("GITHUB_ACTIONS") == "true"
         dry_run_raw = env.get("DRY_RUN", "")
         if in_actions and dry_run_raw not in ("true", "false"):
             raise RunModeError(f"DRY_RUN 값이 true도 false도 아니다: {dry_run_raw!r}")
-        # Actions 밖(개발자 PC)의 실행은 늘 노션에 쓰지 않는다(CCR-UC-001 UC-A1 1b5)
+        # Actions 밖(개발자 PC)의 실행은 늘 목록에 쓰지 않는다(CCR-UC-001 UC-A1 1b5)
         write = in_actions and dry_run_raw == "false"
 
         started_raw = (env.get("RUN_STARTED_AT") or "").strip()
         if started_raw:
             started_at = datetime.fromisoformat(started_raw.replace("Z", "+00:00"))
             if started_at.tzinfo is None:
-                started_at = started_at.replace(tzinfo=timezone.utc)
+                started_at = started_at.replace(tzinfo=UTC)
         else:
-            started_at = now or datetime.now(timezone.utc)
+            started_at = now or datetime.now(UTC)
         base_date = kst_date_of(started_at)
 
-        run_id = (env.get("RUN_ID") or "").strip() or f"local-{started_at.strftime('%Y%m%dT%H%M%S')}"
+        run_id = (
+            env.get("RUN_ID") or ""
+        ).strip() or f"local-{started_at.strftime('%Y%m%dT%H%M%S')}"
         kind = "schedule" if env.get("GITHUB_EVENT_NAME") == "schedule" else "manual"
-        # 버림을 없는 것으로 보는 것은 노션에 쓰지 않는 실행에서만 뜻이 있다(CCR-INFRA-001 8.1)
+        # 버림을 없는 것으로 보는 것은 목록에 쓰지 않는 실행에서만 뜻이 있다(CCR-INFRA-001 8.1)
         requested = env.get("IGNORE_DISCARDS") == "true"
 
         # 기본 브랜치에서 도는 Actions 실행은 시작할 때 받은 main이 곧 최신 판이다. 그 밖은
@@ -191,7 +176,10 @@ class RunContext:
 
 
 def read_dotenv(path: Path) -> dict[str, str]:
-    """로컬 실행용 `.env`. `이름=값` 줄만 읽는다. 없으면 빈 것(CCR-INFRA-001 4.1)."""
+    """CCR-MS-001#settings.read_dotenv
+
+    로컬 실행용 `.env`. `이름=값` 줄만 읽는다. 없으면 빈 것(CCR-INFRA-001 4.1).
+    """
     if not path.is_file():
         return {}
     values: dict[str, str] = {}

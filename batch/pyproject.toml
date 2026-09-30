@@ -1,7 +1,7 @@
 [project]
 name = "competition-collector"
 version = "0.1.0"
-description = "AI·개발 대회를 매일 모아 노션 대회목록에 넣는 배치"
+description = "AI·개발 대회를 매일 모아 목록 파일에 더하는 배치. 페이지가 그 파일을 보여 준다"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "httpx>=0.28",
@@ -12,6 +12,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.3",
+    "ruff>=0.16.9",
 ]
 
 [tool.uv]
@@ -22,3 +23,14 @@ package = false
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501"]

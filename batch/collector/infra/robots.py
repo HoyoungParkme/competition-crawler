@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 from urllib import robotparser
 
 import httpx
@@ -22,7 +22,10 @@ class RobotsDisallowed(Exception):
 
 
 def ensure_allowed(http: SourceHttp, origin: str, paths: Iterable[str]) -> None:
-    """`origin`(예: https://www.wevity.com)의 robots.txt가 `paths`를 막으면 RobotsDisallowed."""
+    """CCR-MS-001#robots.ensure_allowed
+
+    `origin`(예: https://www.wevity.com)의 robots.txt가 `paths`를 막으면 RobotsDisallowed.
+    """
 
     def read(response: httpx.Response) -> str | None:
         if 400 <= response.status_code < 500:

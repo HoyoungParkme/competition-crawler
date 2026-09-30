@@ -9,9 +9,10 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
-from typing import Any, Iterator
+from typing import Any
 
 import httpx
 
@@ -38,6 +39,7 @@ class Task:
 
 
 def extract_payload(html: str) -> str:
+    """CCR-MS-001#aifactory.extract_payload"""
     chunks = _PUSH.findall(html)
     if not chunks:
         raise FormatError("self.__next_f.push 조각이 없다")
@@ -63,6 +65,7 @@ def _date(value: Any) -> date | None:
 
 
 def parse_tasks(payload: str) -> list[Task]:
+    """CCR-MS-001#aifactory.parse_tasks"""
     refs: dict[str, Any] = {}
     raw_tasks: list[dict[str, Any]] = []
     for line in payload.split("\n"):
@@ -75,7 +78,12 @@ def parse_tasks(payload: str) -> list[Task]:
             continue
         refs[key] = obj
         for node in _walk(obj):
-            if "id" in node and "name" in node and "page" in node and ("endDate" in node or "participationDeadline" in node):
+            if (
+                "id" in node
+                and "name" in node
+                and "page" in node
+                and ("endDate" in node or "participationDeadline" in node)
+            ):
                 raw_tasks.append(node)
 
     def page_name(page: Any) -> str:
@@ -122,7 +130,10 @@ def _common(names: list[str]) -> str:
 
 
 def competition_name(page: str, tasks: list[Task], start: date | None) -> str:
-    """대회명을 네 차례로 정한다(CCR-API-001 3.1 AI팩토리)."""
+    """CCR-MS-001#aifactory.competition_name
+
+    대회명을 네 차례로 정한다(CCR-API-001 3.1 AI팩토리).
+    """
     year = _YEAR.search(page)
     if year and start is not None and int(year.group(1)) in (start.year, start.year + 1):
         return page
@@ -143,6 +154,7 @@ def competition_name(page: str, tasks: list[Task], start: date | None) -> str:
 
 
 def group_tasks(tasks: list[Task]) -> list[list[Task]]:
+    """CCR-MS-001#aifactory.group_tasks"""
     groups: dict[tuple[str, date | None], list[Task]] = {}
     for task in sorted(tasks, key=lambda t: t.id):
         groups.setdefault((task.page, task.start), []).append(task)
@@ -150,6 +162,7 @@ def group_tasks(tasks: list[Task]) -> list[list[Task]]:
 
 
 def to_competition(group: list[Task]) -> Competition | None:
+    """CCR-MS-001#aifactory.to_competition"""
     named = [t for t in group if t.name]
     if not named:
         return None
@@ -168,11 +181,14 @@ def to_competition(group: list[Task]) -> Competition | None:
         link=f"https://aifactory.space/competitions/{first.id}",
         start_date=start,
         deadline=deadline,
-        extras=tuple(([page] if page else []) + [t.name for t in sorted(named, key=lambda t: t.id)]),
+        extras=tuple(
+            ([page] if page else []) + [t.name for t in sorted(named, key=lambda t: t.id)]
+        ),
     )
 
 
 def parse_page(response: httpx.Response) -> list[Task]:
+    """CCR-MS-001#aifactory.parse_page"""
     tasks = parse_tasks(extract_payload(response.text))
     if not tasks:
         raise FormatError("과제를 찾지 못했다")
@@ -185,9 +201,11 @@ class AiFactorySource:
     robots_paths = ("/ko/competition",)
 
     def missing_config(self) -> bool:
+        """CCR-MS-001#AiFactorySource.missing_config"""
         return False
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
+        """CCR-MS-001#AiFactorySource.collect"""
         tasks = http.fetch("GET", URL, parse=parse_page)
         competitions: list[Competition] = []
         dropped = 0
