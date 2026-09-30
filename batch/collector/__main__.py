@@ -24,15 +24,14 @@ from collector.domains.collect.adapters.kaggle import KaggleSource
 from collector.domains.collect.adapters.wevity import WevitySource
 from collector.domains.collect.ports import Source
 from collector.domains.collect.service import CollectService
-from collector.domains.notion.crud import NotionCrud
-from collector.domains.notion.service import NotionService
+from collector.domains.list.crud import ListCrud
+from collector.domains.list.service import ListService
 from collector.domains.record.crud import RecordCrud
 from collector.domains.record.models import RunResult
 from collector.domains.record.service import RecordService
 from collector.domains.screen.adapters.openai_judge import OpenAiJudge
 from collector.domains.screen.service import ScreenService
 from collector.infra.http import Stopped
-from collector.infra.notion import NotionHttp
 from collector.run.pipeline import Pipeline, Services
 from collector.shared.dates import kst_date_of
 
@@ -63,6 +62,7 @@ def _install_signals(stop: threading.Event) -> None:
 
 
 def sources_of(secrets: Secrets) -> list[Source]:
+    """CCR-MS-001#__main__.sources_of"""
     return [
         EventUsSource(),
         DaconSource(),
@@ -74,14 +74,12 @@ def sources_of(secrets: Secrets) -> list[Source]:
 
 
 def run_batch(env: dict[str, str], stop: threading.Event) -> int:
+    """CCR-MS-001#__main__.run_batch"""
     ctx = RunContext.from_env(env)
     settings = Settings.load(env)
     secrets = Secrets.from_env(env)
     collect = CollectService(settings.source, sources_of(secrets), stop)
-    notion = None
-    if secrets.notion_token and secrets.notion_data_source_id:
-        http = NotionHttp(settings.notion, secrets.notion_token, stop)
-        notion = NotionService(NotionCrud(http, secrets.notion_data_source_id), write=ctx.write)
+    listing = ListService(ListCrud(ctx.state_dir, ctx.append_dir), write=ctx.write)
     crud = RecordCrud(ctx.state_dir, ctx.append_dir, export_from=REPO_ROOT if ctx.state_from_main else None)
     record = RecordService(crud, write=ctx.write, run_id=ctx.run_id, base_date=ctx.base_date)
     judge = OpenAiJudge(settings.judge, secrets.openai_api_key, stop) if secrets.openai_api_key else None
@@ -94,12 +92,15 @@ def run_batch(env: dict[str, str], stop: threading.Event) -> int:
         stop=stop,
     )
     log.info("판별 모델 %s", settings.judge.model)
-    line = Pipeline(ctx, settings, Services(collect.collect_all, notion, record, screen), stop).run()
+    line = Pipeline(ctx, settings, Services(collect.collect_all, listing, record, screen), stop).run()
     return 0 if line.result is RunResult.SUCCESS else EXIT_FAILURE
 
 
 def run_collect(env: dict[str, str], stop: threading.Event, only: str | None, show: bool) -> int:
-    """수집만 한다. 노션 · OpenAI를 부르지 않고 아무것도 쓰지 않는다(CCR-UC-001 UC-A3 진단용)."""
+    """CCR-MS-001#__main__.run_collect
+
+    수집만 한다. OpenAI를 부르지 않고 파일에 아무것도 쓰지 않는다(CCR-UC-001 UC-A3 진단용).
+    """
     settings = Settings.load(env)
     secrets = Secrets.from_env(env)
     sources = [s for s in sources_of(secrets) if only is None or str(s.name).lower() == only.lower()]
@@ -121,9 +122,10 @@ def run_collect(env: dict[str, str], stop: threading.Event, only: str | None, sh
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CCR-MS-001#__main__.main"""
     parser = argparse.ArgumentParser(prog="collector", description="AI·개발 대회 일배치")
     sub = parser.add_subparsers(dest="command")
-    collect = sub.add_parser("collect", help="수집만 해 본다. 노션 · OpenAI를 부르지 않는다")
+    collect = sub.add_parser("collect", help="수집만 해 본다. OpenAI를 부르지 않고 아무것도 쓰지 않는다")
     collect.add_argument("--source", help="이 소스만(예: wevity)")
     collect.add_argument("--show", action="store_true", help="대회를 한 줄씩 찍는다")
     args = parser.parse_args(argv)
