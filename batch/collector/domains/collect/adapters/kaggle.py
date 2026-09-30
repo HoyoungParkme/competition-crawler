@@ -23,6 +23,7 @@ PRACTICE = {"gettingstarted", "playground"}
 
 
 def parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], str]:
+    """CCR-MS-001#kaggle.parse_page"""
     try:
         data = response.json()
     except ValueError as exc:
@@ -37,10 +38,12 @@ def parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], str]:
 
 def is_practice(category: Any) -> bool:
     # 상위 문서의 두 표기(Getting Started · gettingStarted)를 모두 맞게 견준다
+    """CCR-MS-001#kaggle.is_practice"""
     return isinstance(category, str) and re.sub(r"\s+", "", category).lower() in PRACTICE
 
 
 def normalize(item: dict[str, Any]) -> Competition | None:
+    """CCR-MS-001#kaggle.normalize"""
     ref = str(item.get("ref") or "").strip().rstrip("/")
     slug = ref.split("/")[-1] if ref else ""
     title = clean_text(item.get("title"))
@@ -75,9 +78,11 @@ class KaggleSource:
         self._token = token
 
     def missing_config(self) -> bool:
+        """CCR-MS-001#KaggleSource.missing_config"""
         return not self._token
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
+        """CCR-MS-001#KaggleSource.collect"""
         competitions: list[Competition] = []
         collected = dropped = 0
         page_token = ""

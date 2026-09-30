@@ -51,7 +51,8 @@ class Settings:
     zero_count_days: int
 
     @classmethod
-    def load(cls, env: Mapping[str, str], path: Path | None = None) -> "Settings":
+    def load(cls, env: Mapping[str, str], path: Path | None = None) -> Settings:
+        """CCR-MS-001#Settings.load"""
         data = tomllib.loads((path or BATCH_DIR / "settings.toml").read_text(encoding="utf-8"))
         s, j = data["source"], data["judge"]
         model = (env.get("OPENAI_MODEL") or "").strip() or j["model"]
@@ -91,13 +92,15 @@ class Secrets:
     kaggle_api_token: str | None
 
     @classmethod
-    def from_env(cls, env: Mapping[str, str]) -> "Secrets":
+    def from_env(cls, env: Mapping[str, str]) -> Secrets:
+        """CCR-MS-001#Secrets.from_env"""
         return cls(
             openai_api_key=_secret(env, "OPENAI_API_KEY"),
             kaggle_api_token=_secret(env, "KAGGLE_API_TOKEN"),
         )
 
     def values(self) -> list[str]:
+        """CCR-MS-001#Secrets.values"""
         return [v for v in (self.openai_api_key, self.kaggle_api_token) if v]
 
 
@@ -118,7 +121,8 @@ class RunContext:
     append_dir: Path
 
     @classmethod
-    def from_env(cls, env: Mapping[str, str], *, now: datetime | None = None) -> "RunContext":
+    def from_env(cls, env: Mapping[str, str], *, now: datetime | None = None) -> RunContext:
+        """CCR-MS-001#RunContext.from_env"""
         in_actions = env.get("GITHUB_ACTIONS") == "true"
         dry_run_raw = env.get("DRY_RUN", "")
         if in_actions and dry_run_raw not in ("true", "false"):
@@ -170,7 +174,10 @@ class RunContext:
 
 
 def read_dotenv(path: Path) -> dict[str, str]:
-    """로컬 실행용 `.env`. `이름=값` 줄만 읽는다. 없으면 빈 것(CCR-INFRA-001 4.1)."""
+    """CCR-MS-001#settings.read_dotenv
+
+    로컬 실행용 `.env`. `이름=값` 줄만 읽는다. 없으면 빈 것(CCR-INFRA-001 4.1).
+    """
     if not path.is_file():
         return {}
     values: dict[str, str] = {}

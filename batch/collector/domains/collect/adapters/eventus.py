@@ -18,6 +18,7 @@ _EPOCH = "1900-01-01T00:00:00+00:00"
 
 
 def build_query(base_date: date, page: int) -> dict[str, Any]:
+    """CCR-MS-001#eventus.build_query"""
     day0 = kst_midnight_utc(base_date).isoformat()
     return {
         "query": "",
@@ -51,6 +52,7 @@ def _raw(item: dict[str, Any], key: str) -> Any:
 
 
 def parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], int]:
+    """CCR-MS-001#eventus.parse_page"""
     try:
         data = response.json()
     except ValueError as exc:
@@ -65,6 +67,7 @@ def parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], int]:
 
 
 def normalize(item: dict[str, Any]) -> Competition | None:
+    """CCR-MS-001#eventus.normalize"""
     source_id = str(_raw(item, "id") or "").strip()
     title = clean_text(_raw(item, "title"))
     subdomain = str(_raw(item, "subdomain") or "").strip()
@@ -95,9 +98,11 @@ class EventUsSource:
     robots_paths = ("/api/v1/engine/search",)
 
     def missing_config(self) -> bool:
+        """CCR-MS-001#EventUsSource.missing_config"""
         return False
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
+        """CCR-MS-001#EventUsSource.collect"""
         competitions: list[Competition] = []
         collected = dropped = 0
         page = 1

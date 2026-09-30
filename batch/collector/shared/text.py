@@ -19,7 +19,10 @@ def _blank(ch: str) -> bool:
 
 
 def clean_text(value: Any) -> str:
-    """앞뒤의 공백과 서식 문자만 뗀다. 가운데는 건드리지 않는다."""
+    """CCR-MS-001#text.clean_text
+
+    앞뒤의 공백과 서식 문자만 뗀다. 가운데는 건드리지 않는다.
+    """
     text = str(value or "")
     start, end = 0, len(text)
     while start < end and _blank(text[start]):
@@ -30,5 +33,8 @@ def clean_text(value: Any) -> str:
 
 
 def html_text(value: Any) -> str:
-    """HTML에서 꺼낸 글자. 브라우저가 보여 주는 대로 이어진 공백을 하나로 모은 뒤 앞뒤를 정리한다."""
+    """CCR-MS-001#text.html_text
+
+    HTML에서 꺼낸 글자. 브라우저가 보여 주는 대로 이어진 공백을 하나로 모은 뒤 앞뒤를 정리한다.
+    """
     return clean_text(_SPACES.sub(" ", str(value or "")))

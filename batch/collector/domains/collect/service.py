@@ -49,7 +49,10 @@ class CollectService:
         self._http_factory = http_factory
 
     def collect_all(self, base_date: date) -> list[SourceResult]:
-        """소스 순서대로 결과를 돌려준다. 신호를 받으면 Stopped를 낸다."""
+        """CCR-MS-001#CollectService.collect_all
+
+        소스 순서대로 결과를 돌려준다. 신호를 받으면 Stopped를 낸다.
+        """
         with ThreadPoolExecutor(max_workers=max(1, len(self._sources)), thread_name_prefix="source") as pool:
             futures = [pool.submit(self._collect_one, source, base_date) for source in self._sources]
             results = [future.result() for future in futures]
@@ -58,6 +61,7 @@ class CollectService:
         return results
 
     def _collect_one(self, source: Source, base_date: date) -> SourceResult:
+        """CCR-MS-001#CollectService._collect_one"""
         if source.missing_config():
             log.warning("%s: 자격증명이 설정에 없어 요청하지 않는다", source.name)
             return SourceResult.failed(source.name, FailureKind.MISSING_CONFIG, "자격증명 없음")

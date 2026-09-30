@@ -51,6 +51,7 @@ class Relevance(BaseModel):
 
 
 def build_input(competition: Competition) -> str:
+    """CCR-MS-001#openai_judge.build_input"""
     extras = ", ".join(competition.extras)
     if len(extras) > _EXTRAS_LIMIT:
         extras = extras[:_EXTRAS_LIMIT] + "…"
@@ -92,6 +93,7 @@ class OpenAiJudge:
         self._client = client or openai.OpenAI(api_key=api_key, max_retries=0, timeout=settings.timeout_seconds)
 
     def judge(self, competition: Competition) -> Answer:
+        """CCR-MS-001#OpenAiJudge.judge"""
         attempts = 1 + max(0, self._settings.retries)
         for attempt in range(attempts):
             if self._stop.is_set():

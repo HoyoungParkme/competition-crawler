@@ -15,9 +15,15 @@ class Source(Protocol):
     robots_paths: tuple[str, ...]  # 그 호스트에서 요청하는 경로
 
     def missing_config(self) -> bool:
-        """필요한 자격증명이 설정에 없으면 True. 그때는 요청하지 않는다(UC-S1 1a)."""
+        """CCR-MS-001#Source.missing_config
+
+        필요한 자격증명이 설정에 없으면 True. 그때는 요청하지 않는다(UC-S1 1a).
+        """
         ...
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
-        """목록을 받아 공통 형식으로 맞춘다. 틀을 찾지 못하면 FormatError, 요청 실패는 HttpFailure."""
+        """CCR-MS-001#Source.collect
+
+        목록을 받아 공통 형식으로 맞춘다. 틀을 찾지 못하면 FormatError, 요청 실패는 HttpFailure.
+        """
         ...

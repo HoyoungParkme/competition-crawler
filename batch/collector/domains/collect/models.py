@@ -53,6 +53,7 @@ class Competition:
     practice: bool = False  # Kaggle 상시 연습용 대회. 마감 판정에서 버린다
 
     def dates_filled(self) -> int:
+        """CCR-MS-001#Competition.dates_filled"""
         return (self.start_date is not None) + (self.deadline is not None)
 
 
@@ -81,8 +82,10 @@ class SourceResult:
 
     @property
     def normalized(self) -> int:
+        """CCR-MS-001#SourceResult.normalized"""
         return len(self.competitions)
 
     @classmethod
-    def failed(cls, source: SourceName, kind: FailureKind, detail: str) -> "SourceResult":
+    def failed(cls, source: SourceName, kind: FailureKind, detail: str) -> SourceResult:
+        """CCR-MS-001#SourceResult.failed"""
         return cls(source=source, competitions=[], collected=0, dropped=0, failure=kind, detail=detail)

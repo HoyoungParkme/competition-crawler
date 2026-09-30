@@ -32,6 +32,7 @@ class RunsFile:
 
 
 def _atomic_write(path: Path, text: str) -> None:
+    """CCR-MS-001#record._atomic_write"""
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     try:
@@ -94,11 +95,15 @@ class RecordCrud:
         self._export_from = export_from
 
     def prepare(self) -> None:
+        """CCR-MS-001#RecordCrud.prepare"""
         if self._export_from is not None:
             export_main_state(self._export_from, self._state_dir)
 
     def read_history(self) -> list[HistoryRecord] | None:
-        """처리 이력. 파일이 없으면 None. 한 줄이라도 읽히지 않으면 HistoryReadFailed."""
+        """CCR-MS-001#RecordCrud.read_history
+
+        처리 이력. 파일이 없으면 None. 한 줄이라도 읽히지 않으면 HistoryReadFailed.
+        """
         path = self._state_dir / HISTORY_FILE
         if not path.exists():
             return None
@@ -120,7 +125,10 @@ class RecordCrud:
         return records
 
     def read_runs(self) -> RunsFile:
-        """실행 요약. 파일이 없으면 빈 것. 읽히지 않는 줄은 건너뛰고 센다."""
+        """CCR-MS-001#RecordCrud.read_runs
+
+        실행 요약. 파일이 없으면 빈 것. 읽히지 않는 줄은 건너뛰고 센다.
+        """
         path = self._state_dir / RUNS_FILE
         if not path.exists():
             return RunsFile()
@@ -144,11 +152,14 @@ class RecordCrud:
         return result
 
     def reset_appends(self) -> None:
+        """CCR-MS-001#RecordCrud.reset_appends"""
         _atomic_write(self._append_dir / HISTORY_FILE, "")
         _atomic_write(self._append_dir / RUNS_FILE, "")
 
     def write_history_appends(self, lines: list[dict[str, Any]]) -> None:
+        """CCR-MS-001#RecordCrud.write_history_appends"""
         _atomic_write(self._append_dir / HISTORY_FILE, _jsonl(lines))
 
     def write_run_append(self, line: dict[str, Any]) -> None:
+        """CCR-MS-001#RecordCrud.write_run_append"""
         _atomic_write(self._append_dir / RUNS_FILE, _jsonl([line]))

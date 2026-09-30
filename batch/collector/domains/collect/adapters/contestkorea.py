@@ -38,6 +38,7 @@ class CkItem:
 
 
 def parse_list(response: httpx.Response) -> list[CkItem]:
+    """CCR-MS-001#contestkorea.parse_list"""
     tree = HTMLParser(response.text)
     box = tree.css_first("div.list_style_2")
     if box is None:
@@ -79,7 +80,10 @@ def parse_list(response: httpx.Response) -> list[CkItem]:
 
 
 def resolve_dates(base_date: date, period: tuple[int, int, int, int] | None, days: int | None) -> tuple[date | None, date | None]:
-    """(접수시작일, 접수마감일). 날수를 읽지 못하면 연도를 정할 수 없어 둘 다 비운다."""
+    """CCR-MS-001#contestkorea.resolve_dates
+
+    (접수시작일, 접수마감일). 날수를 읽지 못하면 연도를 정할 수 없어 둘 다 비운다.
+    """
     if days is None:
         return None, None
     estimate = base_date + timedelta(days=days)
@@ -113,9 +117,11 @@ class ContestKoreaSource:
     robots_paths = ("/sub/list.php",)
 
     def missing_config(self) -> bool:
+        """CCR-MS-001#ContestKoreaSource.missing_config"""
         return False
 
     def collect(self, http: SourceHttp, base_date: date, page_cap: int) -> Collected:
+        """CCR-MS-001#ContestKoreaSource.collect"""
         merged: dict[str, CkItem] = {}
         order: list[str] = []
         pages = 0

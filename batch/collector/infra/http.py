@@ -45,7 +45,10 @@ class HttpFailure(Exception):
 
 
 def parse_retry_after(value: str | None, now: datetime | None = None) -> float | None:
-    """`Retry-After`를 초로 읽는다. 초 수와 HTTP 날짜를 모두 받는다. 읽지 못하면 None."""
+    """CCR-MS-001#http.parse_retry_after
+
+    `Retry-After`를 초로 읽는다. 초 수와 HTTP 날짜를 모두 받는다. 읽지 못하면 None.
+    """
     if not value:
         return None
     value = value.strip()
@@ -85,9 +88,11 @@ class SourceHttp:
         self.requests = 0
 
     def close(self) -> None:
+        """CCR-MS-001#SourceHttp.close"""
         self._client.close()
 
     def remaining(self) -> float:
+        """CCR-MS-001#SourceHttp.remaining"""
         return self._deadline - self._clock()
 
     def _check(self) -> None:
@@ -165,7 +170,10 @@ class SourceHttp:
         follow_redirects: bool = False,
         accept_client_errors: bool = False,
     ) -> T:
-        """요청하고 `parse`로 읽는다. `parse`가 FormatError를 내면 다시 보낸다."""
+        """CCR-MS-001#SourceHttp.fetch
+
+        요청하고 `parse`로 읽는다. `parse`가 FormatError를 내면 다시 보낸다.
+        """
         attempts = 1 + max(0, self._settings.retries)
         for attempt in range(attempts):
             last = attempt == attempts - 1

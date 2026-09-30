@@ -47,6 +47,7 @@ class KnownSet:
     history_ids: set[tuple[str, str]] = field(default_factory=set)
 
     def add(self, known: Known) -> None:
+        """CCR-MS-001#KnownSet.add"""
         index = len(self.items)
         self.items.append(known)
         key = known.key
@@ -68,7 +69,10 @@ class JudgeOutcome:
 
 
 def entries_for(bundle: Bundle, result: Result, members: list[Competition] | None = None) -> list[HistoryEntry]:
-    """구성원마다 한 줄. 구성원에게 없는 접수 날짜는 대표의 날짜로 채운다(UC-S4 0.1 · CCR-PRD-001 5.2)."""
+    """CCR-MS-001#screen.entries_for
+
+    구성원마다 한 줄. 구성원에게 없는 접수 날짜는 대표의 날짜로 채운다(UC-S4 0.1 · CCR-PRD-001 5.2).
+    """
     rep = bundle.representative
     seen: set[tuple[str, str]] = set()
     entries: list[HistoryEntry] = []
@@ -122,7 +126,10 @@ class ScreenService:
 
     # UC-S3
     def drop_expired(self, competitions: list[Competition]) -> tuple[list[Competition], int]:
-        """접수마감일이 기준일보다 이른 대회와 Kaggle 상시 연습용 대회를 버린다. 마감일이 비면 남긴다."""
+        """CCR-MS-001#ScreenService.drop_expired
+
+        접수마감일이 기준일보다 이른 대회와 Kaggle 상시 연습용 대회를 버린다. 마감일이 비면 남긴다.
+        """
         kept = [
             c
             for c in competitions
@@ -132,6 +139,7 @@ class ScreenService:
 
     # UC-S4 4
     def bundle(self, competitions: list[Competition]) -> list[Bundle]:
+        """CCR-MS-001#ScreenService.bundle"""
         keys = [key_of_competition(c) for c in competitions]
         bundles: list[Bundle] = []
         for indexes in group(competitions, keys):
@@ -144,6 +152,7 @@ class ScreenService:
 
     # UC-S4 3
     def build_known(self, entries: list[ListEntry], history: list[HistoryRecord]) -> KnownSet:
+        """CCR-MS-001#ScreenService.build_known"""
         known = KnownSet()
         for entry in entries:
             # 참가자가 지운 항목도 파일에 남아 있어 그대로 아는 대회다(UC-S4 3)
@@ -162,7 +171,10 @@ class ScreenService:
 
     # UC-S4 5 · 6 · 7
     def split_known(self, bundles: list[Bundle], known: KnownSet) -> tuple[list[Bundle], int]:
-        """아는 대회와 같은 묶음을 빼고 나머지를 돌려준다. 확실하게 같았으면 구성원을 처리 이력에 적는다."""
+        """CCR-MS-001#ScreenService.split_known
+
+        아는 대회와 같은 묶음을 빼고 나머지를 돌려준다. 확실하게 같았으면 구성원을 처리 이력에 적는다.
+        """
         unknown: list[Bundle] = []
         known_count = 0
         for bundle in bundles:
@@ -177,6 +189,7 @@ class ScreenService:
         return unknown, known_count
 
     def _matches(self, bundle: Bundle, known: KnownSet) -> list[tuple[Known, PairResult]]:
+        """CCR-MS-001#ScreenService._matches"""
         keys = bundle.keys or [key_of_competition(m) for m in bundle.members]
         shortlist: set[int] = set()
         for key in keys:
@@ -205,6 +218,7 @@ class ScreenService:
         return matches
 
     def _record_known(self, bundle: Bundle, matches: list[tuple[Known, PairResult]], known: KnownSet) -> None:
+        """CCR-MS-001#ScreenService._record_known"""
         certain = [item for item, result in matches if result.certain]
         best = min(matches, key=lambda m: (m[1].step or 9, -m[1].similarity))
         if best[1].step != 1:
@@ -227,6 +241,7 @@ class ScreenService:
 
     # UC-S5
     def judge(self, bundles: list[Bundle]) -> JudgeOutcome:
+        """CCR-MS-001#ScreenService.judge"""
         outcome = JudgeOutcome()
         if not bundles:
             return outcome
@@ -256,6 +271,7 @@ class ScreenService:
         return outcome
 
     def _ask_all(self, bundles: list[Bundle], outcome: JudgeOutcome) -> list[Bundle]:
+        """CCR-MS-001#ScreenService._ask_all"""
         fatal = threading.Event()
         judge = self._judge
         assert judge is not None

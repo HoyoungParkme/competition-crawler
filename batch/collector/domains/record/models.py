@@ -76,7 +76,8 @@ class HistoryRecord:
     run_id: str
 
     @classmethod
-    def of(cls, entry: HistoryEntry, base_date: date, run_id: str) -> "HistoryRecord":
+    def of(cls, entry: HistoryEntry, base_date: date, run_id: str) -> HistoryRecord:
+        """CCR-MS-001#HistoryRecord.of"""
         return cls(
             source=entry.source,
             source_id=entry.source_id,
@@ -90,6 +91,7 @@ class HistoryRecord:
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#HistoryRecord.to_dict"""
         return {
             "source": self.source,
             "source_id": self.source_id,
@@ -103,7 +105,8 @@ class HistoryRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "HistoryRecord":
+    def from_dict(cls, data: dict[str, Any]) -> HistoryRecord:
+        """CCR-MS-001#HistoryRecord.from_dict"""
         missing = [k for k in HISTORY_REQUIRED if data.get(k) in (None, "")]
         if missing:
             raise ValueError(f"필수 필드가 없다: {missing}")
@@ -128,6 +131,7 @@ class RunWarning:
     cause: str | None = None  # 판별 미룸일 때 missing_key · call_failed
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#RunWarning.to_dict"""
         out: dict[str, Any] = {"kind": str(self.kind)}
         if self.source is not None:
             out["source"] = self.source
@@ -145,6 +149,7 @@ class SourceLine:
     failure: str | None
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#SourceLine.to_dict"""
         return {"collected": self.collected, "normalized": self.normalized, "failure": self.failure}
 
 
@@ -167,10 +172,12 @@ class RunLine:
     duration_s: float = 0.0
 
     def fail(self, reason: FailureReason) -> None:
+        """CCR-MS-001#RunLine.fail"""
         self.result = RunResult.FAILURE
         self.failure_reason = reason
 
     def to_dict(self) -> dict[str, Any]:
+        """CCR-MS-001#RunLine.to_dict"""
         return {
             "run_id": self.run_id,
             "base_date": self.base_date.isoformat(),

@@ -37,6 +37,7 @@ class SecretFilter(logging.Filter):
         return text
 
     def filter(self, record: logging.LogRecord) -> bool:
+        """CCR-MS-001#SecretFilter.filter"""
         if self._variants:
             record.msg = self._mask(record.getMessage())
             record.args = ()
@@ -51,6 +52,7 @@ class SecretFilter(logging.Filter):
 
 
 def setup_logging(secrets: Iterable[str]) -> None:
+    """CCR-MS-001#logging.setup_logging"""
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter("%(levelname)s %(name)s: %(message)s"))
     handler.addFilter(SecretFilter(secrets))

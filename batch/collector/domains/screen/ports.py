@@ -25,5 +25,8 @@ class Answer:
 
 class Judge(Protocol):
     def judge(self, competition: Competition) -> Answer:
-        """묶음의 대표 하나가 관심 분야인지 묻는다. 실패하면 JudgeError."""
+        """CCR-MS-001#Judge.judge
+
+        묶음의 대표 하나가 관심 분야인지 묻는다. 실패하면 JudgeError.
+        """
         ...

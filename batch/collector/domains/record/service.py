@@ -37,10 +37,14 @@ class State:
 
     @property
     def keep_count(self) -> int:
+        """CCR-MS-001#State.keep_count"""
         return sum(1 for r in self.history if r.result is Result.KEEP)
 
     def last_keep_count(self) -> int | None:
-        """실행 요약에 마지막으로 적힌 남김 기록의 수. 적힌 줄이 없으면 None."""
+        """CCR-MS-001#State.last_keep_count
+
+        실행 요약에 마지막으로 적힌 남김 기록의 수. 적힌 줄이 없으면 None.
+        """
         for line in reversed(self.runs.lines):
             value = line.get("keep_count")
             if isinstance(value, int) and not isinstance(value, bool):
@@ -86,7 +90,10 @@ class RecordService:
         return state
 
     def history_shrank(self, state: State) -> bool:
-        """남김 기록이 실행 요약에 마지막으로 적힌 수보다 적은가(UC-S4 2c · 2a)."""
+        """CCR-MS-001#RecordService.history_shrank
+
+        남김 기록이 실행 요약에 마지막으로 적힌 수보다 적은가(UC-S4 2c · 2a).
+        """
         last = state.last_keep_count()
         if last is None:
             return False  # 첫 실행이거나 적힌 줄이 없다(UC-S4 2a1)
@@ -109,10 +116,14 @@ class RecordService:
 
     @property
     def appended_count(self) -> int:
+        """CCR-MS-001#RecordService.appended_count"""
         return len(self._appended)
 
     def zero_count_warnings(self, results: list[SourceResult], state: State, days: int) -> list[RunWarning]:
-        """꾸준히 건수를 내던 소스가 오류 없이 0건을 냈는가(UC-S7 2)."""
+        """CCR-MS-001#RecordService.zero_count_warnings
+
+        꾸준히 건수를 내던 소스가 오류 없이 0건을 냈는가(UC-S7 2).
+        """
         warnings: list[RunWarning] = []
         for result in results:
             if result.failure is not None or result.normalized > 0:

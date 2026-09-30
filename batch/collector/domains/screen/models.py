@@ -73,6 +73,9 @@ class Bundle:
 
     @property
     def deadline(self) -> date | None:
-        """묶음의 접수마감일은 구성원 가운데 가장 늦은 값이다. 오늘 마감인지 가를 때 쓴다."""
+        """CCR-MS-001#Bundle.deadline
+
+        묶음의 접수마감일은 구성원 가운데 가장 늦은 값이다. 오늘 마감인지 가를 때 쓴다.
+        """
         values = [m.deadline for m in self.members if m.deadline is not None]
         return max(values) if values else None
