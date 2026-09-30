@@ -931,11 +931,11 @@ SettingsDialog({open, tokens: TokenStore, onClose}): JSX
   상태: value · checking · problem
   onSave(): Promise<void>                           20.4. readStatusVersion(value)로 검증한 뒤 tokens.set
   onClear(): void                                   20.5. tokens.clear
-tokenProblem(status: number): string                순수 함수. 401 · 403 · 404를 사람 말로
+tokenProblem(status: number): string                순수 함수. 401 · 403과 그 밖의 거절 코드를 사람 말로
 ```
 
 **규칙이 사는 곳**
-- 저장 전에 반드시 판 읽기로 검증한다. 200이면 저장하고 닫는다. 401 · 403 · 404면 저장하지 않고 이유를 칸 아래에 보인다([[CCR-UC-001#UC-H2]] 4 · 4a · [[CCR-API-001]] 2.3).
+- 저장 전에 반드시 판 읽기로 검증한다. 200이나 404(상태 파일이 아직 없음)면 저장하고 닫는다. 401 · 403이면 저장하지 않고 이유를 칸 아래에 보인다([[CCR-UC-001#UC-H2]] 4 · 4a · [[CCR-API-001]] 2.3). 공개 저장소라 쓰기 권한은 이 검증으로 가르지 못하고 첫 저장에서 드러난다([[CCR-UC-001#UC-H2]] 4b).
 - 토큰 값은 입력 칸(password)에만 있고, 저장한 뒤 다시 보여 주지 않는다. 20.6은 있음 · 없음만이다.
 - 대화상자가 열린 동안 UI-1의 조작은 막는다. 바깥 누름과 Esc로 닫힌다.
 
