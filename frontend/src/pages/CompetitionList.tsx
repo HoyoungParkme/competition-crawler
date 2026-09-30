@@ -45,7 +45,7 @@ export function isExpired(entry: ListEntry, today: string): boolean {
 }
 
 /** 접수마감일 오름차순. 없으면 맨 뒤. 같은 마감일이면 대회명 순. 원본은 바꾸지 않는다 */
-export function sortByDeadline(rows: Row[], _today: string): Row[] {
+export function sortByDeadline(rows: Row[]): Row[] {
   return [...rows].sort((a, b) => {
     const da = a.entry.deadline
     const db = b.entry.deadline
@@ -155,7 +155,7 @@ export function CompetitionList() {
         (filters.source === '' || row.entry.source === filters.source) &&
         (filters.status === '' || row.status.status === filters.status),
     )
-    const sorted = sortByDeadline(filtered, today)
+    const sorted = sortByDeadline(filtered)
     return {
       active: sorted.filter((row) => !row.expired && !row.status.hidden),
       folded: sorted.filter((row) => row.expired || row.status.hidden),
