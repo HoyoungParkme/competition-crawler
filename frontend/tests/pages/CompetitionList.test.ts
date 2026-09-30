@@ -30,7 +30,7 @@ describe('sortByDeadline', () => {
       row(entry('a', '2026-10-06', '가')),
       row(entry('d', '2026-10-01')),
     ]
-    expect(sortByDeadline(rows, TODAY).map((r) => r.entry.id)).toEqual(['d', 'a', 'b', 'c'])
+    expect(sortByDeadline(rows).map((r) => r.entry.id)).toEqual(['d', 'a', 'b', 'c'])
     expect(rows[0]!.entry.id).toBe('c') // 원본은 그대로
   })
 })

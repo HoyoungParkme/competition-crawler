@@ -4,10 +4,9 @@ import { saveFailureText } from '../../src/components/Notice'
 import { tokenProblem } from '../../src/components/SettingsDialog'
 
 describe('tokenProblem', () => {
-  it('explains 401, 403 and 404 in plain words with the code', () => {
+  it('explains 401 and 403 in plain words and other codes with the code', () => {
     expect(tokenProblem(401)).toContain('401')
     expect(tokenProblem(403)).toContain('Contents')
-    expect(tokenProblem(404)).toContain('저장소에 닿지')
     expect(tokenProblem(500)).toContain('500')
   })
 })

@@ -15,13 +15,11 @@ interface Props {
   onClose: () => void
 }
 
-/** 401 · 403 · 404를 사람 말로(CCR-API-001 2.3) */
+/** 401 · 403과 그 밖의 거절 코드를 사람 말로(CCR-API-001 2.3). 판 읽기의 404는 파일이 없다는 뜻이라 여기 오지 않는다 */
 export function tokenProblem(status: number): string {
   if (status === 401) return '토큰이 틀렸거나 만료됐습니다 (401). 값을 다시 확인해 주세요.'
   if (status === 403)
     return '권한이 모자랍니다 (403). Contents 읽기·쓰기 권한이 있는지, 요청 한도에 닿지 않았는지 봐 주세요.'
-  if (status === 404)
-    return '토큰이 이 저장소에 닿지 않습니다 (404). 저장소 접근 범위를 확인해 주세요.'
   return `확인하지 못했습니다 (${status}). 잠시 뒤 다시 시도해 주세요.`
 }
 
