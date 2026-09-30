@@ -8,15 +8,15 @@ from difflib import SequenceMatcher
 import pytest
 
 from collector.domains.collect.models import SourceName
-from collector.domains.notion.models import NotionRow
+from collector.domains.list.models import ListEntry
 from collector.domains.record.models import HistoryRecord, Result
 from collector.domains.screen.matching import (
     extract_marks,
     group,
     judge_pair,
     key_of_competition,
+    key_of_entry,
     key_of_history,
-    key_of_notion,
     normalize_link,
     normalize_title,
     similarity,
@@ -117,13 +117,25 @@ def test_step1_same_source_and_id_ignores_changed_dates() -> None:
     assert (result.verdict, result.step, result.certain) == (Verdict.SAME, 1, True)
 
 
-def test_notion_link_match_still_checks_years() -> None:
-    link = "https://event-us.kr/big/event/1?utm_source=notion"
-    candidate = comp("2026 Big Data 활용 대회", link="https://event-us.kr/big/event/1")
-    same_year = NotionRow("p1", "Big Data 대회 2026", link, None, None)
-    other_year = NotionRow("p2", "2025 Big Data 활용 대회", link, None, None)
-    assert judge_pair(key_of_competition(candidate), key_of_notion(same_year)).step == 1
-    assert judge_pair(key_of_competition(candidate), key_of_notion(other_year)).verdict is Verdict.DIFFERENT
+def entry(title: str, link: str, *, source: str = "event-us", source_id: str = "old") -> ListEntry:
+    return ListEntry(source, source_id, title, link, None, None, date(2026, 9, 1), "")
+
+
+def test_entry_with_same_source_id_is_step_one() -> None:
+    candidate = comp("이름이 바뀐 대회", source_id="1", deadline=date(2026, 10, 1))
+    known = entry("예전 이름", "https://other.example/1", source_id="1")
+    result = judge_pair(key_of_competition(candidate), key_of_entry(known))
+    assert (result.step, result.certain) == (1, True)
+
+
+def test_entry_link_match_still_checks_years() -> None:
+    # 소스가 개편해 원천 ID가 바뀐 공고를 링크로 잇되, 연도가 다르면 다른 대회다
+    link = "https://event-us.kr/big/event/1?utm_source=page"
+    candidate = comp("2026 Big Data 활용 대회", source_id="new", link="https://event-us.kr/big/event/1")
+    same_year = entry("Big Data 대회 2026", link, source_id="a")
+    other_year = entry("2025 Big Data 활용 대회", link, source_id="b")
+    assert judge_pair(key_of_competition(candidate), key_of_entry(same_year)).step == 1
+    assert judge_pair(key_of_competition(candidate), key_of_entry(other_year)).verdict is Verdict.DIFFERENT
 
 
 def test_name_only_match_is_not_certain() -> None:
@@ -142,10 +154,10 @@ def test_below_threshold_is_undecided_not_different() -> None:
 
 
 def test_prd_pair_at_082_is_undecided() -> None:
-    # 노션 행과 event-us의 부문 모집 공고는 같은 대회지만 0.82라 판단하지 않는다(PRD 5.2)
-    row = NotionRow("p1", "2026 데이터·AI 혁신 챌린지 통합경진대회", "https://dxchallenge.co.kr", None, None)
+    # 목록 항목과 event-us의 부문 모집 공고는 같은 대회지만 0.82라 판단하지 않는다(PRD 5.2)
+    known = entry("2026 데이터·AI 혁신 챌린지 통합경진대회", "https://dxchallenge.co.kr", source="DACON", source_id="d")
     notice = comp("2026 데이터·AI 혁신 챌린지 통합경진대회 데이터 문제해결 부문 모집")
-    assert judge_pair(key_of_competition(notice), key_of_notion(row)).verdict is Verdict.UNDECIDED
+    assert judge_pair(key_of_competition(notice), key_of_entry(known)).verdict is Verdict.UNDECIDED
 
 
 def test_threshold_is_090() -> None:

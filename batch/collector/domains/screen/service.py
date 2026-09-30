@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from collector.domains.collect.models import Competition
-from collector.domains.notion.models import NotionRow
+from collector.domains.list.models import ListEntry
 from collector.domains.record.models import HistoryEntry, HistoryRecord, Result
 from collector.domains.record.service import RecordService
 from collector.domains.screen.matching import (
@@ -22,8 +22,8 @@ from collector.domains.screen.matching import (
     group,
     judge_pair,
     key_of_competition,
+    key_of_entry,
     key_of_history,
-    key_of_notion,
     representative_order,
 )
 from collector.domains.screen.models import Bundle, Known, KnownKind, MatchKey, Outcome, PairResult, Verdict
@@ -38,7 +38,7 @@ CAUSE_CALL_FAILED = "call_failed"
 
 @dataclass
 class KnownSet:
-    """아는 대회(UC-S4 3). 노션 현재 행과 처리 이력을 합친 것이다."""
+    """아는 대회(UC-S4 3). 목록 항목과 처리 이력을 합친 것이다."""
 
     items: list[Known] = field(default_factory=list)
     by_id: dict[tuple[str, str], list[int]] = field(default_factory=lambda: defaultdict(list))
@@ -52,7 +52,7 @@ class KnownSet:
         key = known.key
         if key.source is not None and key.source_id is not None:
             self.by_id[(key.source, key.source_id)].append(index)
-        if key.from_notion and key.link:
+        if key.from_list and key.link:
             self.by_link[key.link].append(index)
         if key.title_norm:
             self.by_title[key.title_norm].append(index)
@@ -143,10 +143,11 @@ class ScreenService:
         return bundles
 
     # UC-S4 3
-    def build_known(self, rows: list[NotionRow], history: list[HistoryRecord]) -> KnownSet:
+    def build_known(self, entries: list[ListEntry], history: list[HistoryRecord]) -> KnownSet:
         known = KnownSet()
-        for row in rows:
-            known.add(Known(KnownKind.NOTION, key_of_notion(row), Result.KEEP, f"노션 행 {row.title}"))
+        for entry in entries:
+            # 참가자가 지운 항목도 파일에 남아 있어 그대로 아는 대회다(UC-S4 3)
+            known.add(Known(KnownKind.LIST, key_of_entry(entry), Result.KEEP, f"목록 항목 {entry.id} {entry.title}"))
         skipped = 0
         for record in history:
             known.history_ids.add((record.source, record.source_id))

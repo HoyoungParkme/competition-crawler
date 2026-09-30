@@ -14,7 +14,7 @@ from difflib import SequenceMatcher
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from collector.domains.collect.models import SOURCE_PRIORITY, Competition, SourceName
-from collector.domains.notion.models import NotionRow
+from collector.domains.list.models import ListEntry
 from collector.domains.record.models import HistoryRecord
 from collector.domains.screen.models import MatchKey, PairResult, Verdict
 from collector.shared.text import clean_text
@@ -113,7 +113,7 @@ def _key(
     source: str | None,
     source_id: str | None,
     link: str | None,
-    from_notion: bool,
+    from_list: bool,
     title: str,
     start: date | None,
     deadline: date | None,
@@ -124,7 +124,7 @@ def _key(
         source=source,
         source_id=source_id,
         link=normalize_link(link),
-        from_notion=from_notion,
+        from_list=from_list,
         title_norm=norm,
         years=years,
         rounds=rounds,
@@ -139,22 +139,24 @@ def key_of_competition(competition: Competition) -> MatchKey:
         source=str(competition.source),
         source_id=competition.source_id,
         link=competition.link,
-        from_notion=False,
+        from_list=False,
         title=competition.title,
         start=competition.start_date,
         deadline=competition.deadline,
     )
 
 
-def key_of_notion(row: NotionRow) -> MatchKey:
+def key_of_entry(entry: ListEntry) -> MatchKey:
+    """CCR-MS-001#matching.key_of_entry"""
+    # 원천 ID로 1단계를 보고, 링크는 소스 개편으로 원천 ID가 바뀐 공고를 잇는 예비다(CCR-DOM-001 ListEntry)
     return _key(
-        source=None,
-        source_id=None,
-        link=row.link,
-        from_notion=True,
-        title=row.title,
-        start=row.start_date,
-        deadline=row.deadline,
+        source=entry.source,
+        source_id=entry.source_id,
+        link=entry.link,
+        from_list=True,
+        title=entry.title,
+        start=entry.start_date,
+        deadline=entry.deadline,
     )
 
 
@@ -162,8 +164,8 @@ def key_of_history(record: HistoryRecord) -> MatchKey:
     return _key(
         source=record.source,
         source_id=record.source_id,
-        link=None,  # 링크는 노션 행과 견줄 때만 쓴다
-        from_notion=False,
+        link=None,  # 링크는 목록 항목과 견줄 때만 쓴다
+        from_list=False,
         title=record.title,
         start=record.start_date,
         deadline=record.deadline,
@@ -195,10 +197,10 @@ def _marks_differ(a: MatchKey, b: MatchKey) -> bool:
 
 def judge_pair(a: MatchKey, b: MatchKey) -> PairResult:
     """두 판정 값을 다섯 단계로 견준다(CCR-UC-001 UC-S4 판정표)."""
-    # 1단계. 출처와 원천 ID. 노션 행과는 링크로 견주되 2단계를 더 본다
+    # 1단계. 출처와 원천 ID. 목록 항목과는 링크로도 견주되 2단계를 더 본다
     if a.source_id is not None and a.source == b.source and a.source_id == b.source_id:
         return PairResult(Verdict.SAME, step=1, similarity=1.0, certain=True)
-    if (a.from_notion or b.from_notion) and a.link and a.link == b.link:
+    if (a.from_list or b.from_list) and a.link and a.link == b.link:
         if _marks_differ(a, b):
             return PairResult(Verdict.DIFFERENT, step=2)
         return PairResult(Verdict.SAME, step=1, similarity=1.0, certain=True)

@@ -25,12 +25,12 @@ class PairResult:
 
 @dataclass(frozen=True)
 class MatchKey:
-    """판정에 쓰는 값. 대회 · 노션 행 · 처리 이력 기록에서 같은 방법으로 뽑는다(CCR-DOM-001 4.2 규칙 6)."""
+    """판정에 쓰는 값. 대회 · 목록 항목 · 처리 이력 기록에서 같은 방법으로 뽑는다(CCR-DOM-001 4.2 규칙 6)."""
 
     source: str | None
     source_id: str | None
-    link: str | None  # 추적용 매개변수를 뗀 링크. 노션 행과 견줄 때만 쓴다
-    from_notion: bool
+    link: str | None  # 추적용 매개변수를 뗀 링크. 목록 항목과 견줄 때만 쓴다
+    from_list: bool
     title_norm: str
     years: frozenset[int]
     rounds: frozenset[int]
@@ -40,13 +40,13 @@ class MatchKey:
 
 
 class KnownKind(StrEnum):
-    NOTION = "notion"
+    LIST = "list"
     HISTORY = "history"
 
 
 @dataclass(frozen=True)
 class Known:
-    """이미 아는 대회. 노션 행이면 결과는 남김이다."""
+    """이미 아는 대회. 목록 항목이면 결과는 남김이다."""
 
     kind: KnownKind
     key: MatchKey
@@ -58,7 +58,6 @@ class Outcome(StrEnum):
     KNOWN = "known"
     DISCARDED = "discarded"
     LOADED = "loaded"
-    CREATE_FAILED = "create_failed"
     DEFERRED = "deferred"
 
 
@@ -69,7 +68,7 @@ class Bundle:
     judge_failed: bool = False
     outcome: Outcome | None = None
     matched: list[tuple[Known, PairResult]] = field(default_factory=list)
-    reason: str = ""  # 판별 근거. 로그에만 남긴다
+    reason: str = ""  # 판별 근거. 목록 항목에 들어간다(CCR-UC-001 UC-S6)
     keys: list[MatchKey] = field(default_factory=list, repr=False)  # 구성원의 판정 값. 구성원과 같은 차례
 
     @property

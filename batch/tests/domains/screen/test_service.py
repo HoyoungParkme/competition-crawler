@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from collector.domains.collect.models import Competition, SourceName
-from collector.domains.notion.models import NotionRow
+from collector.domains.list.models import ListEntry
 from collector.domains.record.crud import RecordCrud
 from collector.domains.record.models import HistoryRecord, Result
 from collector.domains.record.service import RecordService
@@ -101,14 +101,26 @@ def test_known_by_source_id_and_member_records(tmp_path: Path) -> None:
     ]
 
 
-def test_notion_row_keeps_and_wins_over_discard(tmp_path: Path) -> None:
+def test_list_entry_keeps_and_wins_over_discard(tmp_path: Path) -> None:
     screen, record = service(tmp_path)
     candidate = comp("2026 데이터 분석 경진대회", source_id="new", start=date(2026, 9, 1), deadline=date(2026, 10, 1))
-    rows = [NotionRow("p", "2026 데이터 분석 경진대회", None, date(2026, 9, 1), date(2026, 10, 1))]
-    known = screen.build_known(rows, [history("2026 데이터 분석 경진대회", Result.DISCARD, source_id="x", deadline=date(2026, 10, 1))])
+    entries = [ListEntry("DACON", "d", "2026 데이터 분석 경진대회", "https://dacon.io/d", date(2026, 9, 1), date(2026, 10, 1), date(2026, 9, 1))]
+    known = screen.build_known(entries, [history("2026 데이터 분석 경진대회", Result.DISCARD, source_id="x", deadline=date(2026, 10, 1))])
     unknown, count = screen.split_known(screen.bundle([candidate]), known)
     assert count == 1
     assert [e.result for e in record.entries] == [Result.KEEP]
+
+
+def test_list_entry_is_found_by_source_id_and_by_link(tmp_path: Path) -> None:
+    # 참가자가 페이지에서 지운 항목도 파일에 남아 있어 그대로 아는 대회다(UC-A2 5a)
+    screen, record = service(tmp_path)
+    entries = [ListEntry("event-us", "9", "지운 대회", "https://example.com/e/9", None, date(2026, 10, 1), date(2026, 9, 1))]
+    known = screen.build_known(entries, [])
+    by_id = comp("이름이 바뀐 지운 대회", source_id="9", deadline=date(2026, 10, 1))
+    by_link = comp("지운 대회", source_id="renumbered", link="https://example.com/e/9?utm_source=x", deadline=date(2026, 10, 1))
+    unknown, count = screen.split_known(screen.bundle([by_id, by_link]), known)
+    assert unknown == [] and count == 2  # 원천 ID로 하나, 링크로 하나가 아는 대회로 빠진다
+    assert {(e.source_id, e.result) for e in record.entries} == {("9", Result.KEEP), ("renumbered", Result.KEEP)}
 
 
 def test_name_only_match_is_known_but_not_recorded(tmp_path: Path) -> None:
