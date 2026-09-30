@@ -61,17 +61,16 @@ def test_manual_kind() -> None:
 
 
 def test_empty_secrets_count_as_missing() -> None:
-    secrets = Secrets.from_env({"NOTION_TOKEN": "", "NOTION_DATA_SOURCE_ID": "  ", "OPENAI_API_KEY": "k"})
-    assert secrets.notion_token is None
-    assert secrets.notion_data_source_id is None
+    secrets = Secrets.from_env({"KAGGLE_API_TOKEN": "  ", "OPENAI_API_KEY": "k"})
+    assert secrets.kaggle_api_token is None
     assert secrets.values() == ["k"]
+    assert Secrets.from_env({}).values() == []  # 반드시 있어야 하는 시크릿은 없다
 
 
 def test_settings_file_loads_and_model_can_be_overridden() -> None:
     settings = Settings.load({})
     assert settings.source.page_cap == 20
     assert settings.source.budget_seconds == 120
-    assert settings.notion.write_timeout_seconds == 70
     assert settings.judge.concurrency == 4
     assert settings.zero_count_days == 3
     assert Settings.load({"OPENAI_MODEL": "gpt-5.6-luna"}).judge.model == "gpt-5.6-luna"
@@ -80,6 +79,6 @@ def test_settings_file_loads_and_model_can_be_overridden() -> None:
 
 def test_read_dotenv(tmp_path: Path) -> None:
     env = tmp_path / ".env"
-    env.write_text("# 주석\nNOTION_TOKEN='abc'\nexport OPENAI_MODEL=gpt-6-luna\nEMPTY=\nbroken line\n", encoding="utf-8")
-    assert read_dotenv(env) == {"NOTION_TOKEN": "abc", "OPENAI_MODEL": "gpt-6-luna", "EMPTY": ""}
+    env.write_text("# 주석\nKAGGLE_API_TOKEN='abc'\nexport OPENAI_MODEL=gpt-6-luna\nEMPTY=\nbroken line\n", encoding="utf-8")
+    assert read_dotenv(env) == {"KAGGLE_API_TOKEN": "abc", "OPENAI_MODEL": "gpt-6-luna", "EMPTY": ""}
     assert read_dotenv(tmp_path / "없음") == {}

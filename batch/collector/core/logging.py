@@ -7,41 +7,29 @@
 from __future__ import annotations
 
 import logging
-import re
 import sys
 from typing import Callable, Iterable
 
-_UUID_HEX = re.compile(r"^[0-9a-fA-F]{32}$")
-_UUID_DASHED = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
-
-def secret_variants(values: Iterable[str]) -> list[str]:
-    """가릴 문자열 목록. 노션 ID는 하이픈이 있는 형태와 없는 형태가 모두 로그에 나올 수 있다."""
-    out: list[str] = []
-    for value in values:
-        if not value:
-            continue
-        out.append(value)
-        if _UUID_HEX.match(value):
-            v = value.lower()
-            out.append(f"{v[0:8]}-{v[8:12]}-{v[12:16]}-{v[16:20]}-{v[20:32]}")
-        elif _UUID_DASHED.match(value):
-            out.append(value.replace("-", "").lower())
+def _to_mask(values: Iterable[str]) -> list[str]:
     # 긴 것부터 가려야 짧은 것이 긴 것의 일부를 먼저 지우지 않는다
-    return sorted(set(out), key=len, reverse=True)
+    return sorted({v for v in values if v}, key=len, reverse=True)
 
 
 def register_actions_masks(values: Iterable[str], emit: Callable[[str], None] | None = None) -> None:
-    """GitHub Actions에 가릴 값을 알린다. 어떤 출력보다 먼저 부른다."""
+    """CCR-MS-001#logging.register_actions_masks
+
+    GitHub Actions에 가릴 값을 알린다. 어떤 출력보다 먼저 부른다.
+    """
     write = emit or (lambda line: print(line, flush=True))
-    for variant in secret_variants(values):
-        write(f"::add-mask::{variant}")
+    for value in _to_mask(values):
+        write(f"::add-mask::{value}")
 
 
 class SecretFilter(logging.Filter):
     def __init__(self, values: Iterable[str]) -> None:
         super().__init__()
-        self._variants = secret_variants(values)
+        self._variants = _to_mask(values)
 
     def _mask(self, text: str) -> str:
         for variant in self._variants:

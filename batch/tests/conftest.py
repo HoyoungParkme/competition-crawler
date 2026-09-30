@@ -9,7 +9,7 @@ from typing import Callable
 import httpx
 import pytest
 
-from collector.core.settings import JudgeSettings, NotionSettings, SourceSettings
+from collector.core.settings import JudgeSettings, SourceSettings
 from collector.infra.http import SourceHttp
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -46,14 +46,6 @@ SOURCE_SETTINGS = SourceSettings(
     interval_seconds=1.0,
     page_cap=20,
     budget_seconds=120,
-)
-NOTION_SETTINGS = NotionSettings(
-    read_timeout_seconds=20,
-    write_timeout_seconds=70,
-    retries=3,
-    backoff_seconds=(1.0, 2.0, 4.0),
-    retry_after_cap_seconds=60,
-    requests_per_second=3.0,
 )
 JUDGE_SETTINGS = JudgeSettings(
     model="gpt-6-luna",
