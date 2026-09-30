@@ -15,7 +15,7 @@ AI·개발 대회를 매일 아침 여섯 곳에서 모아, 접수 중이고 관
 batch/             배치. collector/(본체) · tests/ · settings.toml · finish.py(마무리 단계)
 data/              competitions.jsonl(목록) · processed.jsonl(처리 이력) · runs.jsonl(실행 요약)는 배치가 커밋한다
                    status.json(진행 상태 · 지움)은 페이지만 쓴다
-frontend/          대회 목록 페이지(React + Vite). 준비 중
+frontend/          대회 목록 페이지(React + Vite + TypeScript). src/ · tests/(vitest)
 docs/specs/        명세 원본
 .github/           workflows/daily.yml · dependabot.yml
 .env.example       로컬 실행에 필요한 환경 변수의 이름
@@ -76,3 +76,12 @@ uv run ruff format --check && uv run ruff check
 ```
 
 로컬 실행은 데이터 파일을 작업 트리가 아니라 `origin/main` 최신 판에서 꺼내 읽습니다. 그래서 `git fetch`가 되는 곳에서 돌립니다.
+
+페이지는 `frontend/`에서 띄웁니다. 로컬에서도 데이터는 `main`의 raw 파일을 읽고, 쓰기는 같은 Contents API입니다.
+
+```bash
+cd frontend
+npm ci
+npm run dev                 # http://localhost:5173/competition-crawler/
+npm test && npm run lint && npm run build
+```
