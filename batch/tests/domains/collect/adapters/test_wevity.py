@@ -40,12 +40,16 @@ def handler_for(detail_status: int = 200, shift: int = 0):
         if request.url.params.get("gbn") == "view":
             # 실제 사이트처럼 viewok로 보낸다
             ix = request.url.params["ix"]
-            return httpx.Response(302, headers={"Location": f"/?c=find&s=1&gbn=viewok&gp=1&ix={ix}"})
+            return httpx.Response(
+                302, headers={"Location": f"/?c=find&s=1&gbn=viewok&gp=1&ix={ix}"}
+            )
         if request.url.params.get("gbn") == "viewok":
             if detail_status != 200:
                 return httpx.Response(detail_status)
             end = BASE + timedelta(days=days[request.url.params["ix"]] + shift)
-            return httpx.Response(200, text=f"<table><tr><th>접수기간</th><td>2026-09-01 ~ {end}</td></tr></table>")
+            return httpx.Response(
+                200, text=f"<table><tr><th>접수기간</th><td>2026-09-01 ~ {end}</td></tr></table>"
+            )
         pages.append((request.url.params["cidx"], request.url.params["gp"]))
         if request.url.params["gp"] == "1":
             return httpx.Response(200, content=fixture_bytes("wev_c1_0927.html"))
@@ -105,7 +109,12 @@ def test_promoted_closed_notice_does_not_stop_the_category(clock: FakeClock) -> 
     # 2026-09-28 아침처럼 첫 쪽 위쪽 홍보 칸에 전날 마감된 공고가 있다. 쪽의 끝이 마감인 2쪽까지 읽고,
     # 2쪽 앞머리의 접수 중 공고도 받는다. 모두 마감인 3쪽은 읽지 않는다(CCR-DOM-002 5장 결정 8)
     pages = {
-        "1": list_page(("1", "D-3", "접수중"), ("2", "D+0", "마감"), ("3", "D-5", "접수중"), ("4", "D-9", "마감임박")),
+        "1": list_page(
+            ("1", "D-3", "접수중"),
+            ("2", "D+0", "마감"),
+            ("3", "D-5", "접수중"),
+            ("4", "D-9", "마감임박"),
+        ),
         "2": list_page(("5", "D-12", "접수중"), ("6", "D+1", "마감"), ("7", "D+2", "마감")),
         "3": list_page(("8", "D+3", "마감"), ("9", "D+4", "마감")),
     }

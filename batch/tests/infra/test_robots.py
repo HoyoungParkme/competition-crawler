@@ -28,7 +28,10 @@ def test_disallowed_path_raises(clock: FakeClock) -> None:
 
 
 def test_agent_specific_rule_applies(clock: FakeClock) -> None:
-    http = make_http(robots("User-agent: competition-crawler\nDisallow: /\n\nUser-agent: *\nAllow: /\n"), clock=clock)
+    http = make_http(
+        robots("User-agent: competition-crawler\nDisallow: /\n\nUser-agent: *\nAllow: /\n"),
+        clock=clock,
+    )
     with pytest.raises(RobotsDisallowed):
         ensure_allowed(http, "https://src.test", ["/list"])
 

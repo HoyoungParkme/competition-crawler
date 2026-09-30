@@ -9,7 +9,10 @@ from collector.domains.collect.models import Competition
 
 
 class JudgeError(Exception):
-    """판별하지 못했다. fatal이면 다시 물어도 같은 답이 오므로 남은 묶음도 묻지 않는다(CCR-API-001 2.2)."""
+    """판별하지 못했다.
+
+    fatal이면 다시 물어도 같은 답이 오므로 남은 묶음도 묻지 않는다(CCR-API-001 2.2).
+    """
 
     def __init__(self, detail: str, *, fatal: bool = False) -> None:
         super().__init__(detail)

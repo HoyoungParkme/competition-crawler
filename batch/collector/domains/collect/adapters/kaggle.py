@@ -56,7 +56,9 @@ def normalize(item: dict[str, Any]) -> Competition | None:
     for tag in item.get("tags") or []:
         if isinstance(tag, dict) and str(tag.get("name") or "").strip():
             extras.append(str(tag["name"]).strip())
-    deadline = parse_to_kst_date(item.get("newEntrantDeadline")) or parse_to_kst_date(item.get("deadline"))
+    deadline = parse_to_kst_date(item.get("newEntrantDeadline")) or parse_to_kst_date(
+        item.get("deadline")
+    )
     return Competition(
         source=SourceName.KAGGLE,
         source_id=slug,

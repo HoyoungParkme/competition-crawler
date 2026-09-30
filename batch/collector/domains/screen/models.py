@@ -25,7 +25,10 @@ class PairResult:
 
 @dataclass(frozen=True)
 class MatchKey:
-    """판정에 쓰는 값. 대회 · 목록 항목 · 처리 이력 기록에서 같은 방법으로 뽑는다(CCR-DOM-001 4.2 규칙 6)."""
+    """판정에 쓰는 값.
+
+    대회 · 목록 항목 · 처리 이력 기록에서 같은 방법으로 뽑는다(CCR-DOM-001 4.2 규칙 6).
+    """
 
     source: str | None
     source_id: str | None
@@ -69,7 +72,9 @@ class Bundle:
     outcome: Outcome | None = None
     matched: list[tuple[Known, PairResult]] = field(default_factory=list)
     reason: str = ""  # 판별 근거. 목록 항목에 들어간다(CCR-UC-001 UC-S6)
-    keys: list[MatchKey] = field(default_factory=list, repr=False)  # 구성원의 판정 값. 구성원과 같은 차례
+    keys: list[MatchKey] = field(
+        default_factory=list, repr=False
+    )  # 구성원의 판정 값. 구성원과 같은 차례
 
     @property
     def deadline(self) -> date | None:

@@ -10,9 +10,9 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from typing import Callable
 
 from collector.core.settings import RunContext, Settings
 from collector.domains.collect.models import SourceResult
@@ -108,7 +108,12 @@ class Pipeline:
         competitions = [c for r in results for c in r.competitions]
         candidates, expired = s.screen.drop_expired(competitions)
         line.dropped["expired"] = expired
-        log.info("정규화 뒤 %d건 · 마감 지남 %d건 · 남은 후보 %d건", len(competitions), expired, len(candidates))
+        log.info(
+            "정규화 뒤 %d건 · 마감 지남 %d건 · 남은 후보 %d건",
+            len(competitions),
+            expired,
+            len(candidates),
+        )
 
         # UC-A1 5. 이미 아는 대회. 목록 파일을 먼저 보고 처리 이력의 문제를 본다(UC-S4 1 · 2)
         if listed.error is not None:
@@ -125,7 +130,12 @@ class Pipeline:
         self._check()
         unknown, known_count = s.screen.split_known(bundles, known)
         line.dropped["known"] = known_count
-        log.info("묶음 %d개 가운데 아는 대회 %d개 · 판별할 묶음 %d개", len(bundles), known_count, len(unknown))
+        log.info(
+            "묶음 %d개 가운데 아는 대회 %d개 · 판별할 묶음 %d개",
+            len(bundles),
+            known_count,
+            len(unknown),
+        )
         self._check()
 
         # UC-A1 6. 관심 분야 판별
@@ -169,7 +179,9 @@ class Pipeline:
         if not ctx.write:
             log.info("미리보기: 넣었을 묶음 %d개", line.loaded)
 
-    def _finish(self, line: RunLine, state: State, results: list[SourceResult], started: float) -> None:
+    def _finish(
+        self, line: RunLine, state: State, results: list[SourceResult], started: float
+    ) -> None:
         """CCR-MS-001#Pipeline._finish"""
         zero = self._s.record.zero_count_warnings(results, state, self._settings.zero_count_days)
         line.warnings[:0] = zero

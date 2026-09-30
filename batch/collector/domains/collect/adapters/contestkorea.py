@@ -69,7 +69,9 @@ def parse_list(response: httpx.Response) -> list[CkItem]:
                 str_no=match.group(1) if match else None,
                 href=href,
                 title=html_text(title_node.text()) if title_node is not None else "",
-                categories=[n.text(strip=True) for n in li.css("span.category") if n.text(strip=True)],
+                categories=[
+                    n.text(strip=True) for n in li.css("span.category") if n.text(strip=True)
+                ],
                 host=host,
                 target=target,
                 period=tuple(int(x) for x in period.groups()) if period else None,  # type: ignore[arg-type]
@@ -79,7 +81,9 @@ def parse_list(response: httpx.Response) -> list[CkItem]:
     return items
 
 
-def resolve_dates(base_date: date, period: tuple[int, int, int, int] | None, days: int | None) -> tuple[date | None, date | None]:
+def resolve_dates(
+    base_date: date, period: tuple[int, int, int, int] | None, days: int | None
+) -> tuple[date | None, date | None]:
     """CCR-MS-001#contestkorea.resolve_dates
 
     (접수시작일, 접수마감일). 날수를 읽지 못하면 연도를 정할 수 없어 둘 다 비운다.
@@ -150,7 +154,9 @@ class ContestKoreaSource:
                     key = item.str_no or (item.href or "")
                     if key in merged:
                         known = merged[key]
-                        known.categories.extend(c for c in item.categories if c not in known.categories)
+                        known.categories.extend(
+                            c for c in item.categories if c not in known.categories
+                        )
                         continue
                     merged[key] = item
                     order.append(key)

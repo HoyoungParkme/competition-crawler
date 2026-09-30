@@ -164,7 +164,9 @@ class RunLine:
     failure_reason: FailureReason | None = None
     keep_count: int | None = None  # 배치는 비워 두고 마무리 단계가 올린 뒤 세어 채운다
     sources: dict[str, SourceLine] = field(default_factory=dict)
-    dropped: dict[str, int] = field(default_factory=lambda: {"normalize": 0, "expired": 0, "known": 0, "discarded": 0})
+    dropped: dict[str, int] = field(
+        default_factory=lambda: {"normalize": 0, "expired": 0, "known": 0, "discarded": 0}
+    )
     loaded: int = 0
     judge_failed: int = 0
     deferred: int = 0

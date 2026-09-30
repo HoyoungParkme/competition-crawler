@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import threading
 import zlib
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Callable
 
 import httpx
 import pytest

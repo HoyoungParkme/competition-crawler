@@ -119,7 +119,9 @@ class RecordService:
         """CCR-MS-001#RecordService.appended_count"""
         return len(self._appended)
 
-    def zero_count_warnings(self, results: list[SourceResult], state: State, days: int) -> list[RunWarning]:
+    def zero_count_warnings(
+        self, results: list[SourceResult], state: State, days: int
+    ) -> list[RunWarning]:
         """CCR-MS-001#RecordService.zero_count_warnings
 
         꾸준히 건수를 내던 소스가 오류 없이 0건을 냈는가(UC-S7 2).
@@ -128,9 +130,13 @@ class RecordService:
         for result in results:
             if result.failure is not None or result.normalized > 0:
                 continue
-            last = _nonzero_streak_before_zero(str(result.source), state.runs.lines, self._base_date, days)
+            last = _nonzero_streak_before_zero(
+                str(result.source), state.runs.lines, self._base_date, days
+            )
             if last is not None:
-                warnings.append(RunWarning(WarningKind.ZERO_COUNT, source=str(result.source), last_nonzero=last))
+                warnings.append(
+                    RunWarning(WarningKind.ZERO_COUNT, source=str(result.source), last_nonzero=last)
+                )
         return warnings
 
     def write_run(self, line: RunLine) -> None:
@@ -162,7 +168,9 @@ def _day_counts(source: str, lines: list[dict[str, Any]]) -> dict[date, bool]:
     return days
 
 
-def _nonzero_streak_before_zero(source: str, lines: list[dict[str, Any]], today: date, need: int) -> date | None:
+def _nonzero_streak_before_zero(
+    source: str, lines: list[dict[str, Any]], today: date, need: int
+) -> date | None:
     """0건이 시작되기 바로 앞까지 연속 `need`일 1건 이상이었으면 마지막으로 건수를 낸 기준일."""
     days = _day_counts(source, lines)
     if days.get(today):

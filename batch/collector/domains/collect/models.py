@@ -88,4 +88,6 @@ class SourceResult:
     @classmethod
     def failed(cls, source: SourceName, kind: FailureKind, detail: str) -> SourceResult:
         """CCR-MS-001#SourceResult.failed"""
-        return cls(source=source, competitions=[], collected=0, dropped=0, failure=kind, detail=detail)
+        return cls(
+            source=source, competitions=[], collected=0, dropped=0, failure=kind, detail=detail
+        )

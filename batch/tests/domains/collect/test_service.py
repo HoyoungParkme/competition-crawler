@@ -30,8 +30,17 @@ class FakeSource:
 def http_factory(robots: str = "User-agent: *\nAllow: /\n"):
     def factory(settings, deadline, stop):
         clock = FakeClock()
-        client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, text=robots)))
-        return SourceHttp(settings, deadline=clock() + 100, stop=stop, client=client, sleep=clock.sleep, clock=clock)
+        client = httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(200, text=robots))
+        )
+        return SourceHttp(
+            settings,
+            deadline=clock() + 100,
+            stop=stop,
+            client=client,
+            sleep=clock.sleep,
+            clock=clock,
+        )
 
     return factory
 
@@ -49,7 +58,9 @@ def raise_(exc):
 
 
 def test_failures_become_empty_results_with_a_kind() -> None:
-    ok = FakeSource(SourceName.DACON, lambda: Collected([comp("대회", source=SourceName.DACON)], collected=1))
+    ok = FakeSource(
+        SourceName.DACON, lambda: Collected([comp("대회", source=SourceName.DACON)], collected=1)
+    )
     results = run(
         [
             ok,
@@ -79,5 +90,8 @@ def test_budget_is_a_connection_failure() -> None:
 
 
 def test_robots_disallow_is_its_own_kind() -> None:
-    results = run([FakeSource(SourceName.DACON, lambda: Collected([], 0))], robots="User-agent: *\nDisallow: /\n")
+    results = run(
+        [FakeSource(SourceName.DACON, lambda: Collected([], 0))],
+        robots="User-agent: *\nDisallow: /\n",
+    )
     assert results[0].failure is FailureKind.ROBOTS

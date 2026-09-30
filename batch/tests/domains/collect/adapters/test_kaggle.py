@@ -30,7 +30,9 @@ def test_missing_token_means_missing_config() -> None:
 
 
 def test_normalize_uses_slug_and_new_entrant_deadline() -> None:
-    c = kaggle.normalize(item("ai-cup", "2026-12-01T23:59:00Z", newEntrantDeadline="2026-11-24T23:59:00Z"))
+    c = kaggle.normalize(
+        item("ai-cup", "2026-12-01T23:59:00Z", newEntrantDeadline="2026-11-24T23:59:00Z")
+    )
     assert c is not None
     assert c.source_id == "ai-cup"
     assert c.link == "https://www.kaggle.com/competitions/ai-cup"
@@ -55,6 +57,8 @@ def test_collect_sends_bearer_and_stops_on_closed_page(clock: FakeClock) -> None
             json={"competitions": [item("old", "2026-01-01T00:00:00Z")], "nextPageToken": "next"},
         )
 
-    collected = kaggle.KaggleSource("secret-token").collect(make_http(handler, clock=clock), BASE, page_cap=20)
+    collected = kaggle.KaggleSource("secret-token").collect(
+        make_http(handler, clock=clock), BASE, page_cap=20
+    )
     assert seen["auth"] == "Bearer secret-token"
     assert collected.collected == 1

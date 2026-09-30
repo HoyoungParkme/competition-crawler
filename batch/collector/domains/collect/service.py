@@ -9,9 +9,9 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
-from typing import Callable, Sequence
 
 from collector.core.settings import SourceSettings
 from collector.domains.collect.models import FailureKind, SourceResult
@@ -53,8 +53,12 @@ class CollectService:
 
         소스 순서대로 결과를 돌려준다. 신호를 받으면 Stopped를 낸다.
         """
-        with ThreadPoolExecutor(max_workers=max(1, len(self._sources)), thread_name_prefix="source") as pool:
-            futures = [pool.submit(self._collect_one, source, base_date) for source in self._sources]
+        with ThreadPoolExecutor(
+            max_workers=max(1, len(self._sources)), thread_name_prefix="source"
+        ) as pool:
+            futures = [
+                pool.submit(self._collect_one, source, base_date) for source in self._sources
+            ]
             results = [future.result() for future in futures]
         if self._stop.is_set():
             raise Stopped()
@@ -84,7 +88,9 @@ class CollectService:
             return SourceResult.failed(source.name, FailureKind.FORMAT, str(exc))
         except Exception as exc:  # 파서의 예상하지 못한 오류도 소스 실패로 가둔다(CCR-INFRA-001 C7)
             log.exception("%s: 예상하지 못한 오류", source.name)
-            return SourceResult.failed(source.name, FailureKind.FORMAT, f"{type(exc).__name__}: {exc}")
+            return SourceResult.failed(
+                source.name, FailureKind.FORMAT, f"{type(exc).__name__}: {exc}"
+            )
         finally:
             http.close()
         elapsed = time.monotonic() - started

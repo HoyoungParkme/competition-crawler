@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 
 KST = timezone(timedelta(hours=9))
 
@@ -49,4 +49,4 @@ def kst_midnight_utc(day: date) -> datetime:
 
     KST 날짜의 0시를 UTC 시각으로 나타낸다. 2026-09-23 → 2026-09-22T15:00:00+00:00.
     """
-    return datetime(day.year, day.month, day.day, tzinfo=KST).astimezone(timezone.utc)
+    return datetime(day.year, day.month, day.day, tzinfo=KST).astimezone(UTC)

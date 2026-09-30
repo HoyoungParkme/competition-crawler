@@ -32,18 +32,26 @@ def entry_line(source_id: str, **extra: object) -> str:
     return json.dumps(line, ensure_ascii=False)
 
 
-def make(tmp_path: Path, lines: list[str] | None = None, *, write: bool = True) -> tuple[ListService, Path]:
+def make(
+    tmp_path: Path, lines: list[str] | None = None, *, write: bool = True
+) -> tuple[ListService, Path]:
     state = tmp_path / "data"
     state.mkdir()
     if lines is not None:
-        (state / "competitions.jsonl").write_text("".join(x + "\n" for x in lines), encoding="utf-8")
+        (state / "competitions.jsonl").write_text(
+            "".join(x + "\n" for x in lines), encoding="utf-8"
+        )
     append = tmp_path / "append"
     return ListService(ListCrud(state, append), write=write), append
 
 
 def appended(append: Path) -> list[dict]:
     path = append / "competitions.jsonl"
-    return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
+    return (
+        [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines()]
+        if path.exists()
+        else []
+    )
 
 
 def test_first_run_has_no_list_file(tmp_path: Path) -> None:
@@ -78,14 +86,20 @@ def test_duplicate_ids_are_all_known(tmp_path: Path) -> None:
     service, append = make(tmp_path, [entry_line("1"), entry_line("1", title="다른 이름")])
     loaded = service.load()
     assert len(loaded.entries) == 2 and loaded.ids() == {"DACON:1"}
-    assert service.append(comp("대회 1", source_id="1"), BASE, "x") is not None  # 출처가 다르면 다른 식별자
+    assert (
+        service.append(comp("대회 1", source_id="1"), BASE, "x") is not None
+    )  # 출처가 다르면 다른 식별자
     assert appended(append)[0]["id"] == "event-us:1"
 
 
 def test_append_writes_whole_file_each_time(tmp_path: Path) -> None:
     service, append = make(tmp_path)
     service.load()
-    first = service.append(comp("2026 AI 해커톤", source_id="a", start=date(2026, 9, 1), deadline=date(2026, 10, 1)), BASE, "  AI 해커톤  ")
+    first = service.append(
+        comp("2026 AI 해커톤", source_id="a", start=date(2026, 9, 1), deadline=date(2026, 10, 1)),
+        BASE,
+        "  AI 해커톤  ",
+    )
     second = service.append(comp("데이터 대회", source_id="b"), BASE, "")
     assert first is not None and second is not None
     lines = appended(append)
@@ -109,9 +123,13 @@ def test_append_writes_whole_file_each_time(tmp_path: Path) -> None:
 def test_same_id_is_not_appended_twice(tmp_path: Path) -> None:
     service, append = make(tmp_path, [entry_line("1")])
     service.load()
-    assert service.append(comp("대회 1", source="DACON", source_id="1"), BASE, "x") is None  # 읽은 목록에 있다
+    assert (
+        service.append(comp("대회 1", source="DACON", source_id="1"), BASE, "x") is None
+    )  # 읽은 목록에 있다
     assert service.append(comp("새 대회", source_id="n"), BASE, "x") is not None
-    assert service.append(comp("새 대회 다시", source_id="n"), BASE, "x") is None  # 이번 추가분에 있다
+    assert (
+        service.append(comp("새 대회 다시", source_id="n"), BASE, "x") is None
+    )  # 이번 추가분에 있다
     assert [x["id"] for x in appended(append)] == ["event-us:n"]
 
 

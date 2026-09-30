@@ -114,7 +114,9 @@ def normalize_link(link: str | None) -> str | None:
     ]
     scheme = "https" if parts.scheme.lower() in ("http", "https") else parts.scheme.lower()
     path = parts.path.rstrip("/") if len(parts.path) > 1 else parts.path
-    return urlunsplit((scheme, parts.netloc.lower(), path, urlencode(query, doseq=True), parts.fragment))
+    return urlunsplit(
+        (scheme, parts.netloc.lower(), path, urlencode(query, doseq=True), parts.fragment)
+    )
 
 
 def _key(
@@ -158,7 +160,8 @@ def key_of_competition(competition: Competition) -> MatchKey:
 
 def key_of_entry(entry: ListEntry) -> MatchKey:
     """CCR-MS-001#matching.key_of_entry"""
-    # 원천 ID로 1단계를 보고, 링크는 소스 개편으로 원천 ID가 바뀐 공고를 잇는 예비다(CCR-DOM-001 ListEntry)
+    # 원천 ID로 1단계를 보고, 링크는 소스 개편으로 원천 ID가 바뀐 공고를 잇는 예비다
+    # (CCR-DOM-001 ListEntry)
     return _key(
         source=entry.source,
         source_id=entry.source_id,
@@ -263,13 +266,18 @@ def representative_order(competition: Competition) -> tuple[int, int, str]:
 
     대표를 고르는 차례. 접수 날짜가 더 채워진 쪽, 같으면 소스 우선순위가 앞선 쪽(UC-S4 4a).
     """
-    return (-competition.dates_filled(), SOURCE_PRIORITY[SourceName(competition.source)], competition.source_id)
+    return (
+        -competition.dates_filled(),
+        SOURCE_PRIORITY[SourceName(competition.source)],
+        competition.source_id,
+    )
 
 
 def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[int]]:
     """CCR-MS-001#matching.group
 
-    후보끼리 같은 대회를 묶는다(UC-S4 4). 합친 묶음 안의 모든 짝이 같음일 때만 합친다(CCR-DOM-002 5장 결정 7).
+    후보끼리 같은 대회를 묶는다(UC-S4 4). 합친 묶음 안의 모든 짝이 같음일 때만 합친다
+    (CCR-DOM-002 5장 결정 7).
     """
     n = len(competitions)
     same: list[tuple[tuple, int, int]] = []
@@ -294,7 +302,8 @@ def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[in
         if gi == gj:
             continue
         if any((min(x, y), max(x, y)) not in same_pairs for x in members[gi] for y in members[gj]):
-            continue  # UC-S4 4b. 다름이나 판단하지 않음이 하나라도 있으면 먼저 본 짝 쪽 묶음에 남는다
+            # UC-S4 4b. 다름이나 판단하지 않음이 하나라도 있으면 먼저 본 짝 쪽 묶음에 남는다
+            continue
         if len(members[gi]) < len(members[gj]):
             gi, gj = gj, gi
         for x in members[gj]:
@@ -304,4 +313,8 @@ def group(competitions: list[Competition], keys: list[MatchKey]) -> list[list[in
 
 
 def _order_of(competition: Competition) -> tuple[int, str, str]:
-    return (SOURCE_PRIORITY[SourceName(competition.source)], competition.source_id, competition.title)
+    return (
+        SOURCE_PRIORITY[SourceName(competition.source)],
+        competition.source_id,
+        competition.title,
+    )

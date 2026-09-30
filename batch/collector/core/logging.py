@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 
 def _to_mask(values: Iterable[str]) -> list[str]:
@@ -16,7 +16,9 @@ def _to_mask(values: Iterable[str]) -> list[str]:
     return sorted({v for v in values if v}, key=len, reverse=True)
 
 
-def register_actions_masks(values: Iterable[str], emit: Callable[[str], None] | None = None) -> None:
+def register_actions_masks(
+    values: Iterable[str], emit: Callable[[str], None] | None = None
+) -> None:
     """CCR-MS-001#logging.register_actions_masks
 
     GitHub Actions에 가릴 값을 알린다. 어떤 출력보다 먼저 부른다.

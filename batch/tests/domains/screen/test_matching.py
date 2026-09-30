@@ -45,7 +45,10 @@ def test_normalize_title(title: str, expected: str) -> None:
 def test_marks() -> None:
     assert extract_marks("2026 데이터 경진대회") == (frozenset({2026}), frozenset())
     assert extract_marks("제5회 AI 대회")[1] == frozenset({5})
-    assert extract_marks("The 2nd Global Quantum AI Competition - 2026") == (frozenset({2026}), frozenset({2}))
+    assert extract_marks("The 2nd Global Quantum AI Competition - 2026") == (
+        frozenset({2026}),
+        frozenset({2}),
+    )
     assert extract_marks("SW마에스트로 16기 모집")[1] == frozenset({16})
     assert extract_marks("[제5차] 제조혁신 경진대회")[1] == frozenset({5})
     assert extract_marks("20251 기업")[0] == frozenset()
@@ -53,7 +56,9 @@ def test_marks() -> None:
 
 def test_tracking_parameters_are_removed_but_ids_are_kept() -> None:
     assert (
-        normalize_link("https://www.wevity.com/?c=find&s=1&gbn=view&ix=110675&utm_source=x&fbclid=y")
+        normalize_link(
+            "https://www.wevity.com/?c=find&s=1&gbn=view&ix=110675&utm_source=x&fbclid=y"
+        )
         == "https://www.wevity.com/?c=find&s=1&gbn=view&ix=110675"
     )
     assert normalize_link("http://Event-Us.kr/a/event/1/") == "https://event-us.kr/a/event/1"
@@ -81,7 +86,9 @@ def test_step2_years_split_similar_names() -> None:
 
 def test_step3_last_years_notice_is_a_different_competition() -> None:
     # 2026년 Big Data(9/10~9/18)와 작년 공고(2025-04-24~05-02). 유사도 0.85지만 3단계에서 갈린다
-    new = comp("2026년 Big Data 활용 대회 참가자 모집", start=date(2026, 9, 10), deadline=date(2026, 9, 18))
+    new = comp(
+        "2026년 Big Data 활용 대회 참가자 모집", start=date(2026, 9, 10), deadline=date(2026, 9, 18)
+    )
     old = HistoryRecord(
         source="event-us",
         source_id="1",
@@ -104,14 +111,24 @@ def test_step3_deadlines_far_apart() -> None:
 
 
 def test_extended_deadline_stays_the_same_competition() -> None:
-    before = comp("2026 AI 챌린지", source_id="1", start=date(2026, 8, 1), deadline=date(2026, 9, 10))
-    after = comp("2026 AI 챌린지", source_id="2", start=date(2026, 8, 1), deadline=date(2026, 9, 30))
+    before = comp(
+        "2026 AI 챌린지", source_id="1", start=date(2026, 8, 1), deadline=date(2026, 9, 10)
+    )
+    after = comp(
+        "2026 AI 챌린지", source_id="2", start=date(2026, 8, 1), deadline=date(2026, 9, 30)
+    )
     result = judge_pair(key_of_competition(before), key_of_competition(after))
     assert (result.verdict, result.step, result.certain) == (Verdict.SAME, 4, True)
 
 
 def test_step1_same_source_and_id_ignores_changed_dates() -> None:
-    a = comp("대회", source=SourceName.DACON, source_id="7", start=date(2026, 9, 1), deadline=date(2026, 9, 30))
+    a = comp(
+        "대회",
+        source=SourceName.DACON,
+        source_id="7",
+        start=date(2026, 9, 1),
+        deadline=date(2026, 9, 30),
+    )
     b = comp("대회 이름 바뀜", source=SourceName.DACON, source_id="7", start=date(2027, 1, 1))
     result = judge_pair(key_of_competition(a), key_of_competition(b))
     assert (result.verdict, result.step, result.certain) == (Verdict.SAME, 1, True)
@@ -131,17 +148,24 @@ def test_entry_with_same_source_id_is_step_one() -> None:
 def test_entry_link_match_still_checks_years() -> None:
     # 소스가 개편해 원천 ID가 바뀐 공고를 링크로 잇되, 연도가 다르면 다른 대회다
     link = "https://event-us.kr/big/event/1?utm_source=page"
-    candidate = comp("2026 Big Data 활용 대회", source_id="new", link="https://event-us.kr/big/event/1")
+    candidate = comp(
+        "2026 Big Data 활용 대회", source_id="new", link="https://event-us.kr/big/event/1"
+    )
     same_year = entry("Big Data 대회 2026", link, source_id="a")
     other_year = entry("2025 Big Data 활용 대회", link, source_id="b")
     assert judge_pair(key_of_competition(candidate), key_of_entry(same_year)).step == 1
-    assert judge_pair(key_of_competition(candidate), key_of_entry(other_year)).verdict is Verdict.DIFFERENT
+    assert (
+        judge_pair(key_of_competition(candidate), key_of_entry(other_year)).verdict
+        is Verdict.DIFFERENT
+    )
 
 
 def test_name_only_match_is_not_certain() -> None:
     a = key_of_competition(comp("알고리즘 경진대회", deadline=date(2026, 10, 1)))
     b = key_of_history(
-        HistoryRecord("wevity", "9", None, "알고리즘 경진대회", None, None, Result.DISCARD, None, "r")
+        HistoryRecord(
+            "wevity", "9", None, "알고리즘 경진대회", None, None, Result.DISCARD, None, "r"
+        )
     )
     result = judge_pair(a, b)
     assert (result.verdict, result.certain) == (Verdict.SAME, False)
@@ -155,7 +179,12 @@ def test_below_threshold_is_undecided_not_different() -> None:
 
 def test_prd_pair_at_082_is_undecided() -> None:
     # 목록 항목과 event-us의 부문 모집 공고는 같은 대회지만 0.82라 판단하지 않는다(PRD 5.2)
-    known = entry("2026 데이터·AI 혁신 챌린지 통합경진대회", "https://dxchallenge.co.kr", source="DACON", source_id="d")
+    known = entry(
+        "2026 데이터·AI 혁신 챌린지 통합경진대회",
+        "https://dxchallenge.co.kr",
+        source="DACON",
+        source_id="d",
+    )
     notice = comp("2026 데이터·AI 혁신 챌린지 통합경진대회 데이터 문제해결 부문 모집")
     assert judge_pair(key_of_competition(notice), key_of_entry(known)).verdict is Verdict.UNDECIDED
 
@@ -190,9 +219,19 @@ def test_group_needs_every_pair_to_be_the_same() -> None:
     # 2026-09-27 wevity. a~b 0.94 · b~c 0.91이지만 a–c는 0.90에 못 미쳐 판단하지 않음이다.
     # 강한 a~b를 먼저 합치고, c는 a와 같다고 나오지 않아 따로 남는다(UC-S4 4b)
     items = [
-        comp("[동작구시설관리공단] 2026 주민참여 혁신 아이디어 공모전", source=SourceName.WEVITY, source_id="a"),
-        comp("[대전관광공사] 2026 주민참여 아이디어 공모전", source=SourceName.WEVITY, source_id="b"),
-        comp("[포천도시공사] 2026년 주민참여예산제 아이디어 공모전", source=SourceName.WEVITY, source_id="c"),
+        comp(
+            "[동작구시설관리공단] 2026 주민참여 혁신 아이디어 공모전",
+            source=SourceName.WEVITY,
+            source_id="a",
+        ),
+        comp(
+            "[대전관광공사] 2026 주민참여 아이디어 공모전", source=SourceName.WEVITY, source_id="b"
+        ),
+        comp(
+            "[포천도시공사] 2026년 주민참여예산제 아이디어 공모전",
+            source=SourceName.WEVITY,
+            source_id="c",
+        ),
     ]
     keys = [key_of_competition(c) for c in items]
     assert judge_pair(keys[0], keys[1]).verdict is Verdict.SAME
@@ -213,8 +252,14 @@ def test_group_keeps_templated_idea_contests_apart() -> None:
 
 def test_group_merges_duplicate_notices_across_sources() -> None:
     items = [
-        comp("2026 국립공원 위성 모니터링 AI 챌린지", source=SourceName.AIFACTORY, source_id="9304"),
-        comp("2026 국립공원 위성 모니터링 AI 챌린지 참가자 모집", source=SourceName.EVENTUS, source_id="1"),
+        comp(
+            "2026 국립공원 위성 모니터링 AI 챌린지", source=SourceName.AIFACTORY, source_id="9304"
+        ),
+        comp(
+            "2026 국립공원 위성 모니터링 AI 챌린지 참가자 모집",
+            source=SourceName.EVENTUS,
+            source_id="1",
+        ),
         comp("전혀 다른 사진 공모전", source=SourceName.WEVITY, source_id="2"),
     ]
     groups = group(items, [key_of_competition(c) for c in items])

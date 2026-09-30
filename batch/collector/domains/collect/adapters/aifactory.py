@@ -9,9 +9,10 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
-from typing import Any, Iterator
+from typing import Any
 
 import httpx
 
@@ -77,7 +78,12 @@ def parse_tasks(payload: str) -> list[Task]:
             continue
         refs[key] = obj
         for node in _walk(obj):
-            if "id" in node and "name" in node and "page" in node and ("endDate" in node or "participationDeadline" in node):
+            if (
+                "id" in node
+                and "name" in node
+                and "page" in node
+                and ("endDate" in node or "participationDeadline" in node)
+            ):
                 raw_tasks.append(node)
 
     def page_name(page: Any) -> str:
@@ -175,7 +181,9 @@ def to_competition(group: list[Task]) -> Competition | None:
         link=f"https://aifactory.space/competitions/{first.id}",
         start_date=start,
         deadline=deadline,
-        extras=tuple(([page] if page else []) + [t.name for t in sorted(named, key=lambda t: t.id)]),
+        extras=tuple(
+            ([page] if page else []) + [t.name for t in sorted(named, key=lambda t: t.id)]
+        ),
     )
 
 

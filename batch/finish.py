@@ -14,10 +14,10 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Mapping
 
 LIST = "data/competitions.jsonl"
 HISTORY = "data/processed.jsonl"
@@ -95,9 +95,9 @@ def base_date_of(started_at: str | None) -> str:
     if started_at:
         moment = datetime.fromisoformat(started_at.strip().replace("Z", "+00:00"))
         if moment.tzinfo is None:
-            moment = moment.replace(tzinfo=timezone.utc)
+            moment = moment.replace(tzinfo=UTC)
     else:
-        moment = datetime.now(timezone.utc)
+        moment = datetime.now(UTC)
     return moment.astimezone(KST).date().isoformat()
 
 
@@ -169,7 +169,13 @@ class Git:
     def _run(self, args: list[str], *, auth: bool = False, cwd: Path | None = None) -> str:
         command = ["git", *self._slow, *(self._auth if auth else []), *args]
         try:
-            done = subprocess.run(command, cwd=cwd or self.workdir, capture_output=True, text=True, timeout=GIT_TIMEOUT)
+            done = subprocess.run(
+                command,
+                cwd=cwd or self.workdir,
+                capture_output=True,
+                text=True,
+                timeout=GIT_TIMEOUT,
+            )
         except subprocess.TimeoutExpired as exc:
             raise GitError(f"git {args[0]}이 {GIT_TIMEOUT}초 안에 끝나지 않았다") from exc
         if done.returncode != 0:
@@ -198,7 +204,18 @@ class Git:
         # 첫 실행에는 목록 파일과 처리 이력 파일이 아직 없을 수 있다. 있는 경로만 스테이징한다
         paths = [path for path in (LIST, HISTORY, RUNS) if (self.workdir / path).exists()]
         self._run(["add", "--", *paths])
-        self._run(["-c", f"user.name={BOT_NAME}", "-c", f"user.email={BOT_EMAIL}", "commit", "--quiet", "-m", message])
+        self._run(
+            [
+                "-c",
+                f"user.name={BOT_NAME}",
+                "-c",
+                f"user.email={BOT_EMAIL}",
+                "commit",
+                "--quiet",
+                "-m",
+                message,
+            ]
+        )
         self._run(["push", "origin", "HEAD:refs/heads/main"], auth=True)
 
 
@@ -242,7 +259,11 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
             list_path = git.workdir / LIST
             if has_run(runs_path, run_id):
                 # 앞선 push가 응답만 끊기고 실제로 들어갔다
-                note = "앞선 올리기가 이미 들어가 있다" if pushed_before else "이 실행의 줄이 이미 있다"
+                note = (
+                    "앞선 올리기가 이미 들어가 있다"
+                    if pushed_before
+                    else "이 실행의 줄이 이미 있다"
+                )
                 return Outcome(1 if failed else 0, note)
             list_lines = _list_lines(list_path, additions)
             append_lines(list_path, list_lines)
@@ -252,9 +273,18 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
                 run_line = dict(additions.run)
                 run_line["keep_count"] = keep_count
             else:
-                run_line = {"run_id": run_id, "base_date": base_date, "kind": kind, "result": "aborted", "keep_count": keep_count}
-            append_lines(runs_path, [json.dumps(run_line, ensure_ascii=False, separators=(",", ":"))])
-            message = f"실행 기록 {run_line.get('base_date', base_date)} · {run_id} · {run_line.get('result')}"
+                run_line = {
+                    "run_id": run_id,
+                    "base_date": base_date,
+                    "kind": kind,
+                    "result": "aborted",
+                    "keep_count": keep_count,
+                }
+            append_lines(
+                runs_path, [json.dumps(run_line, ensure_ascii=False, separators=(",", ":"))]
+            )
+            result = run_line.get("result")
+            message = f"실행 기록 {run_line.get('base_date', base_date)} · {run_id} · {result}"
             print(
                 f"올리는 추가분: 목록 {len(list_lines)}줄 · 처리 이력 {len(additions.history)}줄 · "
                 f"실행 요약 1줄(남김 기록 {keep_count})"

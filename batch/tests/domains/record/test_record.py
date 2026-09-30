@@ -9,15 +9,23 @@ import pytest
 
 from collector.domains.collect.models import FailureKind, SourceName, SourceResult
 from collector.domains.record.crud import HistoryReadFailed, RecordCrud, export_main_state
-from collector.domains.record.models import HistoryEntry, Result, RunLine, RunWarning, SourceLine, WarningKind
+from collector.domains.record.models import (
+    HistoryEntry,
+    Result,
+    RunLine,
+    RunWarning,
+    SourceLine,
+    WarningKind,
+)
 from collector.domains.record.service import RecordService
-from tests.conftest import comp
 
 BASE = date(2026, 9, 27)
 
 
 def keep_line(source_id: str) -> str:
-    return json.dumps({"source": "DACON", "source_id": source_id, "result": "keep", "run_id": "r0", "title": "t"})
+    return json.dumps(
+        {"source": "DACON", "source_id": source_id, "result": "keep", "run_id": "r0", "title": "t"}
+    )
 
 
 def run_line(base: str, keep: int | None = None, **sources: int | None) -> str:
@@ -25,13 +33,23 @@ def run_line(base: str, keep: int | None = None, **sources: int | None) -> str:
     if keep is not None:
         line["keep_count"] = keep
     line["sources"] = {
-        name: {"collected": n or 0, "normalized": n or 0, "failure": None if n is not None else "connection"}
+        name: {
+            "collected": n or 0,
+            "normalized": n or 0,
+            "failure": None if n is not None else "connection",
+        }
         for name, n in sources.items()
     }
     return json.dumps(line, ensure_ascii=False)
 
 
-def make(tmp_path: Path, history: list[str] | None = None, runs: list[str] | None = None, *, write: bool = True):
+def make(
+    tmp_path: Path,
+    history: list[str] | None = None,
+    runs: list[str] | None = None,
+    *,
+    write: bool = True,
+):
     state = tmp_path / "data"
     state.mkdir()
     if history is not None:
@@ -56,7 +74,9 @@ def test_unreadable_history_line_is_a_read_failure(tmp_path: Path) -> None:
 
 
 def test_missing_required_field_is_a_read_failure(tmp_path: Path) -> None:
-    service, _ = make(tmp_path, history=[json.dumps({"source": "DACON", "result": "keep", "run_id": "r"})])
+    service, _ = make(
+        tmp_path, history=[json.dumps({"source": "DACON", "result": "keep", "run_id": "r"})]
+    )
     assert service.load().history_error is not None
 
 
@@ -79,10 +99,14 @@ def test_corrupt_run_lines_are_counted_and_skipped(tmp_path: Path) -> None:
 def test_append_writes_whole_file_each_time(tmp_path: Path) -> None:
     service, append = make(tmp_path)
     service.start()
-    entry = HistoryEntry("DACON", "1", "https://dacon.io/x", "대회", date(2026, 9, 1), None, Result.KEEP)
+    entry = HistoryEntry(
+        "DACON", "1", "https://dacon.io/x", "대회", date(2026, 9, 1), None, Result.KEEP
+    )
     service.append([entry])
     service.append([HistoryEntry("wevity", "2", None, "대회", None, None, Result.DISCARD)])
-    lines = [json.loads(x) for x in (append / "processed.jsonl").read_text(encoding="utf-8").splitlines()]
+    lines = [
+        json.loads(x) for x in (append / "processed.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
     assert [(x["source_id"], x["result"], x["run_id"], x["base_date"]) for x in lines] == [
         ("1", "keep", "r1", "2026-09-27"),
         ("2", "discard", "r1", "2026-09-27"),
@@ -109,8 +133,19 @@ def test_run_line_shape(tmp_path: Path) -> None:
     assert data["sources"] == {"DACON": {"collected": 3, "normalized": 2, "failure": None}}
     assert data["warnings"] == [{"kind": "judge_deferred", "cause": "missing_key"}]
     assert set(data) == {
-        "run_id", "base_date", "kind", "result", "failure_reason", "keep_count", "sources", "dropped",
-        "loaded", "judge_failed", "deferred", "warnings", "duration_s",
+        "run_id",
+        "base_date",
+        "kind",
+        "result",
+        "failure_reason",
+        "keep_count",
+        "sources",
+        "dropped",
+        "loaded",
+        "judge_failed",
+        "deferred",
+        "warnings",
+        "duration_s",
     }
 
 
@@ -119,14 +154,22 @@ def zero(source: SourceName = SourceName.DACON) -> list[SourceResult]:
 
 
 def test_zero_count_after_three_days_of_counts(tmp_path: Path) -> None:
-    runs = [run_line(f"2026-09-{d}", DACON=5) for d in (22, 23, 24)] + [run_line("2026-09-26", DACON=0)]
+    runs = [run_line(f"2026-09-{d}", DACON=5) for d in (22, 23, 24)] + [
+        run_line("2026-09-26", DACON=0)
+    ]
     service, _ = make(tmp_path, runs=runs)
     warnings = service.zero_count_warnings(zero(), service.load(), days=3)
-    assert warnings == [RunWarning(WarningKind.ZERO_COUNT, source="DACON", last_nonzero=date(2026, 9, 24))]
+    assert warnings == [
+        RunWarning(WarningKind.ZERO_COUNT, source="DACON", last_nonzero=date(2026, 9, 24))
+    ]
 
 
 def test_zero_count_needs_n_consecutive_days(tmp_path: Path) -> None:
-    runs = [run_line("2026-09-23", DACON=0), run_line("2026-09-24", DACON=5), run_line("2026-09-25", DACON=5)]
+    runs = [
+        run_line("2026-09-23", DACON=0),
+        run_line("2026-09-24", DACON=5),
+        run_line("2026-09-25", DACON=5),
+    ]
     service, _ = make(tmp_path, runs=runs)
     assert service.zero_count_warnings(zero(), service.load(), days=3) == []
 

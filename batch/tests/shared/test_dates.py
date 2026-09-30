@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -26,7 +26,7 @@ def test_unreadable_values_are_none() -> None:
 
 def test_base_date_at_0850_kst_is_not_the_utc_date() -> None:
     # 08:50 KST는 UTC로 전날 23:50이다(CCR-UC-001 UC-A1 1a2)
-    started = datetime(2026, 9, 26, 23, 50, tzinfo=timezone.utc)
+    started = datetime(2026, 9, 26, 23, 50, tzinfo=UTC)
     assert kst_date_of(started) == date(2026, 9, 27)
 
 

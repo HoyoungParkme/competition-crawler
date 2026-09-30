@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import tempfile
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Mapping
 
 from collector.shared.dates import kst_date_of
 
@@ -134,12 +134,14 @@ class RunContext:
         if started_raw:
             started_at = datetime.fromisoformat(started_raw.replace("Z", "+00:00"))
             if started_at.tzinfo is None:
-                started_at = started_at.replace(tzinfo=timezone.utc)
+                started_at = started_at.replace(tzinfo=UTC)
         else:
-            started_at = now or datetime.now(timezone.utc)
+            started_at = now or datetime.now(UTC)
         base_date = kst_date_of(started_at)
 
-        run_id = (env.get("RUN_ID") or "").strip() or f"local-{started_at.strftime('%Y%m%dT%H%M%S')}"
+        run_id = (
+            env.get("RUN_ID") or ""
+        ).strip() or f"local-{started_at.strftime('%Y%m%dT%H%M%S')}"
         kind = "schedule" if env.get("GITHUB_EVENT_NAME") == "schedule" else "manual"
         # 버림을 없는 것으로 보는 것은 목록에 쓰지 않는 실행에서만 뜻이 있다(CCR-INFRA-001 8.1)
         requested = env.get("IGNORE_DISCARDS") == "true"

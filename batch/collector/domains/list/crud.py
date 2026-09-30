@@ -72,5 +72,7 @@ class ListCrud:
 
     def write_appends(self, lines: list[dict[str, Any]]) -> None:
         """CCR-MS-001#ListCrud.write_appends"""
-        text = "".join(json.dumps(line, ensure_ascii=False, separators=(",", ":")) + "\n" for line in lines)
+        text = "".join(
+            json.dumps(line, ensure_ascii=False, separators=(",", ":")) + "\n" for line in lines
+        )
         _atomic_write(self._append_dir / LIST_FILE, text)

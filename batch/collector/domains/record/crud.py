@@ -47,7 +47,9 @@ def _atomic_write(path: Path, text: str) -> None:
 
 
 def _jsonl(lines: list[dict[str, Any]]) -> str:
-    return "".join(json.dumps(line, ensure_ascii=False, separators=(",", ":")) + "\n" for line in lines)
+    return "".join(
+        json.dumps(line, ensure_ascii=False, separators=(",", ":")) + "\n" for line in lines
+    )
 
 
 def export_main_state(repo_root: Path, dest: Path) -> Path:
@@ -61,16 +63,27 @@ def export_main_state(repo_root: Path, dest: Path) -> Path:
 
     def git(*args: str) -> subprocess.CompletedProcess[bytes]:
         try:
-            return subprocess.run(["git", "-C", str(repo_root), *args], capture_output=True, timeout=60, check=False)
+            return subprocess.run(
+                ["git", "-C", str(repo_root), *args], capture_output=True, timeout=60, check=False
+            )
         except (OSError, subprocess.TimeoutExpired) as exc:  # git이 없거나 60초 안에 끝나지 않았다
             raise HistoryReadFailed(f"git {args[0]}을 돌리지 못했다: {type(exc).__name__}") from exc
 
     # 얕게 받은 저장소(Actions의 브랜치 실행)만 얕게 받는다. 개발자 PC의 저장소를 얕게 만들지 않는다
     shallow = git("rev-parse", "--is-shallow-repository").stdout.strip() == b"true"
     depth = ["--depth=1"] if shallow else []
-    fetched = git("fetch", "--quiet", "--no-tags", *depth, "origin", "+refs/heads/main:refs/remotes/origin/main")
+    fetched = git(
+        "fetch",
+        "--quiet",
+        "--no-tags",
+        *depth,
+        "origin",
+        "+refs/heads/main:refs/remotes/origin/main",
+    )
     if fetched.returncode != 0:
-        raise HistoryReadFailed(f"origin/main을 받지 못했다: {fetched.stderr.decode(errors='replace').strip()}")
+        raise HistoryReadFailed(
+            f"origin/main을 받지 못했다: {fetched.stderr.decode(errors='replace').strip()}"
+        )
     dest.mkdir(parents=True, exist_ok=True)
     for name in (LIST_FILE, HISTORY_FILE, RUNS_FILE):
         target = dest / name
@@ -86,8 +99,13 @@ def export_main_state(repo_root: Path, dest: Path) -> Path:
 
 
 class RecordCrud:
-    def __init__(self, state_dir: Path, append_dir: Path, *, export_from: Path | None = None) -> None:
-        """`export_from`(저장소 루트)이 있으면 읽기 전에 기본 브랜치 최신 판을 `state_dir`에 꺼낸다."""
+    def __init__(
+        self, state_dir: Path, append_dir: Path, *, export_from: Path | None = None
+    ) -> None:
+        """`export_from`(저장소 루트)이 있으면 읽기 전에 기본 브랜치 최신 판을 `state_dir`에 꺼낸다.
+
+        페이지가 쓰는 `status.json`은 꺼내지 않는다.
+        """
         if state_dir.resolve() == append_dir.resolve():
             raise ValueError("추가분 폴더가 데이터 폴더와 같다")
         self._state_dir = state_dir
@@ -121,7 +139,9 @@ class RecordCrud:
                     raise ValueError("객체가 아니다")
                 records.append(HistoryRecord.from_dict(data))
             except (UnicodeDecodeError, ValueError, KeyError, TypeError) as exc:
-                raise HistoryReadFailed(f"{path.name} {number}번째 줄을 읽지 못했다: {exc}") from exc
+                raise HistoryReadFailed(
+                    f"{path.name} {number}번째 줄을 읽지 못했다: {exc}"
+                ) from exc
         return records
 
     def read_runs(self) -> RunsFile:

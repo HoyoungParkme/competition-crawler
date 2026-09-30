@@ -9,7 +9,8 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 import openai
 from pydantic import BaseModel, ConfigDict, ValidationError
@@ -90,7 +91,9 @@ class OpenAiJudge:
         self._settings = settings
         self._stop = stop
         self._sleep = sleep
-        self._client = client or openai.OpenAI(api_key=api_key, max_retries=0, timeout=settings.timeout_seconds)
+        self._client = client or openai.OpenAI(
+            api_key=api_key, max_retries=0, timeout=settings.timeout_seconds
+        )
 
     def judge(self, competition: Competition) -> Answer:
         """CCR-MS-001#OpenAiJudge.judge"""
@@ -113,9 +116,13 @@ class OpenAiJudge:
                 raise JudgeError(f"답이 스키마에 맞지 않는다: {exc.error_count()}건") from exc
             except openai.APIStatusError as exc:
                 if _is_fatal(exc):
-                    raise JudgeError(f"응답 {exc.status_code} {exc.code or exc.type or ''}".strip(), fatal=True) from exc
+                    raise JudgeError(
+                        f"응답 {exc.status_code} {exc.code or exc.type or ''}".strip(), fatal=True
+                    ) from exc
                 if not _retryable(exc) or attempt == attempts - 1:
-                    raise JudgeError(f"응답 {exc.status_code} {exc.code or exc.type or ''}".strip()) from exc
+                    raise JudgeError(
+                        f"응답 {exc.status_code} {exc.code or exc.type or ''}".strip()
+                    ) from exc
                 self._backoff(attempt)
                 continue
             except openai.APIConnectionError as exc:

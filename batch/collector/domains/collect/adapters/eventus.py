@@ -37,7 +37,12 @@ def build_query(base_date: date, page: int) -> dict[str, Any]:
                 {
                     "all": [
                         {"none": {"register_due_date": {"from": _EPOCH}}},
-                        {"any": [{"close_date": {"from": day0}}, {"none": {"close_date": {"from": _EPOCH}}}]},
+                        {
+                            "any": [
+                                {"close_date": {"from": day0}},
+                                {"none": {"close_date": {"from": _EPOCH}}},
+                            ]
+                        },
                     ]
                 },
             ],
@@ -110,7 +115,9 @@ class EventUsSource:
         while page <= total_pages:
             if page > page_cap:
                 return Collected(competitions, collected, dropped, page_cap_hit=True)
-            results, total_pages = http.fetch("POST", URL, json=build_query(base_date, page), parse=parse_page)
+            results, total_pages = http.fetch(
+                "POST", URL, json=build_query(base_date, page), parse=parse_page
+            )
             for item in results:
                 collected += 1
                 competition = normalize(item) if isinstance(item, dict) else None
