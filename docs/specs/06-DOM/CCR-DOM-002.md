@@ -427,6 +427,7 @@ flowchart TB
     CL --> NT
     CL --> SD
     CL --> DA
+    CL --> GH
     CL --> ST
     CL --> TK
     SD --> TK
@@ -438,7 +439,7 @@ flowchart TB
 ```
 
 - **`CompetitionList`만 데이터를 읽는다.** 두 파일을 받아 `Row`로 합치고 자식 컴포넌트에는 값과 콜백만 내려 준다. 자식은 요청하지 않는다.
-- **GitHub에 쓰는 곳은 `StatusStore` 하나다.** 상태 · 지우기 · 되살리기가 모두 이 클래스를 거쳐 줄을 선다([[CCR-API-001]] 1.4). `SettingsDialog`가 `api/github.ts`를 부르는 것은 토큰 검증의 판 읽기뿐이다([[CCR-UC-001#UC-H2]] 4).
+- **GitHub에 쓰는 곳은 `StatusStore` 하나다.** 상태 · 지우기 · 되살리기가 모두 이 클래스를 거쳐 줄을 선다([[CCR-API-001]] 1.4). `SettingsDialog`가 `api/github.ts`를 부르는 것은 토큰 검증의 판 읽기뿐이고, `CompetitionList`는 토큰이 있을 때 화면에 보일 상태 파일을 같은 판 읽기로 받는다([[CCR-UC-001#UC-H2]] 4 · [[CCR-INFRA-001]] 6.4).
 - **토큰은 `TokenStore`만 만진다.** `localStorage`의 키 하나다. 화면은 있음 · 없음만 묻는다.
 - `config.ts` · `domain/types.ts` · `styles.css`는 어디서나 쓴다. 거꾸로 부르지 않는다.
 
@@ -903,12 +904,13 @@ main() -> int
 ```
 CompetitionList(): JSX                              UI-1. 두 파일을 읽고 Row로 합쳐 그린다
   상태: entries · statusFile · loading · readError · updatedAt · filters · foldOpen · save · noToken · dialogOpen · hasToken
-  refresh(): void                                   새로 고침(2). readListFile · readStatusFile을 함께 부르고, 받은 상태 파일을 store.load로 넘긴다
+  refresh(): void                                   새로 고침(2). readListFile · readStatusForView를 함께 부르고, 받은 상태 파일을 store.load로 넘긴다
   active · folded                                   Row를 거르고 접수마감일 순으로 줄 세운 뒤, 열린 것과 접힌 구역(9)으로 가른다
   onStatus(id, title, value) · onHide(id, title) · onRestore(id, title)   7.4 · 7.5 · 9.1. 토큰이 없으면 토큰 없음(11)
 kstToday(now?: Date): string                        브라우저의 KST 날짜. 마감 지남과 D-n의 기준
 sortByDeadline(rows: Row[]): Row[]                  순수 함수. 접수마감일 오름차순, 없으면 맨 뒤. tests/가 본다
 isExpired(entry: ListEntry, today: string): boolean  순수 함수. 마감일이 오늘보다 이르면 참
+readStatusForView(token: string | null, readVersion?, readRaw?): Promise<StatusFile>   토큰이 있으면 판 읽기, 없거나 실패하면 raw. 읽는 함수는 넣어 줄 수 있어 tests/가 본다
 ```
 
 | 자식 | 파일 | 요소 |
@@ -925,6 +927,7 @@ isExpired(entry: ListEntry, today: string): boolean  순수 함수. 마감일이
 - 거르기 값은 `localStorage`에 기억한다. 저장소에는 쓰지 않는다.
 - 쓰는 조작 셋은 모두 `StatusStore`로 간다. 토큰이 없으면 부르지 않고 토큰 없음(11)을 띄운다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
 - 읽지 못하면(`DataReadError`) 읽지 못했다는 알림과 새로 고침을 보인다. 목록 파일이 없으면(404) 빈 상태(10)다([[CCR-UC-001#UC-A2]] 1b).
+- 상태 파일은 토큰이 있으면 Contents API의 판 읽기(`readStatusVersion`)로 받는다. raw는 CDN이 5분 캐시해, 방금 바꾼 값이 새로 고친 뒤 옛 값으로 보이기 때문이다. 판 읽기가 실패하면(토큰 만료 · 권한 · 연결) raw로 받고, 토큰 문제는 저장할 때 드러난다. 목록 파일은 늘 raw다([[CCR-INFRA-001]] 6.4 · [[CCR-API-001]] 1.4).
 
 #### SettingsDialog 설정 대화상자
 
@@ -990,7 +993,7 @@ defaultGitHub: GitHubApi                                                 api/git
 **규칙이 사는 곳**
 - 화면을 먼저 바꾼다. `onChange`로 얹은 파일과 저장 중을 알린 뒤 커밋한다([[CCR-UC-001#UC-H1]] 2).
 - 한 번에 요청 하나. 앞 커밋의 응답이 오기 전의 바꿈은 큐에 서고 차례로 보낸다. 같은 판으로 두 번 보내면 둘째가 409로 거절되기 때문이다([[CCR-API-001]] 1.4).
-- 커밋마다 판 읽기부터 한다. raw로 읽어 `load`로 받은 파일은 표시용이고 쓰기의 기준이 아니다([[CCR-INFRA-001]] 6.4). 읽은 파일에 이번 바꿈만 얹어 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다.
+- 커밋마다 판 읽기부터 한다. 화면이 읽어 `load`로 넘긴 파일(판 읽기나 raw)은 표시용이고 쓰기의 기준이 아니다([[CCR-INFRA-001]] 6.4). 읽은 파일에 이번 바꿈만 얹어 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다.
 - 판이 어긋나면(409 · 422) 최신 판을 다시 읽고 한 번 더 쓴다. 다시 실패하면 값을 되돌리고 실패를 알린다. 그 밖의 오류(401 · 403 · 404 · 5xx · 연결 오류)는 되돌리고 알린다. 스스로 되풀이하지 않는다([[CCR-API-001]] 2.3).
 - 되돌리기는 바꾸기 전 값으로다. 큐에 남은 바꿈은 버리고 함께 알린다.
 - 성공한 응답의 새 판(`content.sha`)은 기억하지 않는다. 다음 커밋도 판 읽기부터 하므로 쓸 곳이 없다. 판은 로그에도 찍지 않는다.
@@ -1015,11 +1018,11 @@ api/github.ts
 | 함수 | 엔드포인트 | 유스케이스 |
 |---|---|---|
 | `readListFile` · `readStatusFile` | [[CCR-API-001#GET/raw.githubusercontent.com/…/data/{file}]] | [[CCR-UC-001#UC-A2]] 1 |
-| `readStatusVersion` | [[CCR-API-001#GET/api.github.com/…/contents/data/status.json]] | [[CCR-UC-001#UC-H1]] 3 · 4a · [[CCR-UC-001#UC-H2]] 4 |
+| `readStatusVersion` | [[CCR-API-001#GET/api.github.com/…/contents/data/status.json]] | [[CCR-UC-001#UC-A2]] 1 · [[CCR-UC-001#UC-H1]] 3 · 4a · [[CCR-UC-001#UC-H2]] 4 |
 | `writeStatusFile` | [[CCR-API-001#PUT/api.github.com/…/contents/data/status.json]] | [[CCR-UC-001#UC-H1]] 4 |
 
 **규칙이 사는 곳**
-- raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. `Authorization`을 보내지 않는다. 5xx · 연결 오류면 한 번 다시 받고, 그래도 실패하면 `DataReadError`다([[CCR-API-001]] 1.4 · 2.3).
+- raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. 이것은 브라우저 캐시를 피할 뿐 CDN 캐시(5분)는 피하지 못한다([[CCR-INFRA-001]] 6.4). `Authorization`을 보내지 않는다. 5xx · 연결 오류면 한 번 다시 받고, 그래도 실패하면 `DataReadError`다([[CCR-API-001]] 1.4 · 2.3).
 - Contents API에는 헤더 셋을 보낸다. 토큰은 `Authorization` 헤더에만 있고 주소 · 콘솔 · 오류 메시지에 싣지 않는다([[CCR-INFRA-001]] 5.8).
 - `writeStatusFile`은 `sha`가 `null`이면 `sha` 없이 보내 새 파일을 만든다. `author` · `committer`에는 `config.ts`의 커밋 작성자(저장소 주인의 이름과 noreply 주소)를 둘 다 적는다. 빼면 GitHub가 토큰 주인 계정의 기본 이메일을 넣어 개인 주소가 공개 커밋에 남는다. `committer`만 빼도 그 자리에 기본 이메일이 들어간다([[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 1.4).
 - 판 읽기는 200 · 404, 쓰기는 200 · 201이 아니면 `GitHubError(status, rateLimited)`를 낸다. 403에 `x-ratelimit-remaining: 0`이 붙어 오면 `rateLimited`가 참이다. 가르는 일은 `StatusStore`와 `SettingsDialog`가 한다.
@@ -1064,7 +1067,7 @@ TokenStore
 
 ## 6. 미결사항
 
-2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`).
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`).
 
 - [ ] Kaggle 어댑터는 실측 전이다. 토큰이 생기면 [[CCR-API-001]] 5장대로 필드 이름 · 연습용 표기 · 쪽 크기를 실측하고 `kaggle.py`를 맞춘다. 그때까지는 토큰이 없어 설정 누락으로 건너뛴다
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
