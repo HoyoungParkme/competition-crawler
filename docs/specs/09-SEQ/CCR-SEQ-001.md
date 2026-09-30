@@ -450,11 +450,23 @@ sequenceDiagram
     participant TK as TokenStore
     participant ST as StatusStore
     U->>UI: 페이지를 연다(또는 새로 고침 2)
-    UI->>RF: readListFile() · readStatusFile()
-    RF->>GHB: GET raw …/data/competitions.jsonl?t=… · …/status.json?t=…
-    alt 404
+    UI->>TK: get()
+    UI->>RF: readListFile()
+    RF->>GHB: GET raw …/data/competitions.jsonl?t=…
+    alt 토큰 있음
+        UI->>RF: readStatusVersion(token)
+        RF->>GHB: GET contents/data/status.json?ref=main(캐시 없음)
+        opt 401 · 403 · 5xx · 연결 오류
+            UI->>RF: readStatusFile()
+            RF->>GHB: GET raw …/status.json?t=…
+        end
+    else 토큰 없음
+        UI->>RF: readStatusFile()
+        RF->>GHB: GET raw …/status.json?t=…(CDN이 5분까지 캐시)
+    end
+    alt raw 404
         GHB-->>RF: 목록은 빈 목록 · 상태는 빈 객체
-    else 5xx · 연결 오류
+    else raw 5xx · 연결 오류
         RF->>GHB: 한 번 다시
         RF-->>UI: DataReadError → 읽지 못했다는 알림
     end
@@ -488,7 +500,7 @@ sequenceDiagram
 ```
 
 **읽을 때 볼 것**
-- 표시용 읽기는 raw, 쓰기의 기준은 Contents API의 판이다. raw는 CDN이 몇 분 캐시하므로 쓰기의 기준으로 쓰지 않는다([[CCR-INFRA-001]] 6.4).
+- 목록 파일은 raw로 읽는다. 상태 파일은 토큰이 있으면 Contents API로 읽고, 없거나 실패하면 raw로 읽는다. raw는 CDN이 5분 캐시하고 `?t=`로도 피하지 못해, 방금 바꾼 상태가 새로 고친 뒤 옛 값으로 보이기 때문이다. 쓰기의 기준은 늘 커밋 직전에 다시 읽은 판이다([[CCR-INFRA-001]] 6.4).
 - GitHub에 쓰는 길은 `StatusStore` 하나이고 한 번에 요청 하나다. 같은 판으로 두 번 보내면 둘째가 409로 거절되기 때문이다([[CCR-DOM-002]] 5장 결정 10 · [[CCR-API-001]] 1.4).
 - 판이 어긋나면 한 번만 다시 쓴다. 5xx · 연결 오류는 스스로 되풀이하지 않고 「다시 시도」(12.2)를 기다린다([[CCR-API-001]] 2.3).
 - 배치가 같은 때 커밋해도 부딪히지 않는다. 파일이 다르고, Contents API는 파일 단위의 판으로 견준다([[CCR-UC-001#UC-H1]] 4c).
@@ -564,4 +576,4 @@ sequenceDiagram
 ## 3. 미결사항
 
 - [ ] SEQ-2의 Kaggle 목록 요청은 실측 전이다. 토큰이 생기면 다시 그린다
-- [ ] SEQ-11의 쓰기와 SEQ-12는 브라우저 실측 전이다. 2026-09-30 첫 배포에서 raw 읽기로 목록이 그려지는 것까지 보았다. 페이지 토큰을 넣은 뒤 Contents API의 409 · 422 응답과, 쓰기 권한이 모자란 토큰의 첫 쓰기가 403인지 404인지 실제로 보고 다시 그린다. raw 캐시가 몇 분 가는지는 [[CCR-INFRA-001]] 9장과 함께 잰다
+- [ ] SEQ-11의 브라우저 쓰기와 SEQ-12는 실측 전이다. 2026-09-30에 페이지의 실제 저장 코드를 브라우저 밖에서 돌려, 상태 파일을 만들고(판 없이 쓰기) 고치는(판 위에 쓰기) 흐름까지 보았다([[CCR-CODE-001]] 4장). 같은 날 raw 캐시를 재어 상태 파일의 표시용 읽기를 토큰이 있으면 Contents API로 바꿨다([[CCR-INFRA-001]] 6.4). 페이지 토큰을 넣은 뒤 브라우저에서 Contents API의 409 · 422 응답과, 쓰기 권한이 모자란 토큰의 첫 쓰기가 403인지 404인지 실제로 보고 다시 그린다
