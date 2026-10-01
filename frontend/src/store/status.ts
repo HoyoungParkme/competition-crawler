@@ -19,7 +19,7 @@ import {
 } from '../domain/types'
 import type { TokenStore } from './token'
 
-export type ChangeKind = 'status' | 'hide' | 'restore'
+export type ChangeKind = 'status' | 'hide' | 'restore' | 'star' | 'unstar'
 
 export interface Change {
   kind: ChangeKind
@@ -67,21 +67,36 @@ export function nowIso(date: Date = new Date()): string {
   return date.toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
+/** 바꿈의 종류마다 바뀌는 필드 */
+function changedFields(change: Change, current: Status): Partial<Status> {
+  switch (change.kind) {
+    case 'status':
+      return { status: change.value ?? current.status }
+    case 'hide':
+      return { hidden: true }
+    case 'restore':
+      return { hidden: false }
+    case 'star':
+      return { starred: true }
+    case 'unstar':
+      return { starred: false }
+  }
+}
+
 /** 이번 바꿈만 그 대회의 값에 얹는다. 다른 대회의 값은 그대로다. 되살리기는 hidden=false로 둔다 */
 export function mergeChange(file: StatusFile, change: Change, now: string): StatusFile {
   const current = file[change.id] ?? DEFAULT_STATUS
-  const next: Status =
-    change.kind === 'status'
-      ? { ...current, status: change.value ?? current.status, updated_at: now }
-      : { ...current, hidden: change.kind === 'hide', updated_at: now }
+  const next: Status = { ...current, ...changedFields(change, current), updated_at: now }
   return { ...file, [change.id]: next }
 }
 
-/** `status: <대회명> → <상태>` · `status: <대회명> 지움` · `status: <대회명> 되살림`. 대회명은 60자 */
+/** `status: <대회명> → <상태>` · `지움` · `되살림` · `별표` · `별표 뗌`. 대회명은 60자 */
 export function commitMessage(change: Change): string {
   const title = change.title.length > TITLE_MAX ? change.title.slice(0, TITLE_MAX) : change.title
   if (change.kind === 'hide') return `status: ${title} 지움`
   if (change.kind === 'restore') return `status: ${title} 되살림`
+  if (change.kind === 'star') return `status: ${title} 별표`
+  if (change.kind === 'unstar') return `status: ${title} 별표 뗌`
   return `status: ${title} → ${STATUS_LABEL[change.value ?? 'not_started']}`
 }
 
@@ -116,6 +131,14 @@ export class StatusStore {
 
   restore(id: string, title: string): void {
     this.enqueue({ kind: 'restore', id, title, before: this.file[id], at: nowIso() })
+  }
+
+  star(id: string, title: string): void {
+    this.enqueue({ kind: 'star', id, title, before: this.file[id], at: nowIso() })
+  }
+
+  unstar(id: string, title: string): void {
+    this.enqueue({ kind: 'unstar', id, title, before: this.file[id], at: nowIso() })
   }
 
   /** 마지막으로 실패한 바꿈을 다시 보낸다(UI-1 12.2). 최신 판을 다시 읽어 같은 바꿈을 얹는다 */

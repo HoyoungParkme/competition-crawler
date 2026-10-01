@@ -75,6 +75,7 @@ function toStatus(value: unknown): Status | null {
   return {
     status: record.status,
     hidden: record.hidden,
+    starred: typeof record.starred === 'boolean' ? record.starred : false,
     updated_at: typeof record.updated_at === 'string' ? record.updated_at : '',
   }
 }

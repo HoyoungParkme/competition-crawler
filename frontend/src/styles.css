@@ -17,8 +17,18 @@
   --soon: #a13f1d;
   --state-in-progress: #e3ecdd;
   --state-in-progress-line: #8fae82;
+  --state-in-progress-fg: #25451b;
   --state-submitted: #e6eef0;
   --state-submitted-line: #9fbcc3;
+  --state-submitted-fg: #163e46;
+  --state-done: #ebe5f3;
+  --state-done-line: #b4a5cc;
+  --state-done-fg: #3d2f5a;
+  --state-skipped: #ecebe4;
+  --state-skipped-line: #c9c4b7;
+  --state-skipped-fg: #57534a;
+  --star-off: #57534a;
+  --star-on: #a8650f;
   --alert-warn: #fff7e6;
   --alert-warn-line: #e3c98a;
   --alert-warn-fg: #5b4200;
@@ -137,6 +147,7 @@ a:hover {
 .cc-btn:focus-visible,
 .cc-sel:focus-visible,
 .cc-state:focus-visible,
+.cc-star:focus-visible,
 .cc-fold:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -223,15 +234,46 @@ a:hover {
   padding: 6px 10px;
   min-height: var(--control-height-row);
 }
-/* 대회명(7.2). 굵게 쓰고 밑줄은 가리킬 때만 */
-.cc-tbl td > a {
+/* 대회명(7.2). 굵게 쓰고 밑줄은 가리킬 때만. 앞에 별표(7.7) */
+.cc-titlecell {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.cc-tbl .cc-title {
   color: var(--title-link);
   font-weight: 600;
   text-decoration: none;
 }
-.cc-tbl td > a:hover {
+.cc-tbl .cc-title:hover {
   color: var(--accent-hover);
   text-decoration: underline;
+}
+.cc-star {
+  flex: none;
+  width: var(--control-height-row);
+  height: var(--control-height-row);
+  margin: -6px 0 0 -8px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--star-off);
+  cursor: pointer;
+}
+.cc-star:hover {
+  background: var(--chip);
+}
+.cc-star[aria-pressed='true'] {
+  color: var(--star-on);
+}
+/* 미참인 줄은 글을 흐리게. 상태 셀렉트와 단추는 그대로 */
+.cc-tbl tr.skipped .cc-due,
+.cc-tbl tr.skipped .cc-title,
+.cc-tbl tr.skipped .cc-note,
+.cc-tbl tr.skipped .cc-src {
+  opacity: 0.55;
 }
 .cc-tbl tr.folded td {
   opacity: 0.75;
@@ -276,15 +318,28 @@ a:hover {
   border-radius: var(--radius);
   border: 1px solid var(--line-control);
   background: var(--surface);
+  color: var(--fg);
   height: var(--control-height-row);
 }
 .cc-state.in_progress {
   background: var(--state-in-progress);
   border-color: var(--state-in-progress-line);
+  color: var(--state-in-progress-fg);
 }
 .cc-state.submitted {
   background: var(--state-submitted);
   border-color: var(--state-submitted-line);
+  color: var(--state-submitted-fg);
+}
+.cc-state.done {
+  background: var(--state-done);
+  border-color: var(--state-done-line);
+  color: var(--state-done-fg);
+}
+.cc-state.skipped {
+  background: var(--state-skipped);
+  border-color: var(--state-skipped-line);
+  color: var(--state-skipped-fg);
 }
 
 /* 쪽 나누기(13) */

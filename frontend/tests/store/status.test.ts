@@ -27,29 +27,64 @@ const change = (partial: Partial<Change>): Change => ({
 describe('mergeChange', () => {
   it('changes only that competition and stamps updated_at', () => {
     const file: StatusFile = {
-      'DACON:1': { status: 'not_started', hidden: false, updated_at: 'old' },
-      'DACON:2': { status: 'done', hidden: false, updated_at: 'keep' },
+      'DACON:1': { status: 'not_started', hidden: false, starred: false, updated_at: 'old' },
+      'DACON:2': { status: 'done', hidden: false, starred: false, updated_at: 'keep' },
     }
     const merged = mergeChange(file, change({}), NOW)
-    expect(merged['DACON:1']).toEqual({ status: 'in_progress', hidden: false, updated_at: NOW })
+    expect(merged['DACON:1']).toEqual({
+      status: 'in_progress',
+      hidden: false,
+      starred: false,
+      updated_at: NOW,
+    })
     expect(merged['DACON:2']).toEqual(file['DACON:2'])
     expect(file['DACON:1']!.status).toBe('not_started') // 원본은 그대로
   })
 
   it('hides and restores without touching the status value', () => {
     const hidden = mergeChange({}, change({ kind: 'hide' }), NOW)
-    expect(hidden['DACON:1']).toEqual({ status: 'not_started', hidden: true, updated_at: NOW })
+    expect(hidden['DACON:1']).toEqual({
+      status: 'not_started',
+      hidden: true,
+      starred: false,
+      updated_at: NOW,
+    })
     const restored = mergeChange(hidden, change({ kind: 'restore' }), NOW)
     expect(restored['DACON:1']!.hidden).toBe(false)
     expect(Object.keys(restored)).toEqual(['DACON:1']) // 키를 지우지 않는다
   })
 })
 
+describe('mergeChange with stars', () => {
+  it('stars and unstars without touching the status or hidden value', () => {
+    const file: StatusFile = {
+      'DACON:1': { status: 'submitted', hidden: false, starred: false, updated_at: 'old' },
+    }
+    const starred = mergeChange(file, change({ kind: 'star' }), NOW)
+    expect(starred['DACON:1']).toEqual({
+      status: 'submitted',
+      hidden: false,
+      starred: true,
+      updated_at: NOW,
+    })
+    const unstarred = mergeChange(starred, change({ kind: 'unstar' }), NOW)
+    expect(unstarred['DACON:1']).toEqual({
+      status: 'submitted',
+      hidden: false,
+      starred: false,
+      updated_at: NOW,
+    })
+  })
+})
+
 describe('commitMessage', () => {
-  it('has three shapes and truncates the title at 60 characters', () => {
+  it('has five shapes and truncates the title at 60 characters', () => {
     expect(commitMessage(change({}))).toBe('status: 대회 1 → 진행 중')
+    expect(commitMessage(change({ value: 'skipped' }))).toBe('status: 대회 1 → 미참')
     expect(commitMessage(change({ kind: 'hide' }))).toBe('status: 대회 1 지움')
     expect(commitMessage(change({ kind: 'restore' }))).toBe('status: 대회 1 되살림')
+    expect(commitMessage(change({ kind: 'star' }))).toBe('status: 대회 1 별표')
+    expect(commitMessage(change({ kind: 'unstar' }))).toBe('status: 대회 1 별표 뗌')
     const long = commitMessage(change({ kind: 'hide', title: '가'.repeat(70) }))
     expect(long).toBe(`status: ${'가'.repeat(60)} 지움`)
   })
@@ -125,7 +160,7 @@ describe('StatusStore', () => {
   it('re-reads the version and writes once more when the sha is stale', async () => {
     const github = new FakeGitHub()
     github.sha = 'other-device'
-    github.file = { 'DACON:9': { status: 'done', hidden: false, updated_at: 'x' } }
+    github.file = { 'DACON:9': { status: 'done', hidden: false, starred: false, updated_at: 'x' } }
     github.failNext = new GitHubError(409)
     const states: SaveState[] = []
     const store = new StatusStore(github, new MemoryTokens(), (_file, state) => states.push(state))
@@ -146,13 +181,20 @@ describe('StatusStore', () => {
     const store = new StatusStore(github, new MemoryTokens(), (file, state) => {
       last = { file, state }
     })
-    store.load({ 'DACON:1': { status: 'not_started', hidden: false, updated_at: 'before' } })
+    store.load({
+      'DACON:1': { status: 'not_started', hidden: false, starred: false, updated_at: 'before' },
+    })
     store.setStatus('DACON:1', '대회 1', 'done')
     store.hide('DACON:2', '대회 2')
     await flush()
     await flush()
     const { file, state } = last!
-    expect(file['DACON:1']).toEqual({ status: 'not_started', hidden: false, updated_at: 'before' })
+    expect(file['DACON:1']).toEqual({
+      status: 'not_started',
+      hidden: false,
+      starred: false,
+      updated_at: 'before',
+    })
     expect(file['DACON:2']).toBeUndefined()
     expect(state.saving).toBe(false)
     expect(state.error!.status).toBe(401)

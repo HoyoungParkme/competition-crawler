@@ -22,7 +22,7 @@ const entry = (id: string, deadline: string | null, title = `대회 ${id}`): Lis
 
 const row = (e: ListEntry): Row => ({
   entry: e,
-  status: { status: 'not_started', hidden: false, updated_at: '' },
+  status: { status: 'not_started', hidden: false, starred: false, updated_at: '' },
   expired: false,
 })
 
@@ -58,10 +58,10 @@ describe('kstToday', () => {
 
 describe('readStatusForView', () => {
   const apiFile: StatusFile = {
-    'DACON:1': { status: 'in_progress', hidden: false, updated_at: 'from-api' },
+    'DACON:1': { status: 'in_progress', hidden: false, starred: false, updated_at: 'from-api' },
   }
   const rawFile: StatusFile = {
-    'DACON:1': { status: 'not_started', hidden: false, updated_at: 'from-raw' },
+    'DACON:1': { status: 'not_started', hidden: false, starred: false, updated_at: 'from-raw' },
   }
   const readRaw = () => Promise.resolve(rawFile)
 

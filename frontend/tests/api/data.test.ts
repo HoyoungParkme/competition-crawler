@@ -43,14 +43,40 @@ describe('parseStatusFile', () => {
   it('reads statuses and drops values with a different shape', () => {
     const file = parseStatusFile(
       JSON.stringify({
-        'DACON:1': { status: 'in_progress', hidden: false, updated_at: '2026-09-29T00:12:41Z' },
+        'DACON:1': {
+          status: 'in_progress',
+          hidden: false,
+          starred: false,
+          updated_at: '2026-09-29T00:12:41Z',
+        },
         'DACON:2': { status: 'unknown', hidden: false },
         'DACON:3': 'x',
         'DACON:4': { status: 'done', hidden: true },
       }),
     )
     expect(Object.keys(file)).toEqual(['DACON:1', 'DACON:4'])
-    expect(file['DACON:4']).toEqual({ status: 'done', hidden: true, updated_at: '' })
+    expect(file['DACON:4']).toEqual({
+      status: 'done',
+      hidden: true,
+      starred: false,
+      updated_at: '',
+    })
+  })
+
+  it('reads skipped and starred, and treats a missing or non-boolean starred as false', () => {
+    const file = parseStatusFile(
+      JSON.stringify({
+        'DACON:1': { status: 'skipped', hidden: false, starred: true, updated_at: 'x' },
+        'DACON:2': { status: 'done', hidden: false, starred: 'yes', updated_at: 'x' },
+      }),
+    )
+    expect(file['DACON:1']).toEqual({
+      status: 'skipped',
+      hidden: false,
+      starred: true,
+      updated_at: 'x',
+    })
+    expect(file['DACON:2']!.starred).toBe(false)
   })
 
   it('throws DataReadError when the file is not an object', () => {
