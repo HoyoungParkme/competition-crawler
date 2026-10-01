@@ -15,8 +15,8 @@ upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001, CCR
 항목 하나가 엔드포인트 하나다. 헤딩은 `메서드/호스트/경로`다. 호스트가 여럿이라 경로만으로는 가를 수 없어 호스트를 넣는다. 항목 ID는 50자까지라 긴 경로는 줄여 적는다. Kaggle의 서비스 이름과 GitHub의 `{owner}/{repo}`는 `…`로 줄였다. 온전한 경로는 그 항목의 yaml에 있다. 블록마다 한 줄 요약, 유스케이스와 도메인 개념, 받은 값을 공통 형식으로 옮기는 법, 그 엔드포인트의 yaml을 둔다. yaml은 OpenAPI의 모양을 빌리되 배치가 보내고 읽는 것만 적는다. 응답에는 쓰지 않는 필드가 훨씬 많다.
 
 확인한 방법은 셋이다.
-- **실측:** 소스 다섯은 2026-09-23에 직접 불러 봤다. wevity · 콘테스트코리아는 2026-09-27에 다시 불렀고, wevity는 2026-09-28 아침에 한 번 더 불렀다.
-- **공식 클라이언트 코드:** Kaggle은 공식 클라이언트(`kagglesdk`) 코드로 확인했다. 실측은 아직이다(5장).
+- **실측:** 소스 다섯은 2026-09-23에 직접 불러 봤다. wevity · 콘테스트코리아는 2026-09-27에 다시 불렀고, wevity는 2026-09-28 아침에 한 번 더 불렀다. Kaggle은 2026-10-01에 사용자의 토큰으로 불렀다.
+- **공식 클라이언트 코드:** Kaggle의 엔드포인트와 요청 모양은 공식 클라이언트(`kagglesdk`) 코드에서 찾았다. 쪽 넘김은 코드와 달라 실측을 따랐다(3.1 Kaggle).
 - **공식 문서:** OpenAI와 GitHub는 공식 문서로 확인했다. GitHub Contents API는 2026-09-29에 이 저장소의 파일 하나를 읽어 응답 모양을 봤다.
 
 event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 문서가 없다. wevity · AI팩토리 · 콘테스트코리아는 페이지를 읽는다. 어느 것이든 예고 없이 바뀔 수 있다([[CCR-PRD-001#R9]]).
@@ -26,8 +26,8 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 | 미결 | 정한 것 | 자리 |
 |---|---|---|
 | AI팩토리 과제를 대회로 합치는 법과 대회명([[CCR-PRD-001]] 6장 · [[CCR-DOM-001]] 6장) | 페이지 이름과 접수시작일로 합치고, 대회명은 네 차례로 정한다 | 3.1 AI팩토리 |
-| 소스마다 채우는 날짜와 부가 정보(같은 두 곳) | 소스별 필드. Kaggle은 실측 뒤 확정한다 | 4.1 |
-| Kaggle 호출 방식([[CCR-INFRA-001]] 3장) | 공식 API의 대회 목록. 실측 뒤 확정한다 | 3.1 Kaggle |
+| 소스마다 채우는 날짜와 부가 정보(같은 두 곳) | 소스별 필드. Kaggle은 2026-10-01 실측으로 확정했다 | 4.1 |
+| Kaggle 호출 방식([[CCR-INFRA-001]] 3장) | 공식 API의 대회 목록을 일반 탭만 `page`로 넘겨 받는다. 커뮤니티 탭은 받지 않는다 | 3.1 Kaggle |
 | 페이지가 저장소를 읽고 쓰는 모양([[CCR-INFRA-001]] 8.11) | 목록 파일은 raw로 읽는다. 상태 파일은 토큰이 있으면 Contents API로, 없으면 raw로 읽는다. 쓰기 직전의 판 읽기와 쓰기는 Contents API로 한다 | 1.4 · 3.3 |
 | 판이 어긋난 쓰기를 어떻게 다시 보낼지([[CCR-UC-001#UC-H1]] 4a) | 최신 판을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다 | 2.3 |
 
@@ -39,6 +39,7 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 
 - **User-Agent**는 `competition-crawler/0.1 (+https://github.com/HoyoungParkme/competition-crawler)`다. 앞은 이름과 버전이고, 괄호 안은 연락처 삼아 적은 저장소 주소다. 누가 보냈는지 알 수 있게 한다([[CCR-PRD-001#N4]]). 2026-09-23 실측은 모두 이 문자열로 했고 소스 다섯이 200을 줬다.
 - **요청 간격**은 같은 소스 안에서 요청 사이 1초다. `robots.txt` 요청도 센다([[CCR-INFRA-001]] 8.5).
+- **쿠키**는 남기지 않는다. 응답이 심은 쿠키를 다음 요청에 싣지 않는다. Kaggle은 응답마다 익명 세션 쿠키(`ka_sessionid`)를 심는데, 그 쿠키가 실린 요청은 토큰이 있어도 401로 거절한다. `robots.txt`의 404 응답도 이 쿠키를 심는다(2026-10-01 실측). 같은 날 나머지 다섯 소스도 쿠키 없이 불러 예약 실행과 같은 건수를 받았다.
 - **비밀값**은 환경 변수로만 받는다([[CCR-INFRA-001]] 5장). 요청 헤더와 요청 객체는 로그에 찍지 않는다([[CCR-UC-001#UC-S7]] 7 · [[CCR-INFRA-001]] 5.4).
 - **시간대.** 시간대가 붙은 시각은 KST로 바꾼 뒤 날짜만 쓴다. 시간대 표기가 없는 값은 KST로 보고 바꾸지 않는다([[CCR-UC-001#UC-S2]] 2 · 2b). 기준일 00:00 KST는 UTC로 전날 15:00이다. 기준일이 2026-09-23이면 `2026-09-22T15:00:00+00:00`이다.
 - **빈 값.** 알 수 없는 날짜는 빈 값으로 둔다. 파일에는 빈 문자열이 아니라 `null`로 적는다([[CCR-DOM-003]]).
@@ -75,7 +76,7 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 |---|---|---|---|
 | event-us | 100건 | `meta.page.total_pages`까지 읽었을 때 | 1쪽(09-23) |
 | DACON | 15건 | 접수 중인 대회가 하나도 없는 쪽을 읽었을 때 | 2쪽(09-23) |
-| Kaggle | (실측 뒤 확정) | `nextPageToken`이 비었거나, 한 쪽의 대회가 모두 마감됐을 때 | — |
+| Kaggle | 20건. 바꿀 수 없다 | 빈 쪽을 받았거나, 한 쪽의 대회가 모두 마감됐을 때 | 2쪽과 빈 쪽 하나(10-01) |
 | wevity | 15건 | 분야마다, 마지막 항목의 상태가 `마감`이거나 항목이 없는 쪽을 읽었을 때. 쪽 상한 20은 다섯 분야를 합친 것이다 | 다섯 분야 합쳐 11쪽(09-27 · 09-28). 상세 1쪽은 따로다 |
 | AI팩토리 | 전부 | 목록이 한 페이지에 다 있다 | 1쪽(09-23) |
 | 콘테스트코리아 | 12건 | 분야마다, 12건보다 적은 쪽을 읽었을 때. 빈 쪽도 여기 든다. 쪽 상한 20은 두 분야를 합친 것이다 | 두 분야 합쳐 13쪽(09-27) |
@@ -336,12 +337,18 @@ Kaggle 공식 API로 대회 목록을 받는다. 공식 클라이언트(`kaggles
 
 **인증.** 새 API 토큰을 `Authorization: Bearer <KAGGLE_API_TOKEN>`으로 보낸다([[CCR-INFRA-001]] 5.2). 토큰이 없거나 틀리면 401이다.
 
-**조회 조건.** 목록 탭은 일반, 분야는 전체, 정렬은 마감이 늦은 차례다. 열거값은 이름 문자열로 보낸다. 상태로 거르는 파라미터가 없으므로 끝난 대회는 배치가 거른다.
-- **쪽 넘김.** `nextPageToken`이 비었거나 없으면 멈춘다. 마감이 늦은 차례라, 한 쪽의 대회가 모두 마감됐으면(`deadline`이 기준일보다 이르면) 뒤쪽도 마감된 것이라 멈춘다.
-- **연습용 대회.** 분야는 하나만 걸 수 있어 연습용만 요청에서 뺄 수 없다. `category`에서 공백을 빼고 소문자로 바꾼 값이 `gettingstarted` · `playground`면 연습용으로 보고 마감 판정에서 버린다([[CCR-UC-001#UC-S3]] 2b). 상위 문서의 표기가 `Getting Started` · `Playground`([[CCR-PRD-001#R3]])와 `gettingStarted` · `playground`([[CCR-DOM-001#Competition]])로 갈려 있어 둘 다 맞게 견준다. 실측 뒤 실제 값을 적는다.
-- **커뮤니티 대회.** 일반 탭에는 커뮤니티 탭의 대회가 없다. 함께 받을지는 실측으로 건수를 보고 정한다(5장).
+**조회 조건.** 목록 탭은 일반, 분야는 전체, 정렬은 마감이 늦은 차례다. 열거값은 이름 문자열로 보낸다. 상태로 거르는 파라미터는 없다. 일반 탭은 `deadline`이 지나지 않은 대회만 주지만, 새 참가 마감(`newEntrantDeadline`)이 지난 대회는 섞여 오므로 배치가 거른다.
+- **쪽 넘김.** 한 쪽은 20건으로 정해져 있다. `pageSize`는 10을 보내도 100을 보내도 20건이 왔다. `nextPageToken`은 마지막 쪽이 아니어도 오지 않는다. 그래서 쪽은 `page`(1부터)로 넘긴다. `page`를 빼면 1쪽이고, 마지막 쪽 다음은 빈 객체 `{}`가 온다. 빈 쪽을 받으면 멈춘다. 마감이 늦은 차례라, 한 쪽의 대회가 모두 마감됐으면(`deadline`이 기준일보다 이르면) 뒤쪽도 마감된 것이라 거기서도 멈춘다.
+- **연습용 대회.** 분야는 하나만 걸 수 있어 연습용만 요청에서 뺄 수 없다. `category`의 실제 값은 `Getting Started` · `Featured` · `Playground` · `Research`였다(일반 탭, 2026-10-01). `Getting Started` · `Playground`면 연습용으로 보고 마감 판정에서 버린다([[CCR-UC-001#UC-S3]] 2b). `Getting Started`는 마감이 모두 2030년으로 잡혀 있었다. 공백을 빼고 소문자로 바꿔 `gettingstarted` · `playground`와 견주므로 [[CCR-RFQ-001#Q4]]의 표기 `gettingStarted`도 맞는다.
+- **커뮤니티 대회는 받지 않는다.** 일반 탭에는 커뮤니티 탭(`COMPETITION_LIST_TAB_COMMUNITY`)의 대회가 없다. 커뮤니티 탭은 2026-10-01에 15쪽 300건을 받아도 끝나지 않았고, 300건 모두 분류가 `Community`, 상금이 `Kudos`(상금 없음)였다. 앞쪽은 마감이 2100년 같은 먼 미래로 잡힌 상시 대회가 채우고, 2030년보다 이른 마감은 89건이었으며 대개 수업 과제였다. 받으면 연습용처럼 걸러야 할 것이 수백 건이고 쪽 상한(20)에도 닿는다.
 
-**실측.** 아직 하지 않았다(5장). 필드 이름과 날짜 형식은 공식 클라이언트 코드에서 읽은 것이다. 공식 CLI의 단위 테스트는 가짜 응답의 `ref`를 `https://www.kaggle.com/competitions/example-comp`로, `category`를 `Playground`로 둔다.
+**실측(2026-10-01).** 사용자의 새 토큰으로 일반 탭을 불러 200을 받았다. 21건, 2쪽(20건 · 1건)이었고 3쪽은 빈 객체였다. 필드 이름은 공식 클라이언트 코드와 같았다.
+- `ref`와 `url`은 같은 전체 주소(`https://www.kaggle.com/competitions/{slug}`)다.
+- 날짜는 UTC의 `YYYY-MM-DDTHH:MM:SSZ`다. 밀리초가 붙은 값(`2026-11-12T23:59:00.807Z`)도 섞여 온다. `enabledDate`는 대개 밀리초가 붙는다.
+- `newEntrantDeadline`은 21건 가운데 8건에만 있었다.
+- 연습용 13건(`Getting Started` 11 · `Playground` 2)과 새 참가 마감이 지난 1건을 빼면 남는 것은 7건이었다.
+- 응답에는 토큰 주인이 참가했는지를 뜻하는 `userHasEntered`도 온다. 테스트에 저장한 응답에서는 지웠다.
+- `api.kaggle.com/robots.txt`는 404라 제한이 없다.
 
 **공통 형식으로 옮기기.**
 
@@ -367,8 +374,7 @@ Kaggle 공식 API로 대회 목록을 받는다. 공식 클라이언트(`kaggles
             category: "HOST_SEGMENT_UNSPECIFIED"
             sortBy: "COMPETITION_SORT_BY_LATEST_DEADLINE"
             search: ""
-            pageSize: 100
-            pageToken: ""        # 다음 쪽은 앞 응답의 nextPageToken
+            page: 1              # 다음 쪽은 2, 3, …. pageSize · pageToken은 효과가 없다
     responses:
       "200":
         content:
@@ -381,16 +387,16 @@ Kaggle 공식 API로 대회 목록을 받는다. 공식 클라이언트(`kaggles
                   items:
                     type: object
                     properties:
-                      ref: {type: string, example: "https://www.kaggle.com/competitions/example-comp"}
+                      ref: {type: string, example: "https://www.kaggle.com/competitions/rsna-knee-abnormality-detection"}
                       title: {type: string}
-                      category: {type: string, example: "Playground"}
+                      category: {type: string, example: "Featured"}
                       enabledDate: {type: string, format: date-time}
                       newEntrantDeadline: {type: string, format: date-time}
                       deadline: {type: string, format: date-time}
                       tags: {type: array, items: {type: object, properties: {name: {type: string}}}}
-                nextPageToken: {type: string}
+              # 마지막 쪽 다음은 빈 객체 {}다. nextPageToken은 오지 않는다
       "401":
-        description: '토큰이 없거나 틀렸다. 본문 {"error": {"code": 401, "message": "Unauthenticated"}}'
+        description: '토큰이 없거나 틀렸다. 익명 세션 쿠키가 함께 실려도 401이다. 본문 {"error": {"code": 401, "message": "Unauthenticated"}}'
 ```
 
 #### GET/www.wevity.com/?c=find wevity 공모전 목록
@@ -885,7 +891,8 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 
 ## 5. 미결사항
 
-- [ ] **Kaggle 실측.** 토큰으로 목록을 한 번 불러 필드 이름 · 날짜 형식 · `category` 값 · 쪽 크기 · 첫 요청에 `page`가 필요한지를 확인하고, 커뮤니티 탭을 함께 받을지 정한다. 그때까지 이 문서의 Kaggle 항목은 공식 클라이언트 코드에 기댄 것이다
+2026-10-01에 Kaggle 실측 항목을 닫았다. 쪽 넘김 · `category` 값 · 커뮤니티 탭은 3.1 Kaggle에, 쿠키는 1.1에 적었다.
+
 - [ ] 콘테스트코리아는 목록에 발표일을 준다. 이 소스만이라도 `결과날`을 채울지 정한다([[CCR-PRD-001]] 6장)
 - [ ] Kaggle 새 토큰의 만료와 범위. 설정 화면에서 만든 토큰은 공식 문서가 다루지 않는다([[CCR-INFRA-001]] 5.2)
-- [ ] **[[CCR-RFQ-001]]은 사람이 쓴 문서라 맞추지 않았다.** 2026-09-29의 v9는 노션을 페이지로 바꾼 것만 고쳤다. 이 문서와 다른 곳은 여전히 셋이다. Q2(분야로 좁히지 않는다 — wevity · 콘테스트코리아는 분야로 좁힌다), Q4(DACON은 서버 렌더링 페이로드가 아니라 JSON API, AI팩토리는 보이는 마크업이 아니라 페이지 안의 페이로드), 6장(`결과날` — 콘테스트코리아에는 발표일이 있다). 나머지 상위 문서는 맞췄다([[CCR-PRD-001]] · [[CCR-SCN-001]] · [[CCR-UC-001]] · [[CCR-INFRA-001]] · [[CCR-DOM-001]] · [[CCR-UI-001]])
+- [ ] **[[CCR-RFQ-001]]은 사람이 쓴 문서라 맞추지 않았다.** 2026-09-29의 v9는 노션을 페이지로 바꾼 것만 고쳤다. 이 문서와 다른 곳은 여전히 셋이다. Q2(분야로 좁히지 않는다 — wevity · 콘테스트코리아는 분야로 좁힌다), Q4(DACON은 서버 렌더링 페이로드가 아니라 JSON API, AI팩토리는 보이는 마크업이 아니라 페이지 안의 페이로드, Kaggle의 `category` 값은 `gettingStarted`가 아니라 `Getting Started`), 6장(`결과날` — 콘테스트코리아에는 발표일이 있다). 나머지 상위 문서는 맞췄다([[CCR-PRD-001]] · [[CCR-SCN-001]] · [[CCR-UC-001]] · [[CCR-INFRA-001]] · [[CCR-DOM-001]] · [[CCR-UI-001]])
