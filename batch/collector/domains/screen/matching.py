@@ -21,6 +21,8 @@ from collector.shared.text import clean_text
 
 SIMILARITY = 0.90
 DEADLINE_GAP_DAYS = 180
+# 대회 하나에 원천 ID가 하나뿐인 소스. 같은 소스 안에서 원천 ID가 다르면 다른 대회다
+ONE_ID_PER_COMPETITION = frozenset({SourceName.KAGGLE})
 
 _HEAD_BRACKETS = re.compile(r"^\s*(?:[\[【〔][^\]】〕]*[\]】〕]\s*)+")
 _PAREN = re.compile(r"\(([^()]*)\)")
@@ -220,6 +222,14 @@ def judge_pair(a: MatchKey, b: MatchKey) -> PairResult:
     # 1단계. 출처와 원천 ID. 목록 항목과는 링크로도 견주되 2단계를 더 본다
     if a.source_id is not None and a.source == b.source and a.source_id == b.source_id:
         return PairResult(Verdict.SAME, step=1, similarity=1.0, certain=True)
+    # Kaggle은 같은 대회를 두 번 올리지 않는다. slug가 다르면 이름이 닮아도 다른 대회다
+    if (
+        a.source in ONE_ID_PER_COMPETITION
+        and a.source == b.source
+        and a.source_id is not None
+        and b.source_id is not None
+    ):
+        return PairResult(Verdict.DIFFERENT, step=1)
     if (a.from_list or b.from_list) and a.link and a.link == b.link:
         if _marks_differ(a, b):
             return PairResult(Verdict.DIFFERENT, step=2)
