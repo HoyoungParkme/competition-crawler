@@ -254,7 +254,7 @@ a:hover {
   border-radius: var(--radius);
   border: 1px solid var(--line-control);
   background: var(--surface);
-  min-height: 36px;
+  min-height: var(--control-height);
 }
 .cc-state.in_progress {
   background: var(--state-in-progress);
