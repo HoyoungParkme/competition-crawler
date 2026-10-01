@@ -115,7 +115,7 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 - **API 헤더.** `Accept: application/vnd.github+json` · `X-GitHub-Api-Version: 2022-11-28` · `Authorization: Bearer <페이지 토큰>`. 토큰은 fine-grained personal access token이고 이 저장소의 Contents 읽기·쓰기만 있다([[CCR-INFRA-001]] 5.8).
 - **쓰기는 파일 하나를 한 커밋으로 올린다**([[#PUT/api.github.com/…/contents/data/status.json]]). 본문에 새 내용(UTF-8 JSON을 Base64로), 읽어 둔 `sha`, 커밋 메시지, `branch: main`, 커밋 작성자(`author`·`committer`)를 넣는다. 파일이 아직 없으면 `sha` 없이 보내 만든다.
 - **커밋 작성자.** `author`와 `committer`에 같은 값, 저장소 주인의 이름과 noreply 주소(`<id>+<login>@users.noreply.github.com`)를 넣는다. 페이지 설정 파일의 상수다([[CCR-INFRA-001]] 4.1 · 8.11). GitHub 문서대로 `committer`를 빼면 인증한 사용자(토큰 주인)가, `author`를 빼면 `committer`가 그 자리에 들어간다. 인증한 사용자의 정보에는 계정의 기본 이메일이 쓰여, 이메일 비공개 설정이 꺼진 계정이면 개인 주소가 공개 커밋에 남는다. 그래서 둘 다 보낸다. 둘 다 `name`과 `email`이 있어야 하고, 빠지면 422다.
-- **커밋 메시지**는 페이지가 만든다. 상태를 바꾸면 `status: <대회명> → <상태 이름>`, 지우면 `status: <대회명> 지움`, 되살리면 `status: <대회명> 되살림`이다. 대회명은 60자에서 자른다.
+- **커밋 메시지**는 페이지가 만든다. 상태를 바꾸면 `status: <대회명> → <상태 이름>`, 지우면 `status: <대회명> 지움`, 되살리면 `status: <대회명> 되살림`, 별표를 붙이면 `status: <대회명> 별표`, 떼면 `status: <대회명> 별표 뗌`이다. 대회명은 60자에서 자른다.
 - **한 번에 요청 하나.** 앞 쓰기의 응답이 오기 전에 다음 바꿈이 생기면 줄 세워 차례로 보낸다. 같은 `sha`로 두 번 보내면 둘째가 409로 거절되기 때문이다. 화면은 먼저 바뀐다([[CCR-UC-001#UC-H1]] 2).
 - **판이 어긋나면**(409 · 422) 최신 판을 다시 읽고, 이번 바꿈만 그 위에 얹어 한 번 더 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다(2.3).
 - **크기.** Contents API의 `GET`은 1MB까지 내용을 돌려준다. 상태 파일은 항목 하나가 100바이트 안팎이라 수천 건이어도 그 안이다. 목록 파일은 raw로만 읽으므로 이 한도와 상관없다.
@@ -843,19 +843,20 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 | 수집일 | 수집일 열. 오늘이면 새로 들어온 대회다 |
 | 판별 근거 | 대회명 아래 회색 글(7.6) |
 
-**상태 파일(페이지가 읽고 쓴다).** 식별자를 키로 한 객체 하나다. 값이 없는 대회는 `시작 전`이고 감추지 않은 것이다.
+**상태 파일(페이지가 읽고 쓴다).** 식별자를 키로 한 객체 하나다. 값이 없는 대회는 `시작 전`이고 감추지 않았고 별표가 없는 것이다.
 
 ```json
 {
-  "AI팩토리:9304": {"status": "in_progress", "hidden": false, "updated_at": "2026-09-29T00:12:41Z"},
-  "event-us:135608": {"status": "not_started", "hidden": true, "updated_at": "2026-09-29T00:13:07Z"}
+  "AI팩토리:9304": {"status": "in_progress", "hidden": false, "starred": true, "updated_at": "2026-10-01T00:12:41Z"},
+  "event-us:135608": {"status": "skipped", "hidden": true, "starred": false, "updated_at": "2026-10-01T00:13:07Z"}
 }
 ```
 
 | 값 | 뜻 |
 |---|---|
-| `status` | `not_started` · `in_progress` · `submitted` · `done`. 화면에는 `시작 전` · `진행 중` · `제출` · `완료`로 보인다 |
+| `status` | `not_started` · `in_progress` · `submitted` · `done` · `skipped`. 화면에는 `시작 전` · `진행 중` · `제출` · `완료` · `미참`으로 보인다 |
 | `hidden` | 지웠으면 `true`. 되살리면 `false`로 둔다. 키를 지우지 않는다 |
+| `starred` | 별표를 붙였으면 `true`. 2026-10-01에 더한 필드라 그 전에 쓴 항목에는 없고, 없거나 불 값이 아니면 `false`로 본다 |
 | `updated_at` | 마지막으로 바꾼 시각. UTC, 초 단위 |
 
 `결과날`은 두지 않는다([[CCR-PRD-001#R6]]).
