@@ -2,7 +2,7 @@
 doc_id: CCR-MS-001
 type: MS
 title: MINISPEC — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 ---
 
