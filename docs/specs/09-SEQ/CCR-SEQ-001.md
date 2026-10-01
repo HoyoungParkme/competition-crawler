@@ -438,7 +438,7 @@ sequenceDiagram
 
 ## SEQ-11 페이지를 열고 상태를 바꾼다
 
-[[CCR-UC-001#UC-A2]] 1 ~ 6 · 1b · 4b · [[CCR-UC-001#UC-H1]] 1 ~ 5 · 1a · 1b · 4a · 4b · 4c. 화면은 [[CCR-UI-001#UI-1]]이다.
+[[CCR-UC-001#UC-A2]] 1 ~ 6 · 1b · 4b · [[CCR-UC-001#UC-H1]] 1 ~ 5 · 1a · 1b · 1c · 4a · 4b · 4c. 화면은 [[CCR-UI-001#UI-1]]이다.
 
 ```mermaid
 sequenceDiagram
@@ -473,12 +473,12 @@ sequenceDiagram
     GHB-->>RF: 파일 내용
     RF-->>UI: 항목 · 상태 파일
     UI->>UI: Row로 합쳐 마감일 순 정렬 · 마감 지남 · 지움은 접힌 구역(9)
-    U->>UI: 상태 셀렉트(7.4) · 지우기(7.5) · 되살리기(9.1)
+    U->>UI: 상태 셀렉트(7.4) · 지우기(7.5) · 별표(7.7) · 되살리기(9.1)
     UI->>TK: has()
     alt 토큰 없음
         UI-->>U: 토큰 없음(11). 값은 그대로
     else
-        UI->>ST: setStatus · hide · restore(id, 대회명)
+        UI->>ST: setStatus · hide · restore · star · unstar(id, 대회명)
         ST-->>UI: onChange(얹은 파일, 저장 중) — 화면 먼저
         ST->>ST: 큐. 앞 커밋이 끝날 때까지 기다림
         ST->>RF: readStatusVersion(token)
