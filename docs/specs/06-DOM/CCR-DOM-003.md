@@ -2,7 +2,7 @@
 doc_id: CCR-DOM-003
 type: DOM
 title: ERD·DD — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-DOM-002, CCR-DOM-001, CCR-INFRA-001, CCR-API-001]
 ---
 
