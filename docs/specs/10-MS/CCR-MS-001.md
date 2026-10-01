@@ -24,7 +24,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 | 모듈 | 함수 |
 |---|---|
 | core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#Secrets.values]] · [[#settings.read_dotenv]] · [[#logging.register_actions_masks]] · [[#SecretFilter.filter]] · [[#logging.setup_logging]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
-| infra | [[#SourceHttp.fetch]] · [[#SourceHttp.remaining]] · [[#SourceHttp.close]] · [[#http.parse_retry_after]] · [[#robots.ensure_allowed]] |
+| infra | [[#SourceHttp.fetch]] · [[#SourceHttp.remaining]] · [[#SourceHttp.close]] · [[#http.parse_retry_after]] · [[#http.new_client]] · [[#robots.ensure_allowed]] |
 | 수집 | [[#Competition.dates_filled]] · [[#SourceResult.normalized]] · [[#SourceResult.failed]] · [[#Source.collect]] · [[#Source.missing_config]] · [[#CollectService.collect_all]] · [[#CollectService._collect_one]] · [[#eventus.build_query]] · [[#eventus.parse_page]] · [[#eventus.normalize]] · [[#EventUsSource.collect]] · [[#EventUsSource.missing_config]] · [[#dacon.parse_page]] · [[#dacon.normalize]] · [[#dacon.link_for]] · [[#DaconSource.collect]] · [[#DaconSource.missing_config]] · [[#kaggle.parse_page]] · [[#kaggle.normalize]] · [[#kaggle.is_practice]] · [[#KaggleSource.collect]] · [[#KaggleSource.missing_config]] · [[#wevity.parse_list]] · [[#wevity.parse_detail_end]] · [[#wevity.deadline_of]] · [[#WevitySource.collect]] · [[#WevitySource._calibrate]] · [[#WevitySource.missing_config]] · [[#aifactory.extract_payload]] · [[#aifactory.parse_tasks]] · [[#aifactory.parse_page]] · [[#aifactory.group_tasks]] · [[#aifactory.competition_name]] · [[#aifactory.to_competition]] · [[#AiFactorySource.collect]] · [[#AiFactorySource.missing_config]] · [[#contestkorea.parse_list]] · [[#contestkorea.resolve_dates]] · [[#ContestKoreaSource.collect]] · [[#ContestKoreaSource.missing_config]] |
 | 선별 | [[#matching.normalize_title]] · [[#matching.extract_marks]] · [[#matching.normalize_link]] · [[#matching.key_of_competition]] · [[#matching.key_of_entry]] · [[#matching.key_of_history]] · [[#matching.similarity]] · [[#matching.judge_pair]] · [[#matching.group]] · [[#matching.representative_order]] · [[#Bundle.deadline]] · [[#ScreenService.drop_expired]] · [[#ScreenService.bundle]] · [[#ScreenService.build_known]] · [[#KnownSet.add]] · [[#ScreenService.split_known]] · [[#ScreenService._matches]] · [[#ScreenService._record_known]] · [[#screen.entries_for]] · [[#ScreenService.judge]] · [[#ScreenService._ask_all]] · [[#Judge.judge]] · [[#OpenAiJudge.judge]] · [[#openai_judge.build_input]] |
 | 목록 | [[#ListEntry.id]] · [[#ListEntry.to_dict]] · [[#ListEntry.from_dict]] · [[#list.entry_of]] · [[#ListService.load]] · [[#ListFile.ids]] · [[#ListService.append]] · [[#ListService.appended_count]] · [[#ListCrud.read]] · [[#ListCrud.reset_appends]] · [[#ListCrud.write_appends]] |
@@ -215,6 +215,16 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **테스트 관점** 초 · 날짜 · 읽지 못하는 값
 
+#### http.new_client 소스용 클라이언트
+
+**시그니처** `new_client(transport: httpx.BaseTransport | None = None) -> httpx.Client`
+
+**근거** [[CCR-API-001]] 1.1
+
+**처리** User-Agent를 붙이고 리디렉션은 다섯 번까지 따라가며 쿠키는 남기지 않는 httpx 클라이언트를 만든다. 모든 도메인을 막은 쿠키 정책을 주어, 응답이 심은 쿠키가 다음 요청에 실리지 않는다. Kaggle은 익명 세션 쿠키가 실린 요청을 토큰이 있어도 401로 거절한다(2026-10-01 실측). `SourceHttp`는 클라이언트를 받지 않으면 이것을 쓴다. `transport`는 테스트가 가짜 응답을 끼울 때 준다.
+
+**테스트 관점** 응답이 심은 쿠키가 다음 요청에 실리지 않음. 테스트의 가짜 HTTP도 이 클라이언트에 가짜 전송만 끼우므로 소스 테스트가 모두 같은 설정으로 돈다
+
 #### robots.ensure_allowed robots.txt 확인
 
 **시그니처** `ensure_allowed(http: SourceHttp, origin: str, paths: Iterable[str]) -> None`
@@ -385,11 +395,11 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 #### kaggle.parse_page Kaggle 응답 한 쪽
 
-**시그니처** `parse_page(response: httpx.Response) -> tuple[list[dict[str, Any]], str]`
+**시그니처** `parse_page(response: httpx.Response) -> list[dict[str, Any]]`
 
-**처리** JSON이 아니면 `FormatError`. 최상위가 객체여야 하고 `competitions`(없으면 빈 목록)가 배열이어야 한다. (대회 목록, 다음 쪽 토큰 · 없으면 빈 문자열)을 돌려준다.
+**처리** JSON이 아니면 `FormatError`. 최상위가 객체여야 하고 `competitions`(없으면 빈 목록)가 배열이어야 한다. 대회 목록을 돌려준다. 마지막 쪽 다음은 빈 객체 `{}`로 오므로 빈 목록이 된다. `nextPageToken`은 오지 않아 읽지 않는다([[CCR-API-001]] 3.1 Kaggle).
 
-**테스트 관점** [[#KaggleSource.collect]]의 테스트가 함께 본다. 실측 전이다(3장)
+**테스트 관점** 저장한 응답(2026-10-01) 20건 · 빈 객체는 빈 목록
 
 #### kaggle.normalize Kaggle 대회 하나
 
@@ -397,23 +407,23 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **처리** `ref`(전체 URL)의 마지막 조각이 원천 ID(slug). if slug · `title`이 없음 → `None`. 링크 `https://www.kaggle.com/competitions/{slug}`, 접수시작일 `enabledDate`, 접수마감일 `newEntrantDeadline` · 없으면 `deadline`(UTC → KST). 부가 정보는 `category`와 태그 이름. `practice = is_practice(category)`.
 
-**테스트 관점** 새 참가 마감일을 쓰고 UTC 23:59가 KST 다음 날 · 연습용 표기 셋
+**테스트 관점** 저장한 응답 20건이 모두 대회가 되고 연습용이 13건 · 새 참가 마감일을 쓰고 UTC 23:59가 KST 다음 날 · 밀리초가 붙은 마감
 
 #### kaggle.is_practice 상시 연습용 대회인가
 
 **시그니처** `is_practice(category: Any) -> bool`
 
-**처리** 공백을 빼고 소문자로 바꾼 값이 `gettingstarted` · `playground` 가운데 하나인가. 상위 문서의 두 표기(`Getting Started` · `gettingStarted`)를 모두 맞게 견준다.
+**처리** 공백을 빼고 소문자로 바꾼 값이 `gettingstarted` · `playground` 가운데 하나인가. 실제 값은 `Getting Started` · `Playground`이고(2026-10-01), [[CCR-RFQ-001#Q4]]의 표기 `gettingStarted`도 맞게 견준다.
 
-**테스트 관점** `Getting Started` · `gettingStarted` · `Playground`
+**테스트 관점** `Getting Started` · `gettingStarted` · `Playground`는 참 · `Featured` · `Research` · `Community`는 거짓
 
 #### KaggleSource.collect Kaggle 수집
 
 **시그니처** `collect(http: SourceHttp, base_date: date, page_cap: int) -> Collected`
 
-**처리** 쪽마다 `POST ListCompetitions`(일반 탭 · 마감 늦은 차례 · 쪽 크기 100 · `pageToken`)에 `Authorization: Bearer 토큰`. if 다음 쪽 토큰이 없음 · 빈 쪽 · 그 쪽이 모두 마감됨 → 멈춤. 토큰이 없으면 `CollectService`가 부르지 않는다(`missing_config`).
+**처리** `page`를 1부터 올리며 `POST ListCompetitions`(일반 탭 · 분야 전체 · 마감 늦은 차례 · `page`)에 `Authorization: Bearer 토큰`. `pageSize` · `pageToken`은 효과가 없어 보내지 않는다. 한 쪽은 20건이다. if 빈 쪽 → 멈춤 · else 대회를 담고, if 그 쪽이 모두 마감됨(`deadline` < 기준일) → 멈춤. 쪽 상한에 닿으면 `page_cap_hit`. 토큰이 없으면 `CollectService`가 부르지 않는다(`missing_config`).
 
-**테스트 관점** Bearer 헤더 · 마감된 쪽에서 멈춤. 실측 전이다(3장)
+**테스트 관점** 저장한 두 쪽과 빈 쪽으로 `page` 1 · 2 · 3을 보내고 21건 · `pageSize` · `pageToken`을 보내지 않음 · Bearer 헤더 · 마감된 쪽에서 멈춤 · 쪽 상한
 
 #### KaggleSource.missing_config Kaggle 설정 누락
 
@@ -1231,7 +1241,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **처리** 소스를 (이름이 주어지면 그 하나만) `CollectService`로 돌리고 소스마다 결과 한 줄, `--show`면 대회마다 한 줄(원천 ID · 접수 기간 · 대회명 · 링크)을 찍는다. OpenAI를 부르지 않고 파일에 아무것도 쓰지 않는다. 하나라도 성공하면 0. 사이트 개편을 가를 때 쓴다([[CCR-UC-001#UC-A3]]).
 
-**테스트 관점** 실측으로 다섯 소스 성공 · Kaggle 설정 누락(2026-09-27)
+**테스트 관점** 실측으로 다섯 소스 성공 · Kaggle 설정 누락(2026-09-27) · 토큰을 넣고 여섯 소스 성공(2026-10-01)
 
 #### __main__.sources_of 소스 여섯
 
@@ -1399,5 +1409,6 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 ## 3. 미결사항
 
-- [ ] Kaggle의 필드 이름 · 연습용 표기 · 쪽 크기는 실측 전이다([[#kaggle.normalize]] · [[#KaggleSource.collect]])
+2026-10-01에 Kaggle의 필드 이름 · 연습용 표기 · 쪽 크기를 실측해 닫았다([[#kaggle.parse_page]] · [[#KaggleSource.collect]] · [[#http.new_client]]).
+
 - [ ] 페이지의 순수 함수(`parseListFile` · `mergeChange` · `commitMessage` 등)를 이 문서에 둘지. 지금은 [[CCR-DOM-002]] 4.11의 시그니처만 있다
