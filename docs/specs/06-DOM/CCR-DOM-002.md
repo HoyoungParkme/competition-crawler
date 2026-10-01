@@ -2,7 +2,7 @@
 doc_id: CCR-DOM-002
 type: DOM
 title: 클래스 명세 — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-DOM-001, CCR-INFRA-001, CCR-API-001, CCR-UC-001, CCR-UI-001]
 ---
 
