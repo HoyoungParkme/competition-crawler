@@ -2,7 +2,7 @@
 doc_id: CCR-PRD-001
 type: PRD
 title: AI·개발 대회 일배치 수집기
-status: draft
+status: approved
 upstream: [CCR-RFQ-001]
 ---
 
