@@ -2,7 +2,7 @@
 doc_id: CCR-CODE-001
 type: CODE
 title: 구현 계획 — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR-SCN-001, CCR-UI-001, CCR-API-001]
 ---
 
