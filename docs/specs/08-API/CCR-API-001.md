@@ -2,7 +2,7 @@
 doc_id: CCR-API-001
 type: API
 title: 대회 수집 배치 API 명세 REST
-status: draft
+status: approved
 upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001, CCR-UI-001]
 ---
 
