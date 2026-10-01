@@ -2,7 +2,7 @@
 doc_id: CCR-UI-001
 type: UI
 title: 화면 설계·와이어프레임 — 대회 목록 페이지
-status: draft
+status: approved
 upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
 ---
 
