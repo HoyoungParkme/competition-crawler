@@ -137,21 +137,22 @@ def test_user_agent_identifies_the_crawler(clock: FakeClock) -> None:
         seen["ua"] = request.headers.get("user-agent")
         return httpx.Response(200, text="ok")
 
-    from collector.infra.http import USER_AGENT, SourceHttp
-    from tests.conftest import SOURCE_SETTINGS
-
-    http = SourceHttp(
-        SOURCE_SETTINGS,
-        deadline=clock() + 100,
-        stop=threading.Event(),
-        client=httpx.Client(
-            transport=httpx.MockTransport(handler), headers={"User-Agent": USER_AGENT}
-        ),
-        sleep=clock.sleep,
-        clock=clock,
-    )
-    http.fetch("GET", "https://src.test/list", parse=text)
+    make_http(handler, clock=clock).fetch("GET", "https://src.test/list", parse=text)
     assert seen["ua"].startswith("competition-crawler/")
+
+
+def test_cookies_from_a_response_are_not_sent_back(clock: FakeClock) -> None:
+    sent = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(request.headers.get("cookie"))
+        return httpx.Response(200, text="ok", headers={"set-cookie": "ka_sessionid=abc; Path=/"})
+
+    http = make_http(handler, clock=clock)
+    http.fetch("GET", "https://src.test/robots.txt", parse=text)
+    http.fetch("POST", "https://src.test/list", parse=text)
+    # Kaggle은 익명 세션 쿠키가 실린 요청을 토큰이 있어도 401로 거절한다(2026-10-01)
+    assert sent == [None, None]
 
 
 def test_parse_retry_after_reads_seconds_and_dates() -> None:
