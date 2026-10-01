@@ -2,7 +2,7 @@
 doc_id: CCR-SEQ-001
 type: SEQ
 title: 시퀀스 — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-UC-001, CCR-DOM-002, CCR-DOM-003, CCR-API-001, CCR-INFRA-001, CCR-UI-001]
 ---
 
