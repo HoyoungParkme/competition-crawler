@@ -13,13 +13,14 @@ export interface ListEntry {
   reason: string
 }
 
-export type StatusValue = 'not_started' | 'in_progress' | 'submitted' | 'done'
+export type StatusValue = 'not_started' | 'in_progress' | 'submitted' | 'done' | 'skipped'
 
 export const STATUS_VALUES: readonly StatusValue[] = [
   'not_started',
   'in_progress',
   'submitted',
   'done',
+  'skipped',
 ]
 
 /** 화면에 보이는 이름(CCR-API-001 4.2). */
@@ -28,19 +29,27 @@ export const STATUS_LABEL: Record<StatusValue, string> = {
   in_progress: '진행 중',
   submitted: '제출',
   done: '완료',
+  skipped: '미참',
 }
 
 /** 상태 파일의 값 하나(CCR-DOM-003 status). */
 export interface Status {
   status: StatusValue
   hidden: boolean
+  /** 별표. 2026-10-01 전에 쓴 항목에는 없어 false로 읽는다 */
+  starred: boolean
   updated_at: string
 }
 
 /** 상태 파일 전체. 키는 목록 항목의 id다. */
 export type StatusFile = Record<string, Status>
 
-export const DEFAULT_STATUS: Status = { status: 'not_started', hidden: false, updated_at: '' }
+export const DEFAULT_STATUS: Status = {
+  status: 'not_started',
+  hidden: false,
+  starred: false,
+  updated_at: '',
+}
 
 /** 소스 이름 여섯. 거르기(3.1)의 선택지이고 칩(7.3)의 값이다. */
 export const SOURCE_NAMES: readonly string[] = [
