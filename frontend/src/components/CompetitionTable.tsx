@@ -1,11 +1,16 @@
 /** 목록 표(CCR-UI-001 UI-1 7 · 7.1 ~ 7.6)와 접힌 구역(9 · 9.1). 값과 콜백만 받고 요청하지 않는다. */
 
+import type { ReactNode } from 'react'
 import { STATUS_LABEL, STATUS_VALUES, type Row, type StatusValue } from '../domain/types'
 
 interface Props {
+  /** 지금 쪽의 줄. 펼쳐 있으면 접힌 줄도 섞인다 */
   rows: Row[]
-  folded: Row[]
+  expiredCount: number
+  hiddenCount: number
   foldOpen: boolean
+  /** 표와 접힌 구역 사이에 둘 쪽 나누기 줄(13) */
+  pager?: ReactNode
   today: string
   onToggleFold: () => void
   onStatus: (id: string, title: string, value: StatusValue) => void
@@ -39,13 +44,21 @@ export function dueLabel(deadline: string | null, today: string): { text: string
 }
 
 export function CompetitionTable(props: Props) {
-  const { rows, folded, foldOpen, today, onToggleFold, onStatus, onHide, onRestore } = props
-  const expiredCount = folded.filter((row) => row.expired && !row.status.hidden).length
-  const hiddenCount = folded.filter((row) => row.status.hidden).length
-  const shown = foldOpen ? [...rows, ...folded] : rows
+  const {
+    rows,
+    expiredCount,
+    hiddenCount,
+    foldOpen,
+    today,
+    onToggleFold,
+    onStatus,
+    onHide,
+    onRestore,
+  } = props
 
-  const renderRow = (row: Row, isFolded: boolean) => {
+  const renderRow = (row: Row) => {
     const { entry, status } = row
+    const isFolded = row.expired || status.hidden
     const due = dueLabel(entry.deadline, today)
     return (
       <tr key={entry.id} className={isFolded ? 'folded' : undefined}>
@@ -124,17 +137,17 @@ export function CompetitionTable(props: Props) {
         <table className="cc-tbl" data-el={props.el}>
           <thead>
             <tr>
-              <th style={{ width: 120 }}>마감</th>
+              <th style={{ width: 132 }}>마감</th>
               <th>대회명</th>
-              <th style={{ width: 130 }}>출처</th>
-              <th style={{ width: 110 }}>수집일</th>
-              <th style={{ width: 130 }}>상태</th>
-              <th style={{ width: 110 }}></th>
+              <th style={{ width: 136 }}>출처</th>
+              <th style={{ width: 84 }}>수집일</th>
+              <th style={{ width: 116 }}>상태</th>
+              <th style={{ width: 108 }}></th>
             </tr>
           </thead>
           <tbody>
-            {shown.map((row) => renderRow(row, folded.includes(row)))}
-            {shown.length === 0 && (
+            {rows.map(renderRow)}
+            {rows.length === 0 && (
               <tr>
                 <td colSpan={6} className="cc-note">
                   거른 조건에 맞는 열린 대회가 없습니다
@@ -144,6 +157,7 @@ export function CompetitionTable(props: Props) {
           </tbody>
         </table>
       </div>
+      {props.pager}
       <button
         type="button"
         className={`cc-fold${foldOpen ? ' open' : ''}`}
@@ -163,7 +177,7 @@ export function CompetitionTable(props: Props) {
         </svg>
         <span>
           마감 지난 대회 {expiredCount} · 지운 대회 {hiddenCount} —{' '}
-          {foldOpen ? '펼쳐 있음. 누르면 접힌다' : '접혀 있음. 펼치면 위 표 아래에 이어진다'}
+          {foldOpen ? '펼쳐 있음. 누르면 접힌다' : '접혀 있음. 펼치면 표 끝에 이어진다'}
         </span>
       </button>
     </>

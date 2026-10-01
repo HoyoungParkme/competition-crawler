@@ -16,6 +16,7 @@ import {
   SaveFailedNotice,
   SavingToast,
 } from '../components/Notice'
+import { DEFAULT_PAGE_SIZE, PAGE_SIZES, Pager, pageOfRow, paginate } from '../components/Pager'
 import { SettingsDialog } from '../components/SettingsDialog'
 import { BRANCH, OWNER, REPO } from '../config'
 import {
@@ -29,6 +30,7 @@ import { defaultGitHub, StatusStore, type SaveState } from '../store/status'
 import { TokenStore } from '../store/token'
 
 const FILTERS_KEY = 'ccr.filters'
+const PAGE_SIZE_KEY = 'ccr.pageSize'
 
 /** 브라우저의 KST 날짜(YYYY-MM-DD). 마감 지남과 D-n의 기준이다 */
 export function kstToday(now: Date = new Date()): string {
@@ -92,6 +94,24 @@ function writeFilters(filters: Filters): void {
   }
 }
 
+/** 한 번에 볼 개수(13.2). 고를 수 있는 값이 아니면 기본값이다 */
+function readPageSize(): number {
+  try {
+    const size = Number(window.localStorage.getItem(PAGE_SIZE_KEY))
+    return (PAGE_SIZES as readonly number[]).includes(size) ? size : DEFAULT_PAGE_SIZE
+  } catch {
+    return DEFAULT_PAGE_SIZE
+  }
+}
+
+function writePageSize(size: number): void {
+  try {
+    window.localStorage.setItem(PAGE_SIZE_KEY, String(size))
+  } catch {
+    /* 브라우저에만 기억한다. 못 하면 그만이다 */
+  }
+}
+
 /** 두 파일을 함께 받는다(SEQ-11 2 · 3). 목록 파일은 raw, 상태 파일은 토큰이 있으면 판 읽기다 */
 function readFiles(token: string | null): Promise<[ListEntry[], StatusFile]> {
   return Promise.all([readListFile(), readStatusForView(token)])
@@ -114,6 +134,9 @@ export function CompetitionList() {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [filters, setFilters] = useState<Filters>(readFilters)
   const [foldOpen, setFoldOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(readPageSize)
+  const tableTop = useRef<HTMLDivElement>(null)
   const [save, setSave] = useState<SaveState>({ saving: false, error: null })
   const [noToken, setNoToken] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -161,6 +184,10 @@ export function CompetitionList() {
     writeFilters(filters)
   }, [filters])
 
+  useEffect(() => {
+    writePageSize(pageSize)
+  }, [pageSize])
+
   const { active, folded } = useMemo(() => {
     const all: Row[] = entries.map((entry) => ({
       entry,
@@ -178,6 +205,33 @@ export function CompetitionList() {
       folded: sorted.filter((row) => row.expired || row.status.hidden),
     }
   }, [entries, statusFile, filters, today])
+
+  /** 쪽 나누기(13). 펼쳐 있으면 접힌 줄이 열린 줄 뒤에 이어진다 */
+  const open = foldOpen || filters.showAll
+  const shown = useMemo(() => (open ? [...active, ...folded] : active), [open, active, folded])
+  const view = paginate(shown, page, pageSize)
+
+  /** 거르기를 바꾸면 첫 쪽으로 */
+  const changeFilters = (next: Filters) => {
+    setFilters(next)
+    setPage(1)
+  }
+  /** 개수를 바꾸면 보던 첫 줄이 든 쪽으로 */
+  const changePageSize = (size: number) => {
+    setPage(pageOfRow(view.from - 1, size))
+    setPageSize(size)
+  }
+  /** 이전 · 다음(13.3 · 13.5). 표 머리가 화면 위로 지나갔으면 표 머리로 올린다 */
+  const goToPage = (next: number) => {
+    setPage(next)
+    const top = tableTop.current
+    if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: 'start' })
+  }
+  /** 접힌 구역(9)을 펼치면 접힌 줄이 시작하는 쪽으로 */
+  const toggleFold = () => {
+    if (!open && folded.length > 0) setPage(pageOfRow(active.length, pageSize))
+    setFoldOpen((value) => !value)
+  }
 
   const requireToken = (action: () => void) => {
     if (!tokens.has()) {
@@ -252,22 +306,41 @@ export function CompetitionList() {
 
         <FilterBar
           filters={filters}
-          onChange={setFilters}
+          onChange={changeFilters}
           el="3"
           elSource="3.1"
           elStatus="3.2"
           elShowAll="3.3"
         />
 
+        <div ref={tableTop} />
         {empty ? (
           <EmptyState el="10" />
         ) : (
           <CompetitionTable
-            rows={active}
-            folded={folded}
-            foldOpen={foldOpen || filters.showAll}
+            rows={view.items}
+            expiredCount={folded.filter((row) => row.expired && !row.status.hidden).length}
+            hiddenCount={folded.filter((row) => row.status.hidden).length}
+            foldOpen={open}
+            pager={
+              shown.length > 0 && (
+                <Pager
+                  total={shown.length}
+                  view={view}
+                  pageSize={pageSize}
+                  onPage={goToPage}
+                  onPageSize={changePageSize}
+                  el="13"
+                  elRange="13.1"
+                  elSize="13.2"
+                  elPrev="13.3"
+                  elPageNo="13.4"
+                  elNext="13.5"
+                />
+              )
+            }
             today={today}
-            onToggleFold={() => setFoldOpen((open) => !open)}
+            onToggleFold={toggleFold}
             onStatus={onStatus}
             onHide={onHide}
             onRestore={onRestore}
