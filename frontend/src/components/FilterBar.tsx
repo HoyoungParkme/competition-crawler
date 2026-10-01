@@ -1,4 +1,4 @@
-/** 거르기 줄(CCR-UI-001 UI-1 3 · 3.1 · 3.2 · 3.3). 값은 부모가 들고 브라우저에만 기억한다. */
+/** 거르기 줄(CCR-UI-001 UI-1 3 · 3.1 ~ 3.4). 값은 부모가 들고 브라우저에만 기억한다. */
 
 import { SOURCE_NAMES, STATUS_LABEL, STATUS_VALUES, type StatusValue } from '../domain/types'
 
@@ -6,9 +6,15 @@ export interface Filters {
   source: string
   status: StatusValue | ''
   showAll: boolean
+  starredOnly: boolean
 }
 
-export const DEFAULT_FILTERS: Filters = { source: '', status: '', showAll: false }
+export const DEFAULT_FILTERS: Filters = {
+  source: '',
+  status: '',
+  showAll: false,
+  starredOnly: false,
+}
 
 interface Props {
   filters: Filters
@@ -17,9 +23,11 @@ interface Props {
   elSource: string
   elStatus: string
   elShowAll: string
+  elStarredOnly: string
 }
 
-export function FilterBar({ filters, onChange, el, elSource, elStatus, elShowAll }: Props) {
+export function FilterBar(props: Props) {
+  const { filters, onChange, el, elSource, elStatus, elShowAll, elStarredOnly } = props
   return (
     <div className="cc-bar" data-el={el}>
       <label>
@@ -64,6 +72,15 @@ export function FilterBar({ filters, onChange, el, elSource, elStatus, elShowAll
           onChange={(event) => onChange({ ...filters, showAll: event.target.checked })}
         />
         마감 지남·지운 대회 보기
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          data-el={elStarredOnly}
+          checked={filters.starredOnly}
+          onChange={(event) => onChange({ ...filters, starredOnly: event.target.checked })}
+        />
+        별표만 보기
       </label>
     </div>
   )
