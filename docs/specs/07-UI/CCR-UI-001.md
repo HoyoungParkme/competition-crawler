@@ -39,7 +39,7 @@ upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
 | 주 유스케이스 | [[CCR-UC-001#UC-A2]] · [[CCR-UC-001#UC-H1]] |
 | 진입 / 이탈 | 주소를 열면 바로 이 화면 / 없음. 링크(7.2)는 새 창으로 열리고, 설정(6)은 이 화면 위에 UI-2를 띄운다 |
 | 읽는 것 | 기본 브랜치의 `data/competitions.jsonl`·`data/status.json`([[CCR-INFRA-001]] 6.4) |
-| 쓰는 것 | `data/status.json`만. 상태 셀렉트(7.4)·지우기(7.5)·되살리기(9.1)가 커밋한다([[CCR-INFRA-001]] 8.11) |
+| 쓰는 것 | `data/status.json`만. 상태 셀렉트(7.4)·지우기(7.5)·별표(7.7)·되살리기(9.1)가 커밋한다([[CCR-INFRA-001]] 8.11) |
 
 ### 배치
 ```html
@@ -66,6 +66,11 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 .cc-state{font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid #c9c4b7;background:#fff;min-height:36px}
 .cc-state.s1{background:#e6eef0;border-color:#9fbcc3}
 .cc-state.s2{background:#e3ecdd;border-color:#8fae82}
+.cc-state.s3{background:#ebe5f3;border-color:#b4a5cc}
+.cc-state.s4{background:#ecebe4;border-color:#c9c4b7;color:#57534a}
+.cc-star{border:0;background:transparent;color:#57534a;font-size:18px;line-height:1;padding:0 6px 0 0;cursor:pointer}
+.cc-star.on{color:#a8650f}
+tr.skipped .cc-due,tr.skipped a,tr.skipped .cc-note,tr.skipped .cc-src{opacity:.55}
 .cc-fold{margin-top:16px;border:1px dashed #c9c4b7;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;font-size:14px;color:#5c594f;background:#faf9f5}
 .cc-pager{display:flex;align-items:center;gap:12px;padding-top:12px}
 .cc-range{font-size:13px;color:#5c594f}
@@ -108,8 +113,9 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 
   <div class="cc-bar" data-el="3">
     <label>출처 <select class="cc-sel" data-el="3.1"><option>전체</option><option>event-us</option><option>DACON</option><option>Kaggle</option><option>wevity</option><option>AI팩토리</option><option>콘테스트코리아</option></select></label>
-    <label>상태 <select class="cc-sel" data-el="3.2"><option>전체</option><option>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option></select></label>
+    <label>상태 <select class="cc-sel" data-el="3.2"><option>전체</option><option>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option><option>미참</option></select></label>
     <label><input type="checkbox" data-el="3.3"> 마감 지남·지운 대회 보기</label>
+    <label><input type="checkbox" data-el="3.4"> 별표만 보기</label>
   </div>
 
   <table class="cc-tbl" data-el="7">
@@ -119,42 +125,42 @@ a{color:#1f5f6b}a:hover{color:#143f47}
     <tbody>
       <tr>
         <td class="cc-due soon" data-el="7.1">10-06 (D-7)</td>
-        <td><a href="https://aifactory.space/" data-el="7.2">2026 국립공원 위성 모니터링 AI 챌린지</a><div class="cc-note" data-el="7.6">위성 영상 AI 분석 경진대회</div></td>
+        <td><button class="cc-star on" type="button" data-el="7.7" aria-label="별표 떼기">★</button><a href="https://aifactory.space/" data-el="7.2">2026 국립공원 위성 모니터링 AI 챌린지</a><div class="cc-note" data-el="7.6">위성 영상 AI 분석 경진대회</div></td>
         <td><span class="cc-src" data-el="7.3">AI팩토리</span></td>
         <td class="cc-due">09-16</td>
-        <td><select class="cc-state s2" data-el="7.4"><option>시작 전</option><option selected>진행 중</option><option>제출</option><option>완료</option></select></td>
+        <td><select class="cc-state s2" data-el="7.4"><option>시작 전</option><option selected>진행 중</option><option>제출</option><option>완료</option><option>미참</option></select></td>
         <td><button class="cc-btn ghost" data-el="7.5" type="button">지우기</button></td>
       </tr>
       <tr>
         <td class="cc-due">10-14</td>
-        <td><a href="#">[대회명]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
+        <td><button class="cc-star" type="button" aria-label="별표 붙이기">☆</button><a href="#">[대회명]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
         <td><span class="cc-src">event-us</span></td>
         <td class="cc-due">09-29</td>
-        <td><select class="cc-state"><option selected>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option></select></td>
+        <td><select class="cc-state"><option selected>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option><option>미참</option></select></td>
         <td><button class="cc-btn ghost" type="button">지우기</button></td>
       </tr>
       <tr>
         <td class="cc-due">10-31</td>
-        <td><a href="#">[대회명]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
+        <td><button class="cc-star" type="button" aria-label="별표 붙이기">☆</button><a href="#">[대회명]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
         <td><span class="cc-src">DACON</span></td>
         <td class="cc-due">09-29</td>
-        <td><select class="cc-state"><option selected>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option></select></td>
+        <td><select class="cc-state"><option selected>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option><option>미참</option></select></td>
         <td><button class="cc-btn ghost" type="button">지우기</button></td>
       </tr>
       <tr>
         <td class="cc-due">11-20</td>
-        <td><a href="#">[Competition title]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
+        <td><button class="cc-star" type="button" aria-label="별표 붙이기">☆</button><a href="#">[Competition title]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
         <td><span class="cc-src">Kaggle</span></td>
         <td class="cc-due">09-27</td>
-        <td><select class="cc-state s1"><option>시작 전</option><option>진행 중</option><option selected>제출</option><option>완료</option></select></td>
+        <td><select class="cc-state s1"><option>시작 전</option><option>진행 중</option><option selected>제출</option><option>완료</option><option>미참</option></select></td>
         <td><button class="cc-btn ghost" type="button">지우기</button></td>
       </tr>
-      <tr>
+      <tr class="skipped">
         <td class="cc-due">—</td>
-        <td><a href="#">[대회명 · 마감일 없음]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
+        <td><button class="cc-star" type="button" aria-label="별표 붙이기">☆</button><a href="#">[대회명 · 마감일 없음]</a><div class="cc-note">[판별 근거 한 줄]</div></td>
         <td><span class="cc-src">wevity</span></td>
         <td class="cc-due">09-28</td>
-        <td><select class="cc-state"><option selected>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option></select></td>
+        <td><select class="cc-state s4"><option>시작 전</option><option>진행 중</option><option>제출</option><option>완료</option><option selected>미참</option></select></td>
         <td><button class="cc-btn ghost" type="button">지우기</button></td>
       </tr>
     </tbody>
@@ -231,20 +237,21 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 |---|---|---|---|---|
 | 1 | 머리 | 영역 | 제목(1.1)과 요약 줄(1.2: 정렬 기준 · 마지막 갱신 시각 · 열린 대회 수), 바닥 줄(1.3: 데이터가 어디서 오는지) | — |
 | 2 | 새로 고침 | 버튼 | — | 두 파일을 다시 읽는다. 목록 파일은 raw로, 상태 파일은 토큰이 있으면 Contents API로 읽는다. raw는 CDN이 5분까지 캐시해 배치가 막 올린 목록은 조금 늦게 보일 수 있다([[CCR-INFRA-001]] 6.4) |
-| 3 | 거르기 줄 | 영역 | 출처(3.1)·상태(3.2) 셀렉트와 「마감 지남·지운 대회 보기」(3.3) | 바꾸면 표(7)가 곧바로 걸러지고 첫 쪽으로 간다. 저장소에는 쓰지 않고 브라우저에만 기억한다 |
+| 3 | 거르기 줄 | 영역 | 출처(3.1)·상태(3.2) 셀렉트와 「마감 지남·지운 대회 보기」(3.3) · 「별표만 보기」(3.4) | 바꾸면 표(7)가 곧바로 걸러지고 첫 쪽으로 간다. 저장소에는 쓰지 않고 브라우저에만 기억한다 |
 | 6 | 설정 | 버튼 | 토큰이 없으면 「설정」 옆에 점을 찍어 알린다 | UI-2를 띄운다 |
-| 7 | 목록 표 | 표 | 접수마감일 오름차순. 마감일 없는 대회는 맨 뒤. 열: 마감(7.1) · 대회명(7.2)과 판별 근거(7.6) · 출처(7.3) · 수집일 · 상태(7.4) · 지우기(7.5). 한 번에 13.2의 개수만큼 보인다 | — |
+| 7 | 목록 표 | 표 | 접수마감일 오름차순. 마감일 없는 대회는 맨 뒤. 열: 마감(7.1) · 별표(7.7)와 대회명(7.2), 판별 근거(7.6) · 출처(7.3) · 수집일 · 상태(7.4) · 지우기(7.5). 한 번에 13.2의 개수만큼 보인다. `미참`인 줄은 흐리게 그린다 | — |
 | 7.1 | 마감 | 글 | `MM-DD`와 남은 날(D-n). 7일 안이면 강조 | — |
 | 7.2 | 대회명 | 링크 | 목록 항목의 대회명. Kaggle은 영문 그대로 | 상세 링크를 새 창으로 연다 |
 | 7.3 | 출처 | 칩 | 소스 이름 여섯 가운데 하나 | — |
-| 7.4 | 상태 | 셀렉트 | `시작 전` · `진행 중` · `제출` · `완료`. 상태 파일에 값이 없으면 `시작 전`. 값에 따라 배경색이 다르다 | 고르는 즉시 화면이 바뀌고 저장 중(8)이 뜬다. 커밋이 끝나면 사라진다([[CCR-UC-001#UC-H1]]) |
+| 7.4 | 상태 | 셀렉트 | `시작 전` · `진행 중` · `제출` · `완료` · `미참`. 상태 파일에 값이 없으면 `시작 전`. 다섯 값마다 셀렉트의 색이 다르다(3장) | 고르는 즉시 화면이 바뀌고 저장 중(8)이 뜬다. 커밋이 끝나면 사라진다([[CCR-UC-001#UC-H1]]) |
 | 7.5 | 지우기 | 버튼 | — | 그 줄이 목록에서 사라지고 접힌 구역(9)으로 간다. 상태 파일에 감춤으로 커밋한다. 목록 파일은 그대로다 |
 | 7.6 | 판별 근거 | 글 | 목록 항목의 판별 근거 한 줄. 회색 보조 글(3장) | — |
+| 7.7 | 별표 | 버튼 | 대회명 앞. 붙였으면 채운 별(★), 아니면 빈 별(☆) | 붙이거나 뗀다. 화면이 먼저 바뀌고 상태 파일에 커밋한다([[CCR-UC-001#UC-H1]] 1c) |
 | 8 | 저장 중 | 표시 | 커밋하는 동안 머리에 뜬다. 여럿을 빨리 바꾸면 하나씩 차례로 보낸다 | — |
 | 9 | 접힌 구역 | 영역 | 마감 지난 대회 수와 지운 대회 수. 3.3을 켜거나 여기를 누르면 접힌 줄이 열린 줄 뒤에 이어진다. 지운 대회에는 되살리기(9.1) | 펼치기·접기. 여기를 눌러 펼치면 접힌 줄이 시작하는 쪽으로 넘어간다 |
 | 9.1 | 되살리기 | 버튼 | 지운 대회의 줄에만 | 감춤을 풀어 원래 자리로 돌려보낸다. 상태 파일에 커밋한다 |
 | 10 | 빈 상태 | 글 | 목록 파일이 없거나 비었을 때 표 대신 | — |
-| 11 | 토큰 없음 | 알림 | 7.4·7.5·9.1을 눌렀는데 토큰이 없을 때. 화면은 바꾸지 않는다 | 「설정 열기」(11.1)가 UI-2를 띄운다 |
+| 11 | 토큰 없음 | 알림 | 7.4·7.5·7.7·9.1을 눌렀는데 토큰이 없을 때. 화면은 바꾸지 않는다 | 「설정 열기」(11.1)가 UI-2를 띄운다 |
 | 12 | 저장 실패 | 알림 | 커밋이 끝내 실패했을 때. 값을 바꾸기 전으로 되돌린 뒤 뜬다. 응답 코드와 짧은 이유 | 「다시 시도」(12.2)는 최신 판을 다시 읽고 같은 바꿈을 다시 보낸다. 「설정 열기」(12.1)는 UI-2 |
 | 13 | 쪽 나누기 줄 | 영역 | 표(7)와 접힌 구역(9) 사이. 보이는 범위(13.1) · 한 번에 볼 개수(13.2) · 이전(13.3) · 쪽 번호(13.4) · 다음(13.5). 보일 줄이 하나도 없으면 두지 않는다 | — |
 | 13.1 | 보이는 범위 | 글 | `40개 중 1–20`. 펼쳐 있으면 접힌 줄까지 센다 | — |
@@ -258,9 +265,11 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 - 마감이 지난 대회와 지운 대회는 기본으로 접혀 있고(9), 3.3을 켜면 열린 줄 뒤에 이어진다. 접힌 구역의 줄은 흐리게 그린다.
 - 목록은 쪽으로 나눠 보인다(13). 펼친 접힌 줄도 같은 쪽을 따른다. 한 번에 볼 개수는 10 · 20 · 50 · 100개 가운데 고르고 기본은 20개다. 고른 개수는 브라우저에만 기억하고, 쪽 번호는 기억하지 않는다. 2026-10-01 사용자 요청으로 더했다.
 - 거르기(3)를 바꾸면 첫 쪽으로 가고, 개수(13.2)를 바꾸면 보던 첫 줄이 든 쪽으로 간다. 지우기 · 되살리기로 줄이 줄어 지금 쪽이 비면 마지막 쪽을 보인다.
-- 상태 파일에 값이 없는 대회는 `시작 전`으로 보이고, 감추지 않은 것으로 본다([[CCR-DOM-001#Status]]).
+- 상태 파일에 값이 없는 대회는 `시작 전`으로 보이고, 감추지 않았고 별표가 없는 것으로 본다([[CCR-DOM-001#Status]]).
+- `미참`인 줄은 목록에 남되 마감 · 대회명 · 판별 근거 · 출처 · 수집일을 흐리게 그린다. 상태 셀렉트와 단추는 흐리게 하지 않는다. 미참과 별표는 2026-10-01 사용자 요청으로 더했다([[CCR-PRD-001#R10]]).
+- 별표만 보기(3.4)는 거르기라 브라우저에만 기억한다. 별표 자체(7.7)는 상태처럼 상태 파일에 커밋한다.
 - 상태를 바꾸거나 지우면 **화면을 먼저 바꾸고** 커밋한다. 판이 어긋나면(409·422) 최신 상태 파일을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다. 그래도 실패하면 값을 되돌리고 12를 띄운다([[CCR-UC-001#UC-H1]] 4a · 4b).
-- 커밋 메시지는 페이지가 만든다. `status: <대회명> → <상태>` 꼴이다([[CCR-INFRA-001]] 8.11).
+- 커밋 메시지는 페이지가 만든다. `status: <대회명> → <상태>` 꼴이고, 별표는 `status: <대회명> 별표` · `status: <대회명> 별표 뗌`이다([[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 1.4).
 - 토큰이 없으면 읽기는 그대로 되고, 쓰는 조작을 하면 11이 뜬다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
 - 목록에 없는 식별자의 상태 값은 무시한다([[CCR-INFRA-001]] 6.2).
 - 페이지는 외부 스크립트를 싣지 않는다. 폰트는 Google Fonts `css2` 링크 하나다([[CCR-INFRA-001]] 5.6).
@@ -287,6 +296,11 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 1. 표에 20개가 보이고, 표 아래 쪽 나누기 줄(13)에 `40개 중 1–20`과 `1 / 2`가 보인다.
 2. 다음(13.5)을 누르면 21번째 대회부터 보이고, 화면이 표 머리로 올라간다.
 3. 한 번에 볼 개수(13.2)를 50개로 바꾸면 한 쪽에 모두 보인다. 다음에 열어도 50개다.
+
+**S-7 별표를 붙이고 별표만 본다** — [[CCR-UC-001#UC-A2]] · [[CCR-UC-001#UC-H1]] 1c
+1. 눈여겨볼 대회의 별표(7.7)를 누른다. 빈 별이 채운 별이 되고 저장 중(8)이 떴다 사라진다.
+2. 「별표만 보기」(3.4)를 켜면 별표를 붙인 대회만 남고 첫 쪽으로 간다.
+3. 참가하지 않기로 한 대회는 상태(7.4)를 `미참`으로 고른다. 그 줄이 흐려지고 셀렉트가 회색이 된다.
 
 ## UI-2 설정 대화상자
 
@@ -388,11 +402,11 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 </style>
 ```
 
-색은 셋이다. 바탕 `#f4f2ec`, 글 `#1d1c19`, 강조 `#1f5f6b`(링크·주 버튼). 보조 글의 회색은 `#45423a`(요약 줄 · 거르기 · 표 머리)와 `#57534a`(판별 근거 · 바닥 줄) 둘이다. 흰 표 위에서 7.6:1, 바탕 위에서 6.8:1 이상의 대비다. 상태 셀렉트의 배경은 `진행 중` `#e3ecdd`, `제출` `#e6eef0`, 그 밖은 흰색이다. 알림은 경고 `#fff7e6`, 실패 `#fbe9e4`, 안내 `#e6eef0`. 글꼴은 IBM Plex Sans KR 하나다. 크기는 본문 16px, 보조 글(판별 근거 · 요약 줄 · 거르기 · 상태 셀렉트 · 표 안의 지우기와 되살리기 · 쪽 나누기의 범위와 「한 번에」 · 저장 중 · 알림 · 대화상자의 안내) 14px, 표 머리 · 출처 칩 · 바닥 줄 13px, 날짜(마감 7.1 · 수집일)와 쪽 번호(13.4) 15px, 제목 22px이다. 대회명 링크(7.2)는 `#174a54`로 굵게(600) 쓰고 밑줄은 가리킬 때만 긋는다. 누르는 것의 높이는 머리 · 거르기 · 쪽 나누기 · 대화상자에서 40px, 표 안(상태 셀렉트 · 지우기 · 되살리기)에서 36px이다. 표의 칸 너비는 마감 132 · 출처 136 · 수집일 84 · 상태 116 · 마지막 칸 108px이고, 남는 너비는 대회명이 갖는다. 칸 여백은 위아래 12px · 좌우 16px이다. 표의 줄은 가리키면 `#faf9f5`로 칠하고, 키보드로 옮긴 포커스는 강조색 2px 테두리로 보인다. 값은 `frontend/src/styles.css`에 토큰으로 옮기고 컴포넌트에 직접 쓰지 않는다([[CCR-INFRA-001]] 4장).
+색은 셋이다. 바탕 `#f4f2ec`, 글 `#1d1c19`, 강조 `#1f5f6b`(링크·주 버튼). 보조 글의 회색은 `#45423a`(요약 줄 · 거르기 · 표 머리)와 `#57534a`(판별 근거 · 바닥 줄) 둘이다. 흰 표 위에서 7.6:1, 바탕 위에서 6.8:1 이상의 대비다. 상태 셀렉트는 값마다 색이 다르다. 배경(테두리 · 글)은 `시작 전` 흰색(`#c9c4b7` · `#1d1c19`), `진행 중` `#e3ecdd`(`#8fae82` · `#25451b`), `제출` `#e6eef0`(`#9fbcc3` · `#163e46`), `완료` `#ebe5f3`(`#b4a5cc` · `#3d2f5a`), `미참` `#ecebe4`(`#c9c4b7` · `#57534a`)이고, 글의 대비는 모두 6.4:1 이상이다. 알림은 경고 `#fff7e6`, 실패 `#fbe9e4`, 안내 `#e6eef0`. 글꼴은 IBM Plex Sans KR 하나다. 크기는 본문 16px, 보조 글(판별 근거 · 요약 줄 · 거르기 · 상태 셀렉트 · 표 안의 지우기와 되살리기 · 쪽 나누기의 범위와 「한 번에」 · 저장 중 · 알림 · 대화상자의 안내) 14px, 표 머리 · 출처 칩 · 바닥 줄 13px, 날짜(마감 7.1 · 수집일)와 쪽 번호(13.4) 15px, 제목 22px이다. 대회명 링크(7.2)는 `#174a54`로 굵게(600) 쓰고 밑줄은 가리킬 때만 긋는다. 누르는 것의 높이는 머리 · 거르기 · 쪽 나누기 · 대화상자에서 40px, 표 안(상태 셀렉트 · 지우기 · 되살리기 · 별표)에서 36px이다. 표의 칸 너비는 마감 132 · 출처 136 · 수집일 84 · 상태 116 · 마지막 칸 108px이고, 남는 너비는 대회명이 갖는다. 칸 여백은 위아래 12px · 좌우 16px이다. 표의 줄은 가리키면 `#faf9f5`로 칠하고, 키보드로 옮긴 포커스는 강조색 2px 테두리로 보인다. 별표는 빈 별 `#57534a`, 채운 별 `#a8650f`(흰 바탕 대비 4.6:1)이고, `미참`인 줄의 흐린 칸은 불투명도 0.55다. 값은 `frontend/src/styles.css`에 토큰으로 옮기고 컴포넌트에 직접 쓰지 않는다([[CCR-INFRA-001]] 4장).
 
 글자 크기와 회색은 2026-10-01에 키우고 진하게 했다. 글이 잘 보이지 않는다는 사용자 의견을 따른 것이다. 처음 값(본문 14px · 작은 글 12px · 회색 `#7a766b`)에서 판별 근거는 흰 표 위에서 4.5:1, 바닥 줄은 바탕 위에서 4.05:1이었다. 위 배치 블록의 와이어프레임은 처음 값으로 그렸고, 크기와 색은 이 절이 우선한다.
 
-같은 날 사용자 요청으로 칸과 버튼의 크기를 다듬고 쪽 나누기 줄(13)을 더했다. 칸 너비를 글에 맞추고 칸 여백을 줄여, 1280px 화면에서 대회명 칸이 578px에서 607px로 넓어지고 줄 높이가 평균 87px에서 78px로 줄었다. 머리와 거르기의 조작은 실제로 44px이던 것을 40px로 맞췄다. 사용자가 고친 안의 화면을 보고 골랐다.
+같은 날 사용자 요청으로 칸과 버튼의 크기를 다듬고 쪽 나누기 줄(13)을 더했다. 칸 너비를 글에 맞추고 칸 여백을 줄여, 1280px 화면에서 대회명 칸이 578px에서 607px로 넓어지고 줄 높이가 평균 87px에서 78px로 줄었다. 머리와 거르기의 조작은 실제로 44px이던 것을 40px로 맞췄다. 사용자가 고친 안의 화면을 보고 골랐다. 같은 날 미참 상태와 별표, 상태마다 다른 셀렉트 색도 사용자 요청으로 더했다.
 
 ## 4. 화면 흐름
 
