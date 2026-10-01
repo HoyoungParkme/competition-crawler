@@ -12,7 +12,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 
 배치와 대회 목록 페이지를 어떤 차례의 조각(슬라이스 · 카드)으로 만들었고 만들 것인지, 조각마다 무엇을 구현하고 무엇으로 확인하는지다. 함수의 처리는 [[CCR-MS-001]], 흐름은 [[CCR-SEQ-001]]에 있다. 조각은 도메인 경계를 따라 나눴다.
 
-두 시기가 있다. **A ~ C**는 2026-09-24 ~ 09-28에 노션 `대회목록`에 넣는 배치로 만들어 병합한 것이다. 조각 하나가 커밋 하나였고 PR 둘로 합쳤다(3장). **D1 ~ D3**은 2026-09-29의 결정(노션 대신 우리 페이지)에 따라 새로 만드는 것이다. 카드마다 브랜치와 PR 하나, 함수 하나가 커밋 하나다(`code(D1): 함수 — 요약`, 싱크독 개발 규약 SYNC-STD-004 DEV-13 · DEV-15). **D4**는 2026-10-01의 사용자 요청(쪽 나누기와 칸 · 버튼 크기)으로 더한 카드다. 병합은 사용자가 웹에서 읽고 난 뒤에 한다.
+두 시기가 있다. **A ~ C**는 2026-09-24 ~ 09-28에 노션 `대회목록`에 넣는 배치로 만들어 병합한 것이다. 조각 하나가 커밋 하나였고 PR 둘로 합쳤다(3장). **D1 ~ D3**은 2026-09-29의 결정(노션 대신 우리 페이지)에 따라 새로 만드는 것이다. 카드마다 브랜치와 PR 하나, 함수 하나가 커밋 하나다(`code(D1): 함수 — 요약`, 싱크독 개발 규약 SYNC-STD-004 DEV-13 · DEV-15). **D4** · **D5**는 2026-10-01의 사용자 요청(쪽 나누기와 칸 · 버튼 크기, 미참 · 별표와 상태 색)으로 더한 카드다. 병합은 사용자가 웹에서 읽고 난 뒤에 한다.
 
 **확인하는 법.** 배치는 `batch/`에서 `uv run pytest`(네트워크를 쓰지 않는다) · `uv run ruff check .` · `uv run ruff format --check .`. 실제 소스에 수집만 해 보려면 `uv run python -m collector collect --show`. 판별까지는 미리보기(`python -m collector`, 로컬은 늘 미리보기)로 본다. 페이지는 `frontend/`에서 `npm test`(vitest, 순수 모듈만) · `npm run build`. 명세와 코드의 대조는 싱크독 `tools/check_code.py`(MS 시그니처 · docstring ID)와 `tools/check_ui.py`(`data-el` 번호)로 한다(DEV-14).
 
@@ -162,6 +162,19 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 테스트 | `tests/components/Pager.test.ts` — `paginate`(첫 쪽 · 마지막 쪽의 남은 줄 · 넘친 쪽은 마지막 쪽으로 · 1보다 작으면 첫 쪽으로 · 빈 목록) · `pageOfRow`. `npm test` · `npm run lint` · `npm run build`, `check_ui.py` UI-1 요소 33. 로컬 미리보기에서 넘기기 · 개수 바꾸기 · 펼치기 · 거르기와 폰 폭(390px)을 본다. 커밋 전에 미리 본 결과(2026-10-01): 쪽 이동이 모두 UI 명세대로였고, 1280px 화면에서 대회명 칸 607px · 줄 높이 평균 78px · 지우기 59×36px · 머리와 거르기의 조작 40px, 390px에서는 가로로 넘치지 않았다. 커밋 뒤: `npm test` 34 통과(`Pager.test.ts` 7개를 더했다) · `npm run lint` · `npm run build` 통과, `check_ui.py` UI-1 요소 33 · 일치 33, UI-2 9 · 9 |
 | 선행 | D2 · D3 |
 | 완료 | [#19](https://github.com/HoyoungParkme/competition-crawler/pull/19)(`code/d4-pager` → `main`) · 병합 `4717c58` · 2026-10-01. 커밋 4개(3장). 병합이 돌린 페이지 배포(실행 36800025511)가 성공했고, 배포된 페이지에서 20줄 · 쪽 나누기 줄 · 칸 너비 132 · 607 · 136 · 84 · 116 · 108px · 표 안의 조작 36px · 머리와 거르기의 조작 40px을 확인했다 |
+
+#### D5 미참 · 별표와 상태 색
+
+| 항목 | 내용 |
+|---|---|
+| 근거 | [[CCR-PRD-001#R10]] · [[CCR-UC-001#UC-A2]] 2 · 4 · [[CCR-UC-001#UC-H1]] 1 · 1c · 3 · 5 · [[CCR-UI-001#UI-1]] 3 · 7 · 7.4 · 7.7 · 11 · S-7 · [[CCR-UI-001]] 3장 · [[CCR-DOM-001#Status]] · [[CCR-DOM-003#status]] · [[CCR-API-001]] 1.4 · 4.2 · [[CCR-DOM-002]] 2.1 · 2.3 · 2.4 · 4.11 · [[CCR-SEQ-001#SEQ-11]]. 사용자 요청(2026-10-01)이고, 근거는 RFQ를 고치지 않고 PRD에 적기로 사용자가 골랐다 |
+| 구현 | `domain/types.ts`(`skipped` · `미참`, `Status.starred`, `DEFAULT_STATUS`) · `api/data.ts`(`starred`가 없거나 불 값이 아니면 `false`) · `store/status.ts`(`star` · `unstar`, `mergeChange` · `commitMessage`) · `components/FilterBar.tsx`(3.4 별표만 보기, `Filters.starredOnly`) · `components/CompetitionTable.tsx`(7.7 별표 단추, 미참 줄) · `pages/CompetitionList.tsx`(별표만 거르기, `onStar`) · `styles.css`(상태 다섯의 색, 미참 줄의 흐림, 별표) |
+| 구현 함수 | MS 밖(TypeScript). [[CCR-DOM-002#CompetitionList]] · [[CCR-DOM-002#StatusStore]] · [[CCR-DOM-002#RepoFiles]] |
+| API | [[CCR-API-001#PUT/api.github.com/…/contents/data/status.json]] — 값에 `starred`가 붙고 커밋 메시지가 두 꼴 는다 |
+| 화면 | [[CCR-UI-001#UI-1]] |
+| 테스트 | `tests/api/data.test.ts` — `skipped`를 읽는다 · `starred`가 없거나 불 값이 아니면 `false`. `tests/store/status.test.ts` — `mergeChange`의 별표 붙이기 · 떼기(다른 값은 그대로) · `commitMessage`의 `별표` · `별표 뗌` · `미참`. `npm test` · `npm run lint` · `npm run build`, `check_ui.py` UI-1 요소 35. 로컬 미리보기에서 별표 · 별표만 보기 · 미참 줄 · 다섯 색을 본다. 실제 저장은 사용자가 브라우저에서 한다 |
+| 선행 | D4 |
+| 완료 | — |
 
 ## 2. 통합 테스트
 
