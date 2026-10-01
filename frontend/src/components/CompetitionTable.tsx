@@ -1,4 +1,4 @@
-/** 목록 표(CCR-UI-001 UI-1 7 · 7.1 ~ 7.6)와 접힌 구역(9 · 9.1). 값과 콜백만 받고 요청하지 않는다. */
+/** 목록 표(CCR-UI-001 UI-1 7 · 7.1 ~ 7.7)와 접힌 구역(9 · 9.1). 값과 콜백만 받고 요청하지 않는다. */
 
 import type { ReactNode } from 'react'
 import { STATUS_LABEL, STATUS_VALUES, type Row, type StatusValue } from '../domain/types'
@@ -16,6 +16,7 @@ interface Props {
   onStatus: (id: string, title: string, value: StatusValue) => void
   onHide: (id: string, title: string) => void
   onRestore: (id: string, title: string) => void
+  onStar: (id: string, title: string, starred: boolean) => void
   el: string
   elDue: string
   elTitle: string
@@ -23,6 +24,7 @@ interface Props {
   elStatus: string
   elHide: string
   elReason: string
+  elStar: string
   elFold: string
   elRestore: string
 }
@@ -43,6 +45,24 @@ export function dueLabel(deadline: string | null, today: string): { text: string
   return { text: `${mmdd} (${suffix})`, soon: days <= 7 }
 }
 
+/** 별표(7.7)의 그림. 붙였으면 채운 별, 아니면 빈 별 */
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.15 1 5.85L12 16.9l-5.25 2.8 1-5.85L3.5 9.7l5.9-.9z" />
+    </svg>
+  )
+}
+
 export function CompetitionTable(props: Props) {
   const {
     rows,
@@ -54,32 +74,51 @@ export function CompetitionTable(props: Props) {
     onStatus,
     onHide,
     onRestore,
+    onStar,
   } = props
 
   const renderRow = (row: Row) => {
     const { entry, status } = row
     const isFolded = row.expired || status.hidden
+    const rowClass = [isFolded && 'folded', status.status === 'skipped' && 'skipped']
+      .filter(Boolean)
+      .join(' ')
     const due = dueLabel(entry.deadline, today)
     return (
-      <tr key={entry.id} className={isFolded ? 'folded' : undefined}>
+      <tr key={entry.id} className={rowClass || undefined}>
         <td className={`cc-due${due.soon && !isFolded ? ' soon' : ''}`} data-el={props.elDue}>
           {due.text}
         </td>
         <td>
-          <a
-            href={entry.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={status.hidden ? 'hidden' : undefined}
-            data-el={props.elTitle}
-          >
-            {entry.title}
-          </a>
-          {entry.reason && (
-            <div className="cc-note" data-el={props.elReason}>
-              {entry.reason}
+          <div className="cc-titlecell">
+            <button
+              className="cc-star"
+              type="button"
+              data-el={props.elStar}
+              aria-pressed={status.starred}
+              aria-label={status.starred ? '별표 떼기' : '별표 붙이기'}
+              title={status.starred ? '별표 떼기' : '별표 붙이기'}
+              onClick={() => onStar(entry.id, entry.title, !status.starred)}
+            >
+              <StarIcon filled={status.starred} />
+            </button>
+            <div>
+              <a
+                href={entry.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={status.hidden ? 'cc-title hidden' : 'cc-title'}
+                data-el={props.elTitle}
+              >
+                {entry.title}
+              </a>
+              {entry.reason && (
+                <div className="cc-note" data-el={props.elReason}>
+                  {entry.reason}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </td>
         <td>
           <span className="cc-src" data-el={props.elSource}>
