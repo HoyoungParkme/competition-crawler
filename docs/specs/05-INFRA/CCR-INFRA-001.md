@@ -2,7 +2,7 @@
 doc_id: CCR-INFRA-001
 type: INFRA
 title: 대회 수집 배치 인프라
-status: draft
+status: approved
 upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-SCN-001, CCR-UC-001]
 ---
 
