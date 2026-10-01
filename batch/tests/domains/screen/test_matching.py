@@ -134,6 +134,50 @@ def test_step1_same_source_and_id_ignores_changed_dates() -> None:
     assert (result.verdict, result.step, result.certain) == (Verdict.SAME, 1, True)
 
 
+def test_kaggle_competitions_with_different_ids_are_different() -> None:
+    # 2026-10-01 실측. 유사도 0.95라 원천 ID를 보지 않으면 5단계에서 같다고 나온다
+    a = comp(
+        "ARC Prize 2026 - ARC-AGI-2",
+        source=SourceName.KAGGLE,
+        source_id="arc-prize-2026-arc-agi-2",
+        start=date(2026, 3, 26),
+        deadline=date(2026, 10, 27),
+    )
+    b = comp(
+        "ARC Prize 2026 - ARC-AGI-3",
+        source=SourceName.KAGGLE,
+        source_id="arc-prize-2026-arc-agi-3",
+        start=date(2026, 3, 26),
+        deadline=date(2026, 10, 26),
+    )
+    keys = [key_of_competition(a), key_of_competition(b)]
+    result = judge_pair(*keys)
+    assert (result.verdict, result.step) == (Verdict.DIFFERENT, 1)
+    assert group([a, b], keys) == [[0], [1]]
+
+
+def test_other_sources_still_merge_duplicate_notices_within_a_source() -> None:
+    # 같은 소스 안에도 중복 공고가 있다(UC-S4 4). Kaggle 밖은 그대로다
+    a = comp("2026 AI 해커톤 참가자 모집", source=SourceName.WEVITY, source_id="1")
+    b = comp("2026 AI 해커톤", source=SourceName.WEVITY, source_id="2")
+    result = judge_pair(key_of_competition(a), key_of_competition(b))
+    assert result.verdict is Verdict.SAME
+
+
+def test_kaggle_entry_with_another_slug_is_not_known() -> None:
+    candidate = comp(
+        "ARC Prize 2026 - ARC-AGI-3", source=SourceName.KAGGLE, source_id="arc-prize-2026-arc-agi-3"
+    )
+    known = entry(
+        "ARC Prize 2026 - ARC-AGI-2",
+        "https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-2",
+        source="Kaggle",
+        source_id="arc-prize-2026-arc-agi-2",
+    )
+    result = judge_pair(key_of_competition(candidate), key_of_entry(known))
+    assert (result.verdict, result.step) == (Verdict.DIFFERENT, 1)
+
+
 def entry(title: str, link: str, *, source: str = "event-us", source_id: str = "old") -> ListEntry:
     return ListEntry(source, source_id, title, link, None, None, date(2026, 9, 1), "")
 
