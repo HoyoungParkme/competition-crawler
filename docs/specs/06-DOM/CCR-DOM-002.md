@@ -137,7 +137,7 @@ frontend/
 **기본형과 다른 점, 그리고 왜.** 규약 1.9의 프론트 기본형은 `pages · components · api · store`다. 여기서 벗어난 곳은 둘이다.
 
 1. **도메인 폴더가 없다.** 화면이 하나이고 개념이 둘(목록 항목 · 상태)뿐이라 `domain/types.ts` 하나로 충분하다. 경계는 배치의 것이고, 페이지는 목록 경계의 두 개념만 읽고 쓴다([[CCR-DOM-001]] 4.1).
-2. **상태 관리 라이브러리를 쓰지 않는다.** 저장할 것이 상태 파일 하나이고 바꾸는 조작이 셋(상태 · 지우기 · 되살리기)이다. `store/status.ts`의 클래스 하나가 큐와 화면 기준의 상태 파일을 갖고, 화면은 React 상태로 그린다. 의존성을 줄이는 쪽이다([[CCR-INFRA-001]] 5.6).
+2. **상태 관리 라이브러리를 쓰지 않는다.** 저장할 것이 상태 파일 하나이고 바꾸는 조작이 넷(상태 · 지우기 · 되살리기 · 별표)이다. `store/status.ts`의 클래스 하나가 큐와 화면 기준의 상태 파일을 갖고, 화면은 React 상태로 그린다. 의존성을 줄이는 쪽이다([[CCR-INFRA-001]] 5.6).
 
 `tests/`는 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 같은 순수 모듈만 본다. 화면은 사용자가 브라우저에서 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 빌드 결과 `dist/`는 커밋하지 않는다.
 
@@ -184,13 +184,14 @@ classDiagram
     class Status {
         +StatusValue status
         +bool hidden
+        +bool starred
         +str updated_at
     }
 ```
 
-`frontend/src/domain/types.ts`. 상태 파일은 식별자를 키로 한 객체 하나이고(`StatusFile = Record<string, Status>`), 값 하나가 이 타입이다. `StatusValue`는 `not_started` · `in_progress` · `submitted` · `done`이고 화면 이름(`시작 전` · `진행 중` · `제출` · `완료`)은 같은 모듈의 `STATUS_LABEL`에 한 번만 적고, 선택지의 차례는 `STATUS_VALUES`다. `updated_at`은 UTC 초 단위의 ISO 문자열이다([[CCR-API-001]] 4.2).
+`frontend/src/domain/types.ts`. 상태 파일은 식별자를 키로 한 객체 하나이고(`StatusFile = Record<string, Status>`), 값 하나가 이 타입이다. `StatusValue`는 `not_started` · `in_progress` · `submitted` · `done` · `skipped`이고 화면 이름(`시작 전` · `진행 중` · `제출` · `완료` · `미참`)은 같은 모듈의 `STATUS_LABEL`에 한 번만 적고, 선택지의 차례는 `STATUS_VALUES`다. `starred`는 별표다. 2026-10-01 전에 쓴 항목에는 없어 `false`로 읽는다. `updated_at`은 UTC 초 단위의 ISO 문자열이다([[CCR-API-001]] 4.2).
 
-배치에는 이 타입이 없다. 배치는 상태 파일을 읽지도 쓰지도 않는다([[CCR-DOM-001]] 4.2 규칙 3). 값이 없는 대회는 페이지가 `시작 전` · 감추지 않음(`DEFAULT_STATUS`)으로 본다. 목록에 없는 식별자의 값은 무시한다.
+배치에는 이 타입이 없다. 배치는 상태 파일을 읽지도 쓰지도 않는다([[CCR-DOM-001]] 4.2 규칙 3). 값이 없는 대회는 페이지가 `시작 전` · 감추지 않음 · 별표 없음(`DEFAULT_STATUS`)으로 본다. 목록에 없는 식별자의 값은 무시한다.
 
 ### 2.2 기록
 
@@ -297,8 +298,8 @@ classDiagram
 | `Verdict` | `same` · `different` · `undecided` | `PairResult`. `undecided`는 5단계 문턱에 못 미친 것이다. 다르다는 뜻이 아니다 |
 | `KnownKind` | `list` · `history` | `Known`. 목록 항목에서 온 아는 대회와 처리 이력 기록에서 온 아는 대회 |
 | `Outcome` | `known` · `discarded` · `loaded` · `deferred` | `Bundle`의 처리 결과([[CCR-DOM-001#Bundle]]) |
-| `StatusValue`(페이지) | `not_started` · `in_progress` · `submitted` · `done` | `Status.status`. 문자열 리터럴 유니온이다 |
-| `ChangeKind`(페이지) | `status` · `hide` · `restore` | `Change.kind`. 상태 바꾸기 · 지우기 · 되살리기 |
+| `StatusValue`(페이지) | `not_started` · `in_progress` · `submitted` · `done` · `skipped` | `Status.status`. 문자열 리터럴 유니온이다. `skipped`는 `미참`이다 |
+| `ChangeKind`(페이지) | `status` · `hide` · `restore` · `star` · `unstar` | `Change.kind`. 상태 바꾸기 · 지우기 · 되살리기 · 별표 붙이기 · 떼기 |
 
 `SOURCE_PRIORITY`(DACON 1 · Kaggle 2 · AI팩토리 3 · event-us 4 · wevity 5 · 콘테스트코리아 6)는 `domains/collect/models.py`의 상수다([[CCR-UC-001#UC-S4]] 4a2).
 
@@ -340,7 +341,7 @@ classDiagram
 | `SaveState` | `saving: boolean` · `error: SaveError \| null` | store/status → 화면. 저장 중(8)과 저장 실패(12) |
 | `SaveError` | `status: number \| null` · `rateLimited: boolean` · `change: Change` | store/status → 화면. 저장 실패의 이유. `status`가 `null`이면 응답이 없었다. 알림 문구는 `saveFailureText`(components/Notice)가 만든다. `change`는 되돌린 바꿈이다 |
 | `GitHubApi` | `readStatusVersion` · `writeStatusFile` | store/status. `StatusStore`가 받는 두 요청. 테스트는 가짜를 넣는다 |
-| `Filters` | `source: string` · `status: StatusValue \| ''` · `showAll: boolean` | components/FilterBar. 빈 문자열이 전체다. `showAll`은 3.3(마감 지남 · 지운 대회 보기)이다. `localStorage`의 `ccr.filters`에 기억한다 |
+| `Filters` | `source: string` · `status: StatusValue \| ''` · `showAll: boolean` · `starredOnly: boolean` | components/FilterBar. 빈 문자열이 전체다. `showAll`은 3.3(마감 지남 · 지운 대회 보기), `starredOnly`는 3.4(별표만 보기)다. `localStorage`의 `ccr.filters`에 기억한다 |
 | `PageOf<T>` | `items: T[]` · `page: number` · `pages: number` · `from: number` · `to: number` | components/Pager. 지금 쪽의 줄, 쪽 번호와 쪽 수, 1부터 센 첫 줄과 끝 줄의 번호. 줄이 없으면 `from` · `to`는 0이다 |
 
 예외와 그것이 바뀌는 곳은 이렇다.
@@ -443,7 +444,7 @@ flowchart TB
 ```
 
 - **`CompetitionList`만 데이터를 읽는다.** 두 파일을 받아 `Row`로 합치고 자식 컴포넌트에는 값과 콜백만 내려 준다. 자식은 요청하지 않는다.
-- **GitHub에 쓰는 곳은 `StatusStore` 하나다.** 상태 · 지우기 · 되살리기가 모두 이 클래스를 거쳐 줄을 선다([[CCR-API-001]] 1.4). `SettingsDialog`가 `api/github.ts`를 부르는 것은 토큰 검증의 판 읽기뿐이고, `CompetitionList`는 토큰이 있을 때 화면에 보일 상태 파일을 같은 판 읽기로 받는다([[CCR-UC-001#UC-H2]] 4 · [[CCR-INFRA-001]] 6.4).
+- **GitHub에 쓰는 곳은 `StatusStore` 하나다.** 상태 · 지우기 · 되살리기 · 별표가 모두 이 클래스를 거쳐 줄을 선다([[CCR-API-001]] 1.4). `SettingsDialog`가 `api/github.ts`를 부르는 것은 토큰 검증의 판 읽기뿐이고, `CompetitionList`는 토큰이 있을 때 화면에 보일 상태 파일을 같은 판 읽기로 받는다([[CCR-UC-001#UC-H2]] 4 · [[CCR-INFRA-001]] 6.4).
 - **토큰은 `TokenStore`만 만진다.** `localStorage`의 키 하나다. 화면은 있음 · 없음만 묻는다.
 - `config.ts` · `domain/types.ts` · `styles.css`는 어디서나 쓴다. 거꾸로 부르지 않는다.
 
@@ -912,7 +913,7 @@ CompetitionList(): JSX                              UI-1. 두 파일을 읽고 R
   active · folded                                   Row를 거르고 접수마감일 순으로 줄 세운 뒤, 열린 것과 접힌 구역(9)으로 가른다
   shown · view                                      펼쳐 있으면 열린 줄 뒤에 접힌 줄을 잇고(shown), paginate로 지금 쪽을 자른다(view). 쪽 나누기(13)
   changeFilters(next) · changePageSize(size) · goToPage(page) · toggleFold()   3 · 13.2 · 13.3과 13.5 · 9. 첫 쪽으로 · 보던 첫 줄이 든 쪽으로 · 넘기고 표 머리로 · 펼치면 접힌 줄이 시작하는 쪽으로
-  onStatus(id, title, value) · onHide(id, title) · onRestore(id, title)   7.4 · 7.5 · 9.1. 토큰이 없으면 토큰 없음(11)
+  onStatus(id, title, value) · onHide(id, title) · onRestore(id, title) · onStar(id, title, starred)   7.4 · 7.5 · 9.1 · 7.7. 토큰이 없으면 토큰 없음(11)
 kstToday(now?: Date): string                        브라우저의 KST 날짜. 마감 지남과 D-n의 기준
 sortByDeadline(rows: Row[]): Row[]                  순수 함수. 접수마감일 오름차순, 없으면 맨 뒤. tests/가 본다
 isExpired(entry: ListEntry, today: string): boolean  순수 함수. 마감일이 오늘보다 이르면 참
@@ -923,8 +924,8 @@ pageOfRow(index: number, size: number): number      components/Pager. 순수 함
 
 | 자식 | 파일 | 요소 |
 |---|---|---|
-| `FilterBar` | components/FilterBar.tsx | 3 · 3.1 · 3.2 · 3.3 |
-| `CompetitionTable` | components/CompetitionTable.tsx | 7 · 7.1 ~ 7.6 · 9 · 9.1 |
+| `FilterBar` | components/FilterBar.tsx | 3 · 3.1 ~ 3.4 |
+| `CompetitionTable` | components/CompetitionTable.tsx | 7 · 7.1 ~ 7.7 · 9 · 9.1 |
 | `Pager` | components/Pager.tsx | 13 · 13.1 ~ 13.5 |
 | `Notice` | components/Notice.tsx | 8 · 11 · 11.1 · 12 · 12.1 · 12.2 · 10(빈 상태) |
 | `SettingsDialog` | components/SettingsDialog.tsx | 20 ~ 20.7 |
@@ -935,8 +936,9 @@ pageOfRow(index: number, size: number): number      components/Pager. 순수 함
 - 목록은 쪽으로 나눈다(13). `PAGE_SIZES`(10 · 20 · 50 · 100) 가운데 고른 개수만큼 보이고 기본은 `DEFAULT_PAGE_SIZE`(20)다. 고른 개수는 `localStorage`의 `ccr.pageSize`에 기억하고, 쪽 번호는 기억하지 않는다. `CompetitionTable`은 지금 쪽의 줄만 받아 그리고, 접힌 줄의 표시는 줄의 값(`expired` · `hidden`)으로 정한다.
 - 거르기를 바꾸면 첫 쪽으로, 개수를 바꾸면 보던 첫 줄이 든 쪽으로 간다. 접힌 구역을 눌러 펼치면 접힌 줄이 시작하는 쪽으로 간다. 줄이 줄어 쪽이 넘치면 `paginate`가 마지막 쪽으로 맞춘다. 이전 · 다음으로 넘겼을 때 표 머리가 화면 위로 지나가 있으면 표 머리로 올린다([[CCR-UI-001#UI-1]] 13).
 - 상태 파일에 값이 없는 항목은 `시작 전` · 감추지 않음이다. 목록에 없는 식별자의 값은 버린다.
-- 거르기 값은 `localStorage`에 기억한다. 저장소에는 쓰지 않는다.
-- 쓰는 조작 셋은 모두 `StatusStore`로 간다. 토큰이 없으면 부르지 않고 토큰 없음(11)을 띄운다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
+- 거르기 값은 `localStorage`에 기억한다. 저장소에는 쓰지 않는다. 별표만 보기(3.4)를 켜면 `status.starred`인 줄만 남긴다. 접힌 줄에도 같다.
+- `미참`(`skipped`)인 줄은 `CompetitionTable`이 흐리게 그린다. 상태 셀렉트와 단추는 그대로다([[CCR-UI-001#UI-1]] 3장).
+- 쓰는 조작 넷(상태 · 지우기 · 되살리기 · 별표)은 모두 `StatusStore`로 간다. 토큰이 없으면 부르지 않고 토큰 없음(11)을 띄운다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
 - 읽지 못하면(`DataReadError`) 읽지 못했다는 알림과 새로 고침을 보인다. 목록 파일이 없으면(404) 빈 상태(10)다([[CCR-UC-001#UC-A2]] 1b).
 - 상태 파일은 토큰이 있으면 Contents API의 판 읽기(`readStatusVersion`)로 받는다. raw는 CDN이 5분 캐시해, 방금 바꾼 값이 새로 고친 뒤 옛 값으로 보이기 때문이다. 판 읽기가 실패하면(토큰 만료 · 권한 · 연결) raw로 받고, 토큰 문제는 저장할 때 드러난다. 목록 파일은 늘 raw다([[CCR-INFRA-001]] 6.4 · [[CCR-API-001]] 1.4).
 
@@ -970,6 +972,8 @@ classDiagram
         +setStatus(id: string, title: string, value: StatusValue) void
         +hide(id: string, title: string) void
         +restore(id: string, title: string) void
+        +star(id: string, title: string) void
+        +unstar(id: string, title: string) void
         +retry() void
         -enqueue(change: Change) void
         -drain() Promise~void~
@@ -980,6 +984,7 @@ classDiagram
     class Status {
         +StatusValue status
         +bool hidden
+        +bool starred
         +str updated_at
     }
     StatusStore --> Status
@@ -987,7 +992,7 @@ classDiagram
 
 ```
 mergeChange(file: StatusFile, change: Change, now: string): StatusFile   순수 함수. 그 대회의 값만 얹는다
-commitMessage(change: Change): string                                    status: <대회명> → <상태> · 지움 · 되살림. 대회명 60자
+commitMessage(change: Change): string                                    status: <대회명> → <상태> · 지움 · 되살림 · 별표 · 별표 뗌. 대회명 60자
 nowIso(date?: Date): string                                              UTC 초 단위의 ISO 문자열. Change.at과 updated_at
 defaultGitHub: GitHubApi                                                 api/github의 두 함수. 테스트는 가짜 GitHubApi를 넣는다
 ```
@@ -997,7 +1002,7 @@ defaultGitHub: GitHubApi                                                 api/git
 | 메서드 | 유스케이스 | 실패 |
 |---|---|---|
 | `load` | [[CCR-UC-001#UC-A2]] 1 | 없다 |
-| `setStatus` · `hide` · `restore` | [[CCR-UC-001#UC-H1]] 1 · 1b · 2 | 토큰이 없으면 부르지 않는다(화면이 막는다) |
+| `setStatus` · `hide` · `restore` · `star` · `unstar` | [[CCR-UC-001#UC-H1]] 1 · 1b · 1c · 2 | 토큰이 없으면 부르지 않는다(화면이 막는다) |
 | `commit` | [[CCR-UC-001#UC-H1]] 3 · 4 · 5 · 4a · 4b | 409 · 422면 한 번 다시 읽고 다시 쓴다. 그래도 실패하거나 다른 오류면 `drain`이 `revert`를 부른다 |
 | `retry` | [[CCR-UI-001#UI-1]] 12.2 | 마지막으로 실패한 바꿈을 다시 줄 세운다. 바꾸기 전 값과 시각은 그때 새로 잡는다 |
 
@@ -1018,7 +1023,7 @@ api/data.ts
   readListFile(): Promise<ListEntry[]>              raw. 404면 []. 줄마다 JSON, 읽히지 않는 줄은 건너뛴다
   readStatusFile(): Promise<StatusFile>             raw. 404면 {}
   parseListFile(text: string): ListEntry[]          순수 함수. 식별자가 겹치면 앞의 것
-  parseStatusFile(text: string): StatusFile         순수 함수. 객체가 아니면 DataReadError
+  parseStatusFile(text: string): StatusFile         순수 함수. 객체가 아니면 DataReadError. 모양이 다른 값은 빼고, starred가 없거나 불 값이 아니면 false
 api/github.ts
   readStatusVersion(token: string): Promise<StatusVersion>                 GET contents. 404면 {sha: null, file: {}}
   writeStatusFile(token: string, file: StatusFile, sha: string | null, message: string): Promise<string>   PUT contents. 새 sha
@@ -1072,13 +1077,13 @@ TokenStore
 
 **결정 9. 페이지는 도메인 폴더 없이 계층(`pages · components · api · store`)으로만 나눈다(2026-09-29).** 화면이 하나이고 읽고 쓰는 개념이 둘뿐이다. 배치의 네 경계 가운데 페이지가 닿는 것은 목록 경계의 두 개념이고, 그마저 파일 형식(ERD)으로만 이어진다([[CCR-DOM-001]] 4.2). 배치와 코드를 나누어 갖지 않으므로 `ListEntry`가 파이썬과 TypeScript에 각각 있다. 둘 다 ERD를 따르고, 한쪽을 고치면 다른 쪽도 고친다.
 
-**결정 10. 상태 파일에 쓰는 길은 `StatusStore` 하나다(2026-09-29).** 상태 · 지우기 · 되살리기가 각자 커밋하면 같은 판으로 두 요청이 나가 둘째가 409로 거절된다([[CCR-API-001]] 1.4). 한 클래스가 큐를 갖고 하나씩 보내면 화면은 먼저 바뀌고 커밋은 차례로 들어간다. 여럿을 잠깐 모아 한 커밋으로 보내는 것은 UI 명세 5장의 미결로 남겼다.
+**결정 10. 상태 파일에 쓰는 길은 `StatusStore` 하나다(2026-09-29).** 상태 · 지우기 · 되살리기 · 별표가 각자 커밋하면 같은 판으로 두 요청이 나가 둘째가 409로 거절된다([[CCR-API-001]] 1.4). 한 클래스가 큐를 갖고 하나씩 보내면 화면은 먼저 바뀌고 커밋은 차례로 들어간다. 여럿을 잠깐 모아 한 커밋으로 보내는 것은 UI 명세 5장의 미결로 남겼다.
 
 **결정 11. 페이지 테스트는 브라우저 없는 순수 모듈만 vitest로 본다(2026-09-29).** 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 · Base64가 그것이다. 화면은 사용자가 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 브라우저 테스트 도구를 더하면 의존성과 CI 시간이 늘고, 화면이 하나라 얻는 것이 적다.
 
 ## 6. 미결사항
 
-2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`). 2026-10-01에는 사용자 요청으로 쪽 나누기(`Pager`)를 더했다(4.11 `CompetitionList`).
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`). 2026-10-01에는 사용자 요청으로 쪽 나누기(`Pager`)를 더했다(4.11 `CompetitionList`). 같은 날 미참 상태와 별표(`skipped` · `starred` · `star` · `unstar` · 별표만 보기)도 더했다(사용자 요청, 2.1 · 2.3 · 2.4 · 4.11).
 
 - [ ] Kaggle 어댑터는 실측 전이다. 토큰이 생기면 [[CCR-API-001]] 5장대로 필드 이름 · 연습용 표기 · 쪽 크기를 실측하고 `kaggle.py`를 맞춘다. 그때까지는 토큰이 없어 설정 누락으로 건너뛴다
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
