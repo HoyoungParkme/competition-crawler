@@ -197,7 +197,8 @@ export function CompetitionList() {
     const filtered = all.filter(
       (row) =>
         (filters.source === '' || row.entry.source === filters.source) &&
-        (filters.status === '' || row.status.status === filters.status),
+        (filters.status === '' || row.status.status === filters.status) &&
+        (!filters.starredOnly || row.status.starred),
     )
     const sorted = sortByDeadline(filtered)
     return {
@@ -245,6 +246,8 @@ export function CompetitionList() {
     requireToken(() => store.setStatus(id, title, value))
   const onHide = (id: string, title: string) => requireToken(() => store.hide(id, title))
   const onRestore = (id: string, title: string) => requireToken(() => store.restore(id, title))
+  const onStar = (id: string, title: string, starred: boolean) =>
+    requireToken(() => (starred ? store.star(id, title) : store.unstar(id, title)))
 
   const openSettings = () => setDialogOpen(true)
   const closeSettings = useCallback(() => {
@@ -311,6 +314,7 @@ export function CompetitionList() {
           elSource="3.1"
           elStatus="3.2"
           elShowAll="3.3"
+          elStarredOnly="3.4"
         />
 
         <div ref={tableTop} />
@@ -344,6 +348,7 @@ export function CompetitionList() {
             onStatus={onStatus}
             onHide={onHide}
             onRestore={onRestore}
+            onStar={onStar}
             el="7"
             elDue="7.1"
             elTitle="7.2"
@@ -351,6 +356,7 @@ export function CompetitionList() {
             elStatus="7.4"
             elHide="7.5"
             elReason="7.6"
+            elStar="7.7"
             elFold="9"
             elRestore="9.1"
           />
