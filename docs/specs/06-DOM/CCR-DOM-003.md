@@ -50,6 +50,7 @@ erDiagram
         string id PK "status.json의 키"
         string status
         bool hidden
+        bool starred
         datetime updated_at
     }
     runs {
@@ -133,25 +134,26 @@ erDiagram
 
 클래스: [[CCR-DOM-002#Status]]
 
-상태 파일. 참가자가 페이지에서 바꾼 값이다([[CCR-DOM-001#Status]] · [[CCR-UC-001#UC-H1]]). 파일 전체가 JSON 객체 하나이고, 키가 목록 항목의 `id`, 값이 아래 객체다. 값이 없는 항목은 `not_started` · `hidden=false`다.
+상태 파일. 참가자가 페이지에서 바꾼 값이다([[CCR-DOM-001#Status]] · [[CCR-UC-001#UC-H1]]). 파일 전체가 JSON 객체 하나이고, 키가 목록 항목의 `id`, 값이 아래 객체다. 값이 없는 항목은 `not_started` · `hidden=false` · `starred=false`다.
 
 | 컬럼 | 타입 | 제약 | 의미 | 예시 |
 |---|---|---|---|---|
 | (키) | string | 유일 | 목록 항목의 `id` | `AI팩토리:9304` |
-| status | string | 필수. `not_started` · `in_progress` · `submitted` · `done` | 상태. 화면에는 `시작 전` · `진행 중` · `제출` · `완료` | `in_progress` |
+| status | string | 필수. `not_started` · `in_progress` · `submitted` · `done` · `skipped` | 상태. 화면에는 `시작 전` · `진행 중` · `제출` · `완료` · `미참` | `in_progress` |
 | hidden | bool | 필수 | 지웠는지. 되살리면 `false`로 둔다. 키를 지우지 않는다 | `false` |
+| starred | bool | 선택. 없거나 불 값이 아니면 `false` | 별표를 붙였는지. 2026-10-01에 더했고 그 전에 쓴 항목에는 없다. 페이지는 바꾼 항목에 늘 적는다 | `true` |
 | updated_at | datetime | 필수 | 마지막으로 바꾼 시각. UTC, 초 단위 | `2026-09-29T00:12:41Z` |
 
 - **페이지만 쓴다.** 배치도 마무리 단계도 이 파일을 열지 않는다. 배치의 커밋은 다른 세 파일만 담고, 페이지의 커밋은 이 파일만 담는다([[CCR-INFRA-001]] 6.1 · 8.2).
 - **쓰는 모양.** 키를 문자열 순으로 정렬하고, 두 칸 들여쓰기, 끝에 줄바꿈 하나. 같은 내용이면 같은 바이트가 되게 해 git 이력에서 바뀐 항목만 보이게 한다([[CCR-API-001#PUT/api.github.com/…/contents/data/status.json]]).
 - **통째로 바꾼다.** 페이지는 Contents API로 최신 판을 읽고, 바꾼 항목만 얹어 파일 전체를 다시 쓴다. 판(`sha`)이 어긋나면 다시 읽고 한 번 더 쓴다([[CCR-API-001]] 2.3). 다른 기기가 바꾼 다른 항목의 값은 남는다.
-- **읽히지 않는 파일.** 객체가 아니면 페이지가 읽지 못했다고 알린다. 값이 위 모양이 아닌 항목은 `not_started` · `hidden=false`로 본다. 목록에 없는 키는 무시하고, 다시 쓸 때도 지우지 않는다(목록 파일을 되돌린 경우, [[CCR-INFRA-001]] 6.2).
+- **읽히지 않는 파일.** 객체가 아니면 페이지가 읽지 못했다고 알린다. 값이 위 모양이 아닌 항목은 `not_started` · `hidden=false` · `starred=false`로 본다. 목록에 없는 키는 무시하고, 다시 쓸 때도 지우지 않는다(목록 파일을 되돌린 경우, [[CCR-INFRA-001]] 6.2).
 - 파일이 없으면 빈 객체다. 첫 쓰기가 만든다.
 
 ```json
 {
-  "AI팩토리:9304": {"status": "in_progress", "hidden": false, "updated_at": "2026-09-29T00:12:41Z"},
-  "event-us:135608": {"status": "not_started", "hidden": true, "updated_at": "2026-09-29T00:13:07Z"}
+  "AI팩토리:9304": {"status": "in_progress", "hidden": false, "starred": true, "updated_at": "2026-10-01T00:12:41Z"},
+  "event-us:135608": {"status": "skipped", "hidden": true, "starred": false, "updated_at": "2026-10-01T00:13:07Z"}
 }
 ```
 
