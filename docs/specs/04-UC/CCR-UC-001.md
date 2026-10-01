@@ -2,7 +2,7 @@
 doc_id: CCR-UC-001
 type: UC
 title: 대회 수집 배치 유스케이스
-status: draft
+status: approved
 upstream: [CCR-PRD-001, CCR-SCN-001]
 ---
 
