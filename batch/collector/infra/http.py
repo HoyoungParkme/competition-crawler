@@ -1,6 +1,7 @@
 """대회 소스에 거는 요청.
 
 모든 요청에 식별 가능한 User-Agent를 붙이고, 같은 소스 안에서 요청 사이 1초를 둔다.
+소스가 심는 쿠키는 남기지 않는다.
 연결 오류 · 타임아웃 · 429 · 5xx · 틀이 다른 응답은 정해진 횟수만큼 다시 보낸다. 그 밖의 4xx와
 3xx는 다시 보내지 않는다. 소스마다 시간 예산이 있고, 기다림과 요청이 그 기한을 넘지 않는다.
 httpx의 타임아웃은 단계마다 걸려 요청 전체를 묶지 못하므로, 본문을 받는 동안에도 기한을 본다
@@ -14,6 +15,7 @@ import time
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+from http.cookiejar import CookieJar, DefaultCookiePolicy
 from typing import Any, TypeVar
 
 import httpx
@@ -66,6 +68,21 @@ def parse_retry_after(value: str | None, now: datetime | None = None) -> float |
     return max(0.0, (when - (now or datetime.now(UTC))).total_seconds())
 
 
+def new_client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
+    """CCR-MS-001#http.new_client
+
+    User-Agent를 붙이고 리디렉션은 다섯 번까지 따라가며, 쿠키는 남기지 않는 클라이언트.
+    """
+    # 모든 도메인을 막은 정책이라 응답이 심은 쿠키가 다음 요청에 실리지 않는다.
+    # Kaggle은 익명 세션 쿠키가 실린 요청을 토큰이 있어도 401로 거절한다(CCR-API-001 1.1)
+    return httpx.Client(
+        headers={"User-Agent": USER_AGENT},
+        max_redirects=5,
+        cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
+        transport=transport,
+    )
+
+
 class SourceHttp:
     """소스 하나가 한 실행에서 쓰는 요청 도구. 시간 예산의 기한은 만들 때 정한다."""
 
@@ -82,7 +99,7 @@ class SourceHttp:
         self._settings = settings
         self._deadline = deadline
         self._stop = stop
-        self._client = client or httpx.Client(headers={"User-Agent": USER_AGENT}, max_redirects=5)
+        self._client = client or new_client()
         self._sleep = sleep
         self._clock = clock
         self._last_request: float | None = None

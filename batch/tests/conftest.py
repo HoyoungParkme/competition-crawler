@@ -10,7 +10,7 @@ import httpx
 import pytest
 
 from collector.core.settings import JudgeSettings, SourceSettings
-from collector.infra.http import SourceHttp
+from collector.infra.http import SourceHttp, new_client
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -69,7 +69,7 @@ def make_http(
         settings,
         deadline=clock() + settings.budget_seconds,
         stop=stop or threading.Event(),
-        client=httpx.Client(transport=httpx.MockTransport(handler), max_redirects=5),
+        client=new_client(httpx.MockTransport(handler)),
         sleep=clock.sleep,
         clock=clock,
     )
