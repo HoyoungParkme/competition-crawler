@@ -2,7 +2,7 @@
 doc_id: CCR-SCN-001
 type: SCN
 title: 대회 수집 배치 사용자 시나리오
-status: draft
+status: approved
 upstream: [CCR-PRD-001]
 ---
 
