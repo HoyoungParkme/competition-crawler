@@ -114,7 +114,7 @@ frontend/
 ├── src/
 │   ├── main.tsx                입구. CompetitionList를 붙인다
 │   ├── config.ts               저장소 소유자 · 이름 · 브랜치 · 데이터 파일 경로 · raw · Contents API 주소 · 상태 커밋의 작성자
-│   ├── styles.css              공통 틀의 색 · 글꼴 토큰(UI 명세 3장)
+│   ├── styles.css              공통 틀의 색 · 글꼴 · 크기 토큰(UI 명세 3장)
 │   ├── domain/
 │   │   └── types.ts            ListEntry · Status · StatusValue · StatusFile · 상태 표시 이름
 │   ├── api/
@@ -128,6 +128,7 @@ frontend/
 │   └── components/
 │       ├── FilterBar.tsx       거르기 줄(3)
 │       ├── CompetitionTable.tsx 목록 표(7)와 접힌 구역(9)
+│       ├── Pager.tsx           쪽 나누기 줄(13)
 │       ├── Notice.tsx          저장 중(8) · 토큰 없음(11) · 저장 실패(12)
 │       └── SettingsDialog.tsx  UI-2 설정 대화상자
 └── tests/                      src/ 구조를 거울로. 브라우저 없이 도는 순수 모듈만(vitest)
@@ -340,6 +341,7 @@ classDiagram
 | `SaveError` | `status: number \| null` · `rateLimited: boolean` · `change: Change` | store/status → 화면. 저장 실패의 이유. `status`가 `null`이면 응답이 없었다. 알림 문구는 `saveFailureText`(components/Notice)가 만든다. `change`는 되돌린 바꿈이다 |
 | `GitHubApi` | `readStatusVersion` · `writeStatusFile` | store/status. `StatusStore`가 받는 두 요청. 테스트는 가짜를 넣는다 |
 | `Filters` | `source: string` · `status: StatusValue \| ''` · `showAll: boolean` | components/FilterBar. 빈 문자열이 전체다. `showAll`은 3.3(마감 지남 · 지운 대회 보기)이다. `localStorage`의 `ccr.filters`에 기억한다 |
+| `PageOf<T>` | `items: T[]` · `page: number` · `pages: number` · `from: number` · `to: number` | components/Pager. 지금 쪽의 줄, 쪽 번호와 쪽 수, 1부터 센 첫 줄과 끝 줄의 번호. 줄이 없으면 `from` · `to`는 0이다 |
 
 예외와 그것이 바뀌는 곳은 이렇다.
 
@@ -413,6 +415,7 @@ flowchart TB
     CL["pages/CompetitionList.tsx<br/>UI-1"]
     FB[FilterBar]
     CT[CompetitionTable]
+    PG[Pager]
     NT[Notice]
     SD["components/SettingsDialog.tsx<br/>UI-2"]
     ST["store/status.ts<br/>StatusStore"]
@@ -424,6 +427,7 @@ flowchart TB
     MAIN --> CL
     CL --> FB
     CL --> CT
+    CL --> PG
     CL --> NT
     CL --> SD
     CL --> DA
@@ -903,26 +907,33 @@ main() -> int
 
 ```
 CompetitionList(): JSX                              UI-1. 두 파일을 읽고 Row로 합쳐 그린다
-  상태: entries · statusFile · loading · readError · updatedAt · filters · foldOpen · save · noToken · dialogOpen · hasToken
+  상태: entries · statusFile · loading · readError · updatedAt · filters · foldOpen · page · pageSize · save · noToken · dialogOpen · hasToken
   refresh(): void                                   새로 고침(2). readListFile · readStatusForView를 함께 부르고, 받은 상태 파일을 store.load로 넘긴다
   active · folded                                   Row를 거르고 접수마감일 순으로 줄 세운 뒤, 열린 것과 접힌 구역(9)으로 가른다
+  shown · view                                      펼쳐 있으면 열린 줄 뒤에 접힌 줄을 잇고(shown), paginate로 지금 쪽을 자른다(view). 쪽 나누기(13)
+  changeFilters(next) · changePageSize(size) · goToPage(page) · toggleFold()   3 · 13.2 · 13.3과 13.5 · 9. 첫 쪽으로 · 보던 첫 줄이 든 쪽으로 · 넘기고 표 머리로 · 펼치면 접힌 줄이 시작하는 쪽으로
   onStatus(id, title, value) · onHide(id, title) · onRestore(id, title)   7.4 · 7.5 · 9.1. 토큰이 없으면 토큰 없음(11)
 kstToday(now?: Date): string                        브라우저의 KST 날짜. 마감 지남과 D-n의 기준
 sortByDeadline(rows: Row[]): Row[]                  순수 함수. 접수마감일 오름차순, 없으면 맨 뒤. tests/가 본다
 isExpired(entry: ListEntry, today: string): boolean  순수 함수. 마감일이 오늘보다 이르면 참
 readStatusForView(token: string | null, readVersion?, readRaw?): Promise<StatusFile>   토큰이 있으면 판 읽기, 없거나 실패하면 raw. 읽는 함수는 넣어 줄 수 있어 tests/가 본다
+paginate(items: T[], page: number, size: number): PageOf<T>   components/Pager. 순수 함수. 쪽 번호를 1 ~ 마지막 쪽으로 맞추고 그 쪽의 줄을 자른다. tests/가 본다
+pageOfRow(index: number, size: number): number      components/Pager. 순수 함수. 0부터 센 줄 번호가 든 쪽(1부터)
 ```
 
 | 자식 | 파일 | 요소 |
 |---|---|---|
 | `FilterBar` | components/FilterBar.tsx | 3 · 3.1 · 3.2 · 3.3 |
 | `CompetitionTable` | components/CompetitionTable.tsx | 7 · 7.1 ~ 7.6 · 9 · 9.1 |
+| `Pager` | components/Pager.tsx | 13 · 13.1 ~ 13.5 |
 | `Notice` | components/Notice.tsx | 8 · 11 · 11.1 · 12 · 12.1 · 12.2 · 10(빈 상태) |
 | `SettingsDialog` | components/SettingsDialog.tsx | 20 ~ 20.7 |
 
 **규칙이 사는 곳**
 - 정렬은 접수마감일 오름차순 하나뿐이다. 마감일이 없는 항목은 맨 뒤다. 같은 마감일이면 대회명 순이다.
-- 마감이 지난 항목(`deadline < 오늘`)과 감춘 항목은 접힌 구역(9)에 둔다. 오늘은 브라우저의 KST 날짜다. 3.3을 켜면 표 아래에 이어진다.
+- 마감이 지난 항목(`deadline < 오늘`)과 감춘 항목은 접힌 구역(9)에 둔다. 오늘은 브라우저의 KST 날짜다. 3.3을 켜면 열린 줄 뒤에 이어진다.
+- 목록은 쪽으로 나눈다(13). `PAGE_SIZES`(10 · 20 · 50 · 100) 가운데 고른 개수만큼 보이고 기본은 `DEFAULT_PAGE_SIZE`(20)다. 고른 개수는 `localStorage`의 `ccr.pageSize`에 기억하고, 쪽 번호는 기억하지 않는다. `CompetitionTable`은 지금 쪽의 줄만 받아 그리고, 접힌 줄의 표시는 줄의 값(`expired` · `hidden`)으로 정한다.
+- 거르기를 바꾸면 첫 쪽으로, 개수를 바꾸면 보던 첫 줄이 든 쪽으로 간다. 접힌 구역을 눌러 펼치면 접힌 줄이 시작하는 쪽으로 간다. 줄이 줄어 쪽이 넘치면 `paginate`가 마지막 쪽으로 맞춘다. 이전 · 다음으로 넘겼을 때 표 머리가 화면 위로 지나가 있으면 표 머리로 올린다([[CCR-UI-001#UI-1]] 13).
 - 상태 파일에 값이 없는 항목은 `시작 전` · 감추지 않음이다. 목록에 없는 식별자의 값은 버린다.
 - 거르기 값은 `localStorage`에 기억한다. 저장소에는 쓰지 않는다.
 - 쓰는 조작 셋은 모두 `StatusStore`로 간다. 토큰이 없으면 부르지 않고 토큰 없음(11)을 띄운다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
@@ -1067,7 +1078,7 @@ TokenStore
 
 ## 6. 미결사항
 
-2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`).
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`). 2026-10-01에는 사용자 요청으로 쪽 나누기(`Pager`)를 더했다(4.11 `CompetitionList`).
 
 - [ ] Kaggle 어댑터는 실측 전이다. 토큰이 생기면 [[CCR-API-001]] 5장대로 필드 이름 · 연습용 표기 · 쪽 크기를 실측하고 `kaggle.py`를 맞춘다. 그때까지는 토큰이 없어 설정 누락으로 건너뛴다
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
