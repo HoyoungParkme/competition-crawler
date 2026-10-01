@@ -2,7 +2,7 @@
 doc_id: CCR-DOM-001
 type: DOM
 title: 대회 수집 배치 도메인 모델
-status: draft
+status: approved
 upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001]
 ---
 
