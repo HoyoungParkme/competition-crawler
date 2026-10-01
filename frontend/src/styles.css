@@ -7,6 +7,7 @@
   --fg-chip: #3f3d36;
   --accent: #1f5f6b;
   --accent-hover: #143f47;
+  --title-link: #174a54;
   --line: #d9d5cb;
   --line-soft: #eceae3;
   --line-control: #c9c4b7;
@@ -199,6 +200,16 @@ a:hover {
 }
 .cc-tbl tr:last-child td {
   border-bottom: 0;
+}
+/* 대회명(7.2). 굵게 쓰고 밑줄은 가리킬 때만 */
+.cc-tbl td > a {
+  color: var(--title-link);
+  font-weight: 600;
+  text-decoration: none;
+}
+.cc-tbl td > a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
 }
 .cc-tbl tr.folded td {
   opacity: 0.75;
