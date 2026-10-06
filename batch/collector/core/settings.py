@@ -1,8 +1,7 @@
 """설정과 실행 문맥.
 
 조정값은 `batch/settings.toml`, 비밀값은 환경 변수로만 받는다(CCR-INFRA-001 4.1 · 5장).
-실행 문맥은 노트북 실행기(`scripts/daily.sh`)가 넘긴 시작 시각과 실행 식별자에서 만든다
-(CCR-INFRA-001 8.1).
+실행 문맥은 워크플로 첫 스텝이 남긴 시작 시각과 실행 식별자에서 만든다(CCR-INFRA-001 8.1).
 """
 
 from __future__ import annotations
@@ -21,7 +20,7 @@ REPO_ROOT = BATCH_DIR.parent
 
 
 class RunModeError(Exception):
-    """실행기 안에서 쓰기 여부 값이 `true`도 `false`도 아니다. 아무것도 하지 않고 실패한다."""
+    """Actions 안에서 쓰기 여부 값이 `true`도 `false`도 아니다. 아무것도 하지 않고 실패한다."""
 
 
 @dataclass(frozen=True)
@@ -80,7 +79,7 @@ class Settings:
 
 
 def _secret(env: Mapping[str, str], name: str) -> str | None:
-    # 설정 파일에 자리만 있고 값이 비면 빈 문자열로 들어온다. 빈 값은 빠진 것으로 본다(INFRA 5장)
+    # 등록되지 않은 시크릿은 빈 문자열로 들어오므로 빈 값을 빠진 것으로 본다(CCR-INFRA-001 5장)
     value = (env.get(name) or "").strip()
     return value or None
 
@@ -116,7 +115,7 @@ class RunContext:
     write: bool  # 목록에 쓰는 실행인가
     ignore_discards: bool
     ignore_discards_requested: bool
-    in_runner: bool
+    in_actions: bool
     state_dir: Path
     state_from_main: bool  # 데이터 파일을 기본 브랜치 최신 판에서 꺼내 읽는가
     append_dir: Path
@@ -124,12 +123,12 @@ class RunContext:
     @classmethod
     def from_env(cls, env: Mapping[str, str], *, now: datetime | None = None) -> RunContext:
         """CCR-MS-001#RunContext.from_env"""
-        in_runner = env.get("BATCH_RUNNER") == "laptop"
+        in_actions = env.get("GITHUB_ACTIONS") == "true"
         dry_run_raw = env.get("DRY_RUN", "")
-        if in_runner and dry_run_raw not in ("true", "false"):
+        if in_actions and dry_run_raw not in ("true", "false"):
             raise RunModeError(f"DRY_RUN 값이 true도 false도 아니다: {dry_run_raw!r}")
-        # 실행기 밖(개발 PC)의 실행은 늘 목록에 쓰지 않는다(CCR-UC-001 UC-A1 1b5)
-        write = in_runner and dry_run_raw == "false"
+        # Actions 밖(개발자 PC)의 실행은 늘 목록에 쓰지 않는다(CCR-UC-001 UC-A1 1b5)
+        write = in_actions and dry_run_raw == "false"
 
         started_raw = (env.get("RUN_STARTED_AT") or "").strip()
         if started_raw:
@@ -143,22 +142,22 @@ class RunContext:
         run_id = (
             env.get("RUN_ID") or ""
         ).strip() or f"local-{started_at.strftime('%Y%m%dT%H%M%S')}"
-        kind = "schedule" if env.get("RUN_KIND") == "schedule" else "manual"
+        kind = "schedule" if env.get("GITHUB_EVENT_NAME") == "schedule" else "manual"
         # 버림을 없는 것으로 보는 것은 목록에 쓰지 않는 실행에서만 뜻이 있다(CCR-INFRA-001 8.1)
         requested = env.get("IGNORE_DISCARDS") == "true"
 
-        # 실행기는 main을 새로 받아 그 안에서 돈다 — 받은 main이 곧 최신 판이다. 그 밖은
+        # 기본 브랜치에서 도는 Actions 실행은 시작할 때 받은 main이 곧 최신 판이다. 그 밖은
         # 작업 트리의 사본이 아니라 기본 브랜치 최신 판을 꺼내 읽는다(CCR-UC-001 UC-A1 1b7)
         if env.get("STATE_DIR"):
             state_dir, from_main = Path(env["STATE_DIR"]), False
-        elif in_runner:
+        elif in_actions and env.get("GITHUB_REF") == "refs/heads/main":
             state_dir, from_main = REPO_ROOT / "data", False
         else:
             state_dir, from_main = Path(tempfile.mkdtemp(prefix="competition-state-")), True
         if env.get("APPEND_DIR"):
             append_dir = Path(env["APPEND_DIR"])
-        elif env.get("WORK_DIR"):
-            append_dir = Path(env["WORK_DIR"]) / "append"
+        elif env.get("RUNNER_TEMP"):
+            append_dir = Path(env["RUNNER_TEMP"]) / "append"
         else:
             append_dir = Path(tempfile.gettempdir()) / "competition-crawler-append"
         return cls(
@@ -169,7 +168,7 @@ class RunContext:
             write=write,
             ignore_discards=requested and not write,
             ignore_discards_requested=requested,
-            in_runner=in_runner,
+            in_actions=in_actions,
             state_dir=state_dir,
             state_from_main=from_main,
             append_dir=append_dir,

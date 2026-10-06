@@ -8,12 +8,24 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 
 def _to_mask(values: Iterable[str]) -> list[str]:
     # 긴 것부터 가려야 짧은 것이 긴 것의 일부를 먼저 지우지 않는다
     return sorted({v for v in values if v}, key=len, reverse=True)
+
+
+def register_actions_masks(
+    values: Iterable[str], emit: Callable[[str], None] | None = None
+) -> None:
+    """CCR-MS-001#logging.register_actions_masks
+
+    GitHub Actions에 가릴 값을 알린다. 어떤 출력보다 먼저 부른다.
+    """
+    write = emit or (lambda line: print(line, flush=True))
+    for value in _to_mask(values):
+        write(f"::add-mask::{value}")
 
 
 class SecretFilter(logging.Filter):

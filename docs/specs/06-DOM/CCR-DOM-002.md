@@ -2,7 +2,7 @@
 doc_id: CCR-DOM-002
 type: DOM
 title: 클래스 명세 — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-DOM-001, CCR-INFRA-001, CCR-API-001, CCR-UC-001, CCR-UI-001]
 ---
 
@@ -10,7 +10,7 @@ upstream: [CCR-DOM-001, CCR-INFRA-001, CCR-API-001, CCR-UC-001, CCR-UI-001]
 
 ## 0. 이 문서가 다루는 것
 
-도메인 모델([[CCR-DOM-001]])의 개념과 경계를 **코드 구조**로 옮긴다. 폴더 배치, 엔티티 클래스, 서비스의 책임과 메서드 이름까지다. 실행 컴포넌트는 셋이다. 배치(`batch/collector/`)와 노트북 페이지 서버(`batch/page_server.py`), 대회 목록 페이지(`frontend/`)다([[CCR-INFRA-001]] 4장). 데이터 파일 넷의 줄 형식은 [[CCR-DOM-003]] ERD·DD가 맡고, 함수 하나하나의 처리는 [[CCR-MS-001]]이 맡는다. 화면의 모양은 [[CCR-UI-001]]이 정했고, 여기서는 그 화면을 그리는 컴포넌트와 모듈만 정한다. 노트북의 셸 스크립트(`scripts/`)는 MS 항목이 없고 [[CCR-INFRA-001]]이 단계까지 정한다. 2026-09-29까지 있던 노션 경계(`domains/notion/` · `infra/notion.py`)는 노션을 쓰지 않기로 하면서 지웠다. 2026-10-06에는 GitHub를 빼면서 페이지의 토큰(`store/token.ts` · `components/SettingsDialog.tsx`)을 지우고 노트북 페이지 서버(4.12)를 더했다.
+도메인 모델([[CCR-DOM-001]])의 개념과 경계를 **코드 구조**로 옮긴다. 폴더 배치, 엔티티 클래스, 서비스의 책임과 메서드 이름까지다. 실행 컴포넌트는 둘이다. 배치(`batch/`)와 대회 목록 페이지(`frontend/`)다([[CCR-INFRA-001]] 4장). 데이터 파일 넷의 줄 형식은 [[CCR-DOM-003]] ERD·DD가 맡고, 함수 하나하나의 처리는 [[CCR-MS-001]]이 맡는다. 화면의 모양은 [[CCR-UI-001]]이 정했고, 여기서는 그 화면을 그리는 컴포넌트와 모듈만 정한다. 2026-09-29까지 있던 노션 경계(`domains/notion/` · `infra/notion.py`)는 노션을 쓰지 않기로 하면서 지웠다.
 
 **클래스 세 종류와 이 문서의 범위**
 
@@ -18,19 +18,19 @@ upstream: [CCR-DOM-001, CCR-INFRA-001, CCR-API-001, CCR-UC-001, CCR-UI-001]
 |---|---|---|---|
 | Entity | 저장되는 데이터를 갖는 것 | 목록 항목, 상태, 처리 이력 한 줄, 실행 요약 한 줄과 그 안의 소스별 건수 · 경고 | 2장 + [[CCR-DOM-003]] |
 | Control | 유스케이스 흐름을 조율하는 것 | 수집 · 선별 · 목록 · 기록의 서비스, 실행의 흐름(`Pipeline`), 마무리 단계, 페이지의 상태 저장(`StatusStore`) | 3장 · 4장 |
-| Boundary | 바깥과 만나는 것 | 배치의 입구(`python -m collector`)와 소스 · OpenAI · git에 거는 요청, 페이지의 화면과 페이지 서버에 거는 요청, 페이지 서버가 받는 요청과 원본에 거는 git | [[CCR-API-001]] · [[CCR-UI-001]]. 4장에서 Control과 잇는 곳만 |
+| Boundary | 바깥과 만나는 것 | 배치의 입구(`python -m collector`)와 소스 · OpenAI · git에 거는 요청, 페이지의 화면과 GitHub에 거는 요청 | [[CCR-API-001]] · [[CCR-UI-001]]. 4장에서 Control과 잇는 곳만 |
 
 **전제(앞 단계에서 정한 것)**
-- 데이터베이스가 없다. 배치는 한 번 돌고 끝난다. 페이지는 정적 파일이고, 늘 떠 있는 노트북 페이지 서버가 그것과 원본의 두 데이터 파일을 127.0.0.1에만 내며 상태 파일 쓰기만 받는다([[CCR-INFRA-001#C1]] · [[CCR-INFRA-001#C4]] · [[CCR-INFRA-001#C14]]).
+- 서버 · 데이터베이스가 없다. 배치는 한 번 돌고 끝나고, 페이지는 정적 파일이다([[CCR-INFRA-001#C1]] · [[CCR-INFRA-001#C4]] · [[CCR-INFRA-001#C14]]).
 - 경계는 넷이다. 수집 · 선별 · 목록 · 기록. 의존은 선별 → 수집 · 목록 · 기록, 목록 · 기록 → 수집의 한 방향이다([[CCR-DOM-001]] 4.2).
 - 경계끼리는 값으로 주고받는다. 받은 값을 고쳐 돌려보내지 않는다.
-- 목록 경계는 배치에게 읽기와 더하기만, 기록 경계는 읽기와 덧붙이기만 연다. 상태는 페이지만 읽고 쓴다. 원본에 커밋하는 것은 페이지 서버다.
-- 페이지는 배치와 코드를 나누어 가지지 않는다. 두 파일의 형식([[CCR-DOM-003]])만 함께 따른다([[CCR-DOM-001]] 4.2). 페이지 서버도 배치 패키지를 불러오지 않는다.
+- 목록 경계는 배치에게 읽기와 더하기만, 기록 경계는 읽기와 덧붙이기만 연다. 상태는 페이지만 읽고 쓴다.
+- 페이지는 배치와 코드를 나누어 가지지 않는다. 두 파일의 형식([[CCR-DOM-003]])만 함께 따른다([[CCR-DOM-001]] 4.2).
 - 판정 규칙의 수치(유사도 0.90 · 마감일 180일 · 판별 실패 절반)는 코드의 상수이고, 조정값은 `batch/settings.toml`이다([[CCR-INFRA-001]] 4.1).
 
 ## 1. 폴더 구조
 
-[[CCR-INFRA-001]] 4장대로 루트에 쏟지 않고 배치와 노트북 페이지 서버는 `batch/`, 페이지는 `frontend/`, 노트북의 셸 스크립트는 `scripts/`에 담는다.
+[[CCR-INFRA-001]] 4장대로 루트에 쏟지 않고 배치는 `batch/`, 페이지는 `frontend/`에 담는다.
 
 ```
 competition-crawler/
@@ -38,21 +38,20 @@ competition-crawler/
 │   ├── collector/              배치 본체(임포트 패키지). 아래
 │   ├── tests/                  collector/ 구조를 거울로. fixtures/에 실측 응답을 줄인 것
 │   ├── finish.py               마무리 단계. 표준 라이브러리만 쓴다(4.10)
-│   ├── page_server.py          노트북 페이지 서버. 표준 라이브러리만 쓴다(4.12)
 │   ├── settings.toml           비밀이 아닌 조정값
 │   └── pyproject.toml · uv.lock
 ├── frontend/                   대회 목록 페이지. React + Vite + TypeScript. 아래
 ├── data/                       데이터 파일 넷. competitions.jsonl · status.json · processed.jsonl · runs.jsonl
-├── scripts/                    노트북의 셸 스크립트. MS 항목이 없다
-│   ├── daily.sh                노트북 실행기. crontab이 부른다(INFRA 8.1)
-│   ├── page.sh                 페이지 서버 띄우기 · 배포(INFRA 8.11)
-│   └── notify.sh               윈도 알림(INFRA 8.7)
 ├── docs/specs/                 명세 원본
+├── .github/
+│   ├── workflows/daily.yml     배치의 예약 · 수동 실행과 스텝 순서
+│   ├── workflows/pages.yml     페이지 빌드와 Pages 배포
+│   └── dependabot.yml          액션 · npm 버전 갱신
 ├── .env.example · .gitignore
 └── README.md · AGENTS.md       사람용 · 에이전트용
 ```
 
-`data/`의 넷 가운데 셋(목록 파일 · 처리 이력 · 실행 요약)은 마무리 단계만 커밋하고, 상태 파일은 페이지가 보낸 쓰기를 노트북 페이지 서버가 커밋한다([[CCR-INFRA-001]] 6.2 · 8.11). 2026-10-06까지 있던 `.github/`(`workflows/daily.yml` · `workflows/pages.yml` · `dependabot.yml`)는 GitHub를 빼며 지웠다. 그 자리는 `scripts/`의 `daily.sh` · `page.sh`이고, 의존성 갱신은 사람이 한다([[CCR-INFRA-001]] 5.6).
+`data/`의 넷 가운데 셋(목록 파일 · 처리 이력 · 실행 요약)은 마무리 단계만 커밋하고, 상태 파일은 페이지만 커밋한다([[CCR-INFRA-001]] 6.2).
 
 **batch/collector/ 안**
 
@@ -94,15 +93,15 @@ collector/
 
 **기본형과 다른 점, 그리고 왜.** [[CCR-INFRA-001]] 4장이 가리킨 싱크독 규약 1.9의 기본형은 `domains/<도메인>/`에 `router · schemas · service · crud · models`를 둔다. 여기서 벗어난 곳은 다섯이다.
 
-1. **`router.py` · `schemas.py`가 없다.** 배치에는 들어오는 요청이 없다. 입구는 `__main__.py` 하나이고, 입구가 하나라 도메인 밖에 따로 폴더를 두지 않는다. 요청을 받는 노트북 페이지 서버는 패키지 밖의 파일 하나다(5).
+1. **`router.py` · `schemas.py`가 없다.** 들어오는 요청이 없다. 입구는 `__main__.py` 하나이고, 입구가 하나라 도메인 밖에 따로 폴더를 두지 않는다.
 2. **실행의 흐름을 `run/pipeline.py`에 둔다.** 도메인 모델은 이 일을 어느 경계에도 넣지 않고 클래스 명세에 맡겼다([[CCR-DOM-001]] 4.2). 네 경계를 모두 부르므로 어느 경계 안에 두면 의존이 거꾸로 흐른다.
 3. **선별 경계에 `matching.py`를 따로 둔다.** 같은 대회 판정은 대회 · 목록 항목 · 처리 이력 기록 셋에 같은 규칙을 쓰는 순수 함수다([[CCR-DOM-001]] 4.2 규칙 6). 흐름(`service.py`)과 섞으면 판정 규칙을 고칠 때 흐름까지 건드린다. 판정 규칙이 바뀌면 이 파일만 바뀐다([[CCR-UC-001#UC-A4]]).
 4. **선별 경계의 폴더 이름이 `screen`이다.** 파이썬 표준 라이브러리에 `select`가 있어 헷갈린다. 역할은 그대로다.
-5. **마무리 단계(`finish.py`)와 노트북 페이지 서버(`page_server.py`)는 패키지 밖 `batch/` 바로 아래에 둔다.** [[CCR-INFRA-001]] 8.2 · 8.11이 둘 다 표준 라이브러리만 쓰고 배치 패키지를 불러오지 말라고 정했다. 마무리 단계는 uv 설치가 실패한 실행에서도 노트북의 python3로 돌아야 한다. 페이지 서버는 `scripts/page.sh`가 빌드와 함께 이 파일 하나만 꺼내 노트북의 python3로 띄운다. 배치의 가상환경에 기대지 않는다. 패키지 안에 두면 `collector/__init__.py`를 거쳐 다른 모듈을 끌어들이기 쉽다.
+5. **마무리 단계(`finish.py`)는 패키지 밖 `batch/` 바로 아래에 둔다.** [[CCR-INFRA-001]] 8.2가 표준 라이브러리만 쓰고 배치 패키지를 불러오지 말라고 정했다. uv 설치가 실패한 실행에서도 러너의 python3로 돌아야 한다. 패키지 안에 두면 `collector/__init__.py`를 거쳐 다른 모듈을 끌어들이기 쉽다.
 
 `ports.py` · `adapters/`는 바깥 호출이 실제로 있는 두 곳에만 둔다. 수집(소스 여섯, 구현 여섯)과 선별(판별 모델). 목록과 기록의 `crud.py`는 데이터베이스 대신 저장소의 데이터 파일을 읽고 쓴다. 목록 경계에는 HTTP가 없다. 배치는 git으로 받은 파일을 읽고 추가분 파일에 더할 뿐이고, 저장소에 올리는 일은 마무리 단계가 한다([[CCR-INFRA-001]] 8.2).
 
-**tests/** 는 `collector/` 구조를 그대로 따른다. `tests/fixtures/`의 응답은 실측을 줄인 것이고, event-us 응답에서는 주최자 연락처 필드를 뺐다(2026-10-06까지 공개 저장소였다).
+**tests/** 는 `collector/` 구조를 그대로 따른다. `tests/fixtures/`의 응답은 실측을 줄인 것이고, event-us 응답에서는 주최자 연락처 필드를 뺐다(공개 저장소).
 
 **frontend/ 안**
 
@@ -110,18 +109,19 @@ collector/
 frontend/
 ├── index.html                  진입 html. 폰트 링크 하나, 외부 스크립트 없음
 ├── package.json · package-lock.json
-├── vite.config.ts              base: '/'
+├── vite.config.ts              base: '/competition-crawler/'
 ├── tsconfig.json
 ├── src/
 │   ├── main.tsx                입구. CompetitionList를 붙인다
-│   ├── config.ts               데이터 파일 경로 · 페이지 서버의 데이터 주소(dataUrl)와 판 읽기 · 쓰기 주소 · 상태 커밋의 작성자
+│   ├── config.ts               저장소 소유자 · 이름 · 브랜치 · 데이터 파일 경로 · raw · Contents API 주소 · 상태 커밋의 작성자
 │   ├── styles.css              공통 틀의 색 · 글꼴 · 크기 토큰(UI 명세 3장)
 │   ├── domain/
 │   │   └── types.ts            ListEntry · Status · StatusValue · StatusFile · 상태 표시 이름
 │   ├── api/
-│   │   ├── data.ts             페이지 서버에서 두 파일 읽기와 파싱
-│   │   └── contents.ts         페이지 서버의 판 읽기 · 쓰기. GitHub Contents API와 같은 모양
+│   │   ├── data.ts             raw 읽기와 두 파일의 파싱
+│   │   └── github.ts           Contents API의 판 읽기 · 쓰기
 │   ├── store/
+│   │   ├── token.ts            TokenStore. localStorage의 페이지 토큰
 │   │   └── status.ts           StatusStore. 상태 바꿈을 줄 세워 커밋한다
 │   ├── pages/
 │   │   └── CompetitionList.tsx UI-1 대회 목록
@@ -129,7 +129,8 @@ frontend/
 │       ├── FilterBar.tsx       거르기 줄(3)
 │       ├── CompetitionTable.tsx 목록 표(7)와 접힌 구역(9)
 │       ├── Pager.tsx           쪽 나누기 줄(13)
-│       └── Notice.tsx          저장 중(8) · 저장 실패(12)
+│       ├── Notice.tsx          저장 중(8) · 토큰 없음(11) · 저장 실패(12)
+│       └── SettingsDialog.tsx  UI-2 설정 대화상자
 └── tests/                      src/ 구조를 거울로. 브라우저 없이 도는 순수 모듈만(vitest)
 ```
 
@@ -138,17 +139,7 @@ frontend/
 1. **도메인 폴더가 없다.** 화면이 하나이고 개념이 둘(목록 항목 · 상태)뿐이라 `domain/types.ts` 하나로 충분하다. 경계는 배치의 것이고, 페이지는 목록 경계의 두 개념만 읽고 쓴다([[CCR-DOM-001]] 4.1).
 2. **상태 관리 라이브러리를 쓰지 않는다.** 저장할 것이 상태 파일 하나이고 바꾸는 조작이 넷(상태 · 지우기 · 되살리기 · 별표)이다. `store/status.ts`의 클래스 하나가 큐와 화면 기준의 상태 파일을 갖고, 화면은 React 상태로 그린다. 의존성을 줄이는 쪽이다([[CCR-INFRA-001]] 5.6).
 
-`tests/`는 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 같은 순수 모듈만 본다. 화면은 사용자가 브라우저에서 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 빌드 결과 `dist/`는 커밋하지 않는다. `scripts/page.sh`가 원본 main의 `frontend/`로 빌드하고, 노트북 페이지 서버가 그 결과를 `http://localhost:8090`의 뿌리에서 낸다(4.12 · [[CCR-INFRA-001]] 8.11).
-
-**층** — 함수 단위 명세(MS 항목 · 화면 파일의 첫 주석)가 없는 코드가 어느 층이고, 그 층을 무슨 문서가 정하는지다(싱크독 규약 2.6). 위에서부터 첫 줄이 이긴다. `batch/`의 파이썬 함수는 [[CCR-MS-001]] 항목이거나, 같은 파일에 항목 있는 함수가 있는 도우미라 적지 않는다. `finish.py` · `page_server.py`의 비공개 함수와 `PageHandler`의 훅 `do_GET` · `do_PUT`도 도우미다. 노트북의 셸 스크립트(`scripts/*.sh`)는 코드 그래프에 함수로 들어가지 않아 표에 줄을 두지 않는다 — 단계는 [[CCR-INFRA-001]] 8.1 · 8.7 · 8.11이 정한다. `pages/CompetitionList.tsx`는 첫 주석이 화면 항목(UI-1)이다. 테스트는 대조에서 빠진다.
-
-| 경로 | 층 | 명세 |
-|---|---|---|
-| `frontend/src/api/*` | 저장소 파일 읽기 · 쓰기 | [[CCR-DOM-002#RepoFiles]] · [[CCR-API-001]] 3.3 |
-| `frontend/src/store/*` | 상태 저장 | [[CCR-DOM-002#StatusStore]] · [[CCR-UC-001#UC-H1]] |
-| `frontend/src/main.tsx` · `frontend/src/pages/*` · `frontend/src/components/*` | 화면 | [[CCR-UI-001#UI-1]] · [[CCR-DOM-002#CompetitionList]] |
-| `frontend/src/domain/*` | 타입 | [[CCR-DOM-002]] 2장 · [[CCR-DOM-003]] |
-| `frontend/src/config.ts` | 설정 | [[CCR-INFRA-001]] 4.1·8.11 |
+`tests/`는 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 같은 순수 모듈만 본다. 화면은 사용자가 브라우저에서 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 빌드 결과 `dist/`는 커밋하지 않는다.
 
 ## 2. 엔티티
 
@@ -200,7 +191,7 @@ classDiagram
 
 `frontend/src/domain/types.ts`. 상태 파일은 식별자를 키로 한 객체 하나이고(`StatusFile = Record<string, Status>`), 값 하나가 이 타입이다. `StatusValue`는 `not_started` · `in_progress` · `submitted` · `done` · `skipped`이고 화면 이름(`시작 전` · `진행 중` · `제출` · `완료` · `미참`)은 같은 모듈의 `STATUS_LABEL`에 한 번만 적고, 선택지의 차례는 `STATUS_VALUES`다. `starred`는 별표다. 2026-10-01 전에 쓴 항목에는 없어 `false`로 읽는다. `updated_at`은 UTC 초 단위의 ISO 문자열이다([[CCR-API-001]] 4.2).
 
-배치에는 이 타입이 없다. 배치는 상태 파일을 읽지도 쓰지도 않는다([[CCR-DOM-001]] 4.2 규칙 3). 노트북 페이지 서버도 이 타입을 모른다. 상태 파일을 바이트로 내고 받아 원본에 올릴 뿐이다(4.12). 값이 없는 대회는 페이지가 `시작 전` · 감추지 않음 · 별표 없음(`DEFAULT_STATUS`)으로 본다. 목록에 없는 식별자의 값은 무시한다.
+배치에는 이 타입이 없다. 배치는 상태 파일을 읽지도 쓰지도 않는다([[CCR-DOM-001]] 4.2 규칙 3). 값이 없는 대회는 페이지가 `시작 전` · 감추지 않음 · 별표 없음(`DEFAULT_STATUS`)으로 본다. 목록에 없는 식별자의 값은 무시한다.
 
 ### 2.2 기록
 
@@ -276,7 +267,7 @@ classDiagram
     }
 ```
 
-`SourceResult`(2.4)에서 대회 목록과 원문 사유를 뺀 것이다. `failure`는 실패의 종류(`FailureKind` 값)이고 성공이면 비어 있다. 원문 사유는 노트북의 실행 로그에만 간다. 커밋되는 파일에는 자유 문장을 넣지 않는다([[CCR-INFRA-001]] 5.4).
+`SourceResult`(2.4)에서 대회 목록과 원문 사유를 뺀 것이다. `failure`는 실패의 종류(`FailureKind` 값)이고 성공이면 비어 있다. 원문 사유는 로그에만 간다(공개 저장소).
 
 #### RunWarning 경고
 
@@ -334,12 +325,10 @@ classDiagram
 | `Relevance` | `decision: keep\|discard` · `reason: str` | openai_judge. 판별 스키마([[CCR-API-001]] 4.3)를 pydantic 모델로 옮긴 것 |
 | `State` | `history` · `history_exists` · `history_error: str?` · `runs: RunsFile` | record/service. 시작할 때 읽은 기록 파일 둘. `keep_count` · `last_keep_count()` |
 | `RunsFile` | `lines: list[dict]` · `corrupt: int` | record/crud. 읽힌 실행 요약 줄과 읽히지 않은 줄의 수 |
-| `Settings` | `source: SourceSettings` · `judge: JudgeSettings` · `zero_count_days` | core/settings. `settings.toml`과 환경 변수 `OPENAI_MODEL`(노트북의 `batch.env`. 작업 사본은 `.env`) |
+| `Settings` | `source: SourceSettings` · `judge: JudgeSettings` · `zero_count_days` | core/settings. `settings.toml`과 저장소 변수 `OPENAI_MODEL` |
 | `Secrets` | `openai_api_key?` · `kaggle_api_token?` | core/settings. 빈 문자열은 빠진 것으로 본다. 둘뿐이다([[CCR-INFRA-001]] 5장) |
-| `RunContext` | `run_id` · `started_at` · `base_date` · `kind` · `write` · `ignore_discards` · `ignore_discards_requested` · `in_runner` · `state_dir` · `state_from_main` · `append_dir` | core/settings. 실행 문맥. `in_runner`는 노트북 실행기 안(`BATCH_RUNNER=laptop`)인지, `write`는 그 안이고 `DRY_RUN=false`인지다. `kind`는 `RUN_KIND`가 `schedule`이면 예약, 그 밖은 수동이다. `state_dir`는 세 파일을 읽는 폴더(실행기 안은 실행기가 받은 main의 `data/`), `state_from_main`은 실행기 밖이라 main 최신 판을 꺼내 읽는지, `append_dir`는 추가분 폴더(`APPEND_DIR`, 없으면 `WORK_DIR/append`) |
+| `RunContext` | `run_id` · `started_at` · `base_date` · `kind` · `write` · `ignore_discards` · `ignore_discards_requested` · `in_actions` · `state_dir` · `state_from_main` · `append_dir` | core/settings. 실행 문맥. `state_dir`는 세 파일을 읽는 폴더, `append_dir`는 추가분 폴더 |
 | `Services` | `collect` · `list` · `record` · `screen` | run/pipeline. `Pipeline`이 받는 서비스 묶음. 테스트는 가짜를 넣는다 |
-| `Blob` | `sha: str` · `data: bytes` | page_server. `Mirror.read`가 돌려주는 원본 main의 파일 하나. `sha`는 git 블롭 해시이고 페이지가 쓰는 판이다 |
-| `Person` | `name: str` · `email: str` | page_server. 상태 커밋의 작성자 · 커미터. 페이지가 보낸 `author`(없으면 `committer`)다 |
 
 페이지의 값 타입은 `domain/types.ts`와 각 모듈에 있다.
 
@@ -347,11 +336,11 @@ classDiagram
 |---|---|---|
 | `ListEntry` · `Status` · `StatusFile` | 2.1 | domain/types |
 | `Row` | `entry: ListEntry` · `status: Status` · `expired: boolean` | domain/types. 표 한 줄. 정렬과 거르기의 단위 |
-| `StatusVersion` | `sha: string \| null` · `file: StatusFile` | api/contents. 판 읽기의 결과. 파일이 없으면 `sha`가 `null` |
+| `StatusVersion` | `sha: string \| null` · `file: StatusFile` | api/github. 판 읽기의 결과. 파일이 없으면 `sha`가 `null` |
 | `Change` | `kind: ChangeKind` · `id` · `title` · `value?: StatusValue` · `before: Status \| undefined` · `at: string` | store/status. 바꿈 하나. `value`는 상태 바꾸기만 채운다. `before`는 되돌릴 때 쓰는 바꾸기 전 값이고 없었으면 `undefined`다. `at`은 바꾼 시각이고 `updated_at`에 적힌다 |
 | `SaveState` | `saving: boolean` · `error: SaveError \| null` | store/status → 화면. 저장 중(8)과 저장 실패(12) |
-| `SaveError` | `status: number \| null` · `change: Change` | store/status → 화면. 저장 실패의 이유. `status`는 페이지 서버의 응답 코드이고, `null`이면 페이지 서버에 닿지 못했거나 응답이 없었다. 알림 문구는 `saveFailureText`(components/Notice)가 응답 코드로 가른다. `change`는 되돌린 바꿈이다 |
-| `ContentsApi` | `readStatusVersion` · `writeStatusFile` | store/status. `StatusStore`가 받는 두 요청. 테스트는 가짜를 넣는다 |
+| `SaveError` | `status: number \| null` · `rateLimited: boolean` · `change: Change` | store/status → 화면. 저장 실패의 이유. `status`가 `null`이면 응답이 없었다. 알림 문구는 `saveFailureText`(components/Notice)가 만든다. `change`는 되돌린 바꿈이다 |
+| `GitHubApi` | `readStatusVersion` · `writeStatusFile` | store/status. `StatusStore`가 받는 두 요청. 테스트는 가짜를 넣는다 |
 | `Filters` | `source: string` · `status: StatusValue \| ''` · `showAll: boolean` · `starredOnly: boolean` | components/FilterBar. 빈 문자열이 전체다. `showAll`은 3.3(마감 지남 · 지운 대회 보기), `starredOnly`는 3.4(별표만 보기)다. `localStorage`의 `ccr.filters`에 기억한다 |
 | `PageOf<T>` | `items: T[]` · `page: number` · `pages: number` · `from: number` · `to: number` | components/Pager. 지금 쪽의 줄, 쪽 번호와 쪽 수, 1부터 센 첫 줄과 끝 줄의 번호. 줄이 없으면 `from` · `to`는 0이다 |
 
@@ -366,9 +355,7 @@ classDiagram
 | `RunModeError` | `RunContext.from_env` | 입구가 종료 코드 2로 |
 | `Stopped` | 멈춤 표시를 보는 모든 곳 | 입구가 종료 코드 130으로. 줄을 쓰지 않는다 |
 | `GitError` | `finish.py`의 git 명령 | `finish`가 처음부터 다시 |
-| `Conflict` · `ShaRequired` | `Mirror.write` | `PageHandler.serve_put`이 409 · 422로 |
-| `RemoteError` | `Mirror`의 git 명령 | 쓰기는 `PageHandler.serve_put`이 502로. 읽기 전 받기(`refresh`)의 실패는 `PageHandler`가 로그에만 남기고 마지막으로 받은 판을 낸다 |
-| `ContentsError(status)`(페이지) | `api/contents.ts` | `StatusStore`가 409 · 422면 한 번 다시 쓰고, 그 밖은 값을 되돌리고 `SaveState.error`로 |
+| `GitHubError(status, rateLimited)`(페이지) | `api/github.ts` | `StatusStore`가 409 · 422면 한 번 다시 쓰고, 그 밖은 값을 되돌리고 `SaveState.error`로. 토큰 검증에서는 `SettingsDialog`가 `tokenProblem`으로 |
 | `DataReadError`(페이지) | `api/data.ts` | `CompetitionList`가 읽지 못했다는 알림으로([[CCR-UC-001#UC-A2]] 1b) |
 
 여기 없는 예외(파일을 쓰지 못함 등)는 입구까지 올라가 스택을 로그에 남기고 종료 코드 1로 끝난다. 줄을 쓰지 않으므로 마무리 단계가 중단 줄을 쓴다([[CCR-UC-001#UC-A1]] \*a).
@@ -416,7 +403,7 @@ flowchart TB
 
 - **`Pipeline`만 네 서비스를 모두 부른다.** 목록 파일에 항목을 더할 때마다 `RecordService.append`에 남김을 적게 하는 것도 `Pipeline`이다([[CCR-DOM-001]] 4.2).
 - **`ScreenService`는 `RecordService.append`를 부른다.** 버림과 아는 대회의 구성원을 곧바로 적어야 하기 때문이다([[CCR-UC-001#UC-S5]] 5 · [[CCR-UC-001#UC-S4]] 6). 선별 → 기록은 도메인 모델이 허락한 방향이다.
-- **`ListService` · `RecordService`는 서로 부르지 않고 선별도 부르지 않는다.** 목록과 기록이 가리키는 것은 수집의 값(`Competition` · `SourceResult`)뿐이다. 두 `crud`가 같은 폴더(`state_dir` · `append_dir`)를 읽고 쓰지만, 폴더는 실행 문맥(`core/`)이 정하고 기본 브랜치의 최신 판을 꺼내는 일(실행기 밖의 실행)은 `RecordCrud.prepare`가 세 파일을 한 번에 한다. `Pipeline`이 `RecordService.start`를 먼저 부르므로 `ListCrud`는 꺼내 둔 파일을 읽기만 한다.
+- **`ListService` · `RecordService`는 서로 부르지 않고 선별도 부르지 않는다.** 목록과 기록이 가리키는 것은 수집의 값(`Competition` · `SourceResult`)뿐이다. 두 `crud`가 같은 폴더(`state_dir` · `append_dir`)를 읽고 쓰지만, 폴더는 실행 문맥(`core/`)이 정하고 기본 브랜치의 최신 판을 꺼내는 일은 `RecordCrud.prepare`가 세 파일을 한 번에 한다. `Pipeline`이 `RecordService.start`를 먼저 부르므로 `ListCrud`는 꺼내 둔 파일을 읽기만 한다.
 - **소스 어댑터는 `SourceHttp`로만 요청한다.** robots.txt 확인 · 요청 간격 · 시간 예산이 거기 있다.
 - **`finish.py`는 아무것도 부르지 않는다.** 세 파일의 줄 형식을 스스로 안다([[CCR-DOM-001]] 4.2 · [[CCR-INFRA-001]] 8.2).
 - `core/` · `shared/`는 어디서나 부른다. 거꾸로 부르지 않는다.
@@ -431,31 +418,34 @@ flowchart TB
     CT[CompetitionTable]
     PG[Pager]
     NT[Notice]
+    SD["components/SettingsDialog.tsx<br/>UI-2"]
     ST["store/status.ts<br/>StatusStore"]
-    DA["api/data.ts<br/>파일 읽기"]
-    CA["api/contents.ts<br/>판 읽기 · 쓰기"]
+    TK["store/token.ts<br/>TokenStore"]
+    DA["api/data.ts<br/>raw 읽기"]
+    GH["api/github.ts<br/>Contents API"]
     CF["config.ts"]
-    SV["batch/page_server.py<br/>노트북 페이지 서버"]
 
     MAIN --> CL
     CL --> FB
     CL --> CT
     CL --> PG
     CL --> NT
+    CL --> SD
     CL --> DA
+    CL --> GH
     CL --> ST
-    ST --> CA
-    CA --> DA
+    CL --> TK
+    SD --> TK
+    SD --> GH
+    ST --> GH
+    ST --> TK
     DA --> CF
-    CA --> CF
-    DA -.->|"GET /data/…"| SV
-    CA -.->|"GET · PUT /api/contents/…"| SV
+    GH --> CF
 ```
 
 - **`CompetitionList`만 데이터를 읽는다.** 두 파일을 받아 `Row`로 합치고 자식 컴포넌트에는 값과 콜백만 내려 준다. 자식은 요청하지 않는다.
-- **상태 파일에 쓰는 곳은 `StatusStore` 하나다.** 상태 · 지우기 · 되살리기 · 별표가 모두 이 클래스를 거쳐 줄을 선다([[CCR-API-001]] 1.4). 판 읽기 · 쓰기(`api/contents.ts`)를 부르는 곳도 이 클래스뿐이다. `api/contents.ts`가 `api/data.ts`에서 쓰는 것은 받은 내용의 파싱(`parseStatusFile`)뿐이다. 화면에 보일 상태 파일은 `CompetitionList`가 목록 파일과 함께 `api/data.ts`로 받는다. 페이지 서버에 캐시가 없어 방금 쓴 값이 곧바로 보인다([[CCR-INFRA-001]] 6.4).
-- **페이지는 같은 출처의 노트북 페이지 서버만 부르고, 토큰이 없다.** 원본에 쓰는 자격은 페이지 서버가 갖는다([[CCR-INFRA-001]] 5.8). 2026-10-06까지 있던 `TokenStore` · `SettingsDialog`는 지웠다.
-- **페이지 서버는 배치 패키지도 페이지 코드도 부르지 않는다.** 표준 라이브러리와 git만 쓰고, 두 데이터 파일과 빌드 결과를 바이트로만 다룬다. 안의 의존은 4.12다.
+- **GitHub에 쓰는 곳은 `StatusStore` 하나다.** 상태 · 지우기 · 되살리기 · 별표가 모두 이 클래스를 거쳐 줄을 선다([[CCR-API-001]] 1.4). `SettingsDialog`가 `api/github.ts`를 부르는 것은 토큰 검증의 판 읽기뿐이고, `CompetitionList`는 토큰이 있을 때 화면에 보일 상태 파일을 같은 판 읽기로 받는다([[CCR-UC-001#UC-H2]] 4 · [[CCR-INFRA-001]] 6.4).
+- **토큰은 `TokenStore`만 만진다.** `localStorage`의 키 하나다. 화면은 있음 · 없음만 묻는다.
 - `config.ts` · `domain/types.ts` · `styles.css`는 어디서나 쓴다. 거꾸로 부르지 않는다.
 
 ## 4. 설계 클래스
@@ -701,7 +691,7 @@ classDiagram
 | 메서드 | 읽고 쓰는 곳 |
 |---|---|
 | `read` | 데이터 폴더(`state_dir`)의 `competitions.jsonl`. 없으면 `None` |
-| `reset_appends` · `write_appends` | 추가분 폴더(`append_dir`. 실행기에서는 `WORK_DIR/append`)의 `competitions.jsonl` |
+| `reset_appends` · `write_appends` | 추가분 폴더(`$RUNNER_TEMP/append`)의 `competitions.jsonl` |
 
 **규칙이 사는 곳**
 - 작업 트리의 목록 파일을 직접 고치지 않는다. 추가분은 작업 트리 밖에 쌓는다([[CCR-INFRA-001]] 6.2).
@@ -795,15 +785,15 @@ classDiagram
 
 | 메서드 | 읽고 쓰는 곳 |
 |---|---|
-| `prepare` | 실행기 밖(작업 사본)의 실행이면 `export_main_state`로 원본 main(`origin/main`) 최신 판의 **세 파일**(목록 파일 · 처리 이력 · 실행 요약)을 데이터 폴더에 꺼낸다. 상태 파일은 꺼내지 않는다 |
+| `prepare` | 기본 브랜치가 아닌 실행이면 `export_main_state`로 origin/main 최신 판의 **세 파일**(목록 파일 · 처리 이력 · 실행 요약)을 데이터 폴더에 꺼낸다. 상태 파일은 꺼내지 않는다 |
 | `read_history` · `read_runs` | 데이터 폴더의 `processed.jsonl` · `runs.jsonl` |
-| `reset_appends` · `write_history_appends` · `write_run_append` | 추가분 폴더(`append_dir`. 실행기에서는 `WORK_DIR/append`)의 같은 이름 두 파일 |
+| `reset_appends` · `write_history_appends` · `write_run_append` | 추가분 폴더(`$RUNNER_TEMP/append`)의 같은 이름 두 파일 |
 
 **규칙이 사는 곳**
 - 작업 트리의 두 파일을 직접 고치지 않는다. 추가분은 작업 트리 밖에 쌓는다([[CCR-INFRA-001]] 6.2).
 - 쓸 때마다 새 이름의 임시 파일에 쓰고 `os.replace`로 통째로 바꾼다. 도중에 끊겨도 반쯤 쓴 파일이 남지 않는다.
 - 추가분 폴더가 데이터 폴더와 같으면 만들 때 거부한다. 데이터 파일을 비우는 사고를 막는다.
-- 데이터 폴더는 실행 문맥이 정한다. 노트북 실행기 안의 실행은 실행기가 새로 받은 main의 `data/`(`REPO_ROOT/data`)를 그대로 읽는다. 그 밖(개발 PC의 작업 사본)은 원본 main(`origin/main`)에서 꺼낸 사본이다. 받지 못하면 처리 이력 읽기 실패다([[CCR-UC-001#UC-A1]] 1b7 · [[CCR-INFRA-001]] 4.1). 목록 파일도 같은 사본에서 읽히므로 `ListCrud`가 따로 꺼내지 않는다(5장 결정 5).
+- 데이터 폴더는 실행 문맥이 정한다. 기본 브랜치에서 도는 Actions 실행은 시작할 때 받은 `data/`, 그 밖(다른 브랜치 · 개발자 PC)은 origin/main에서 꺼낸 사본이다. 받지 못하면 처리 이력 읽기 실패다([[CCR-UC-001#UC-A1]] 1b7 · [[CCR-INFRA-001]] 4.1). 목록 파일도 같은 사본에서 읽히므로 `ListCrud`가 따로 꺼내지 않는다(5장 결정 5).
 
 ### 4.7 실행의 흐름
 
@@ -855,7 +845,7 @@ classDiagram
 - 단계 사이마다 신호 표시를 본다. 신호를 받았으면 `Stopped`를 낸다.
 - 목록에 쓰지 않는 실행은 넣었을 대회와 판별 근거를 로그에만 남긴다([[CCR-UC-001#UC-A1]] 1b3).
 
-**입구(`__main__.py`)** — `main`이 로그를 설정해 비밀값을 가리고(`SecretFilter`), 신호 처리기를 건 뒤 `run_batch` 또는 `run_collect`를 부른다. `run_batch`는 서비스 넷(`Services`)을 조립해 `Pipeline`을 돌리고 결과가 성공이면 0, 아니면 1로 끝난다. 쓰기 여부 값이 깨졌으면 2, 신호로 멈추면 130이다. 첫 신호는 새 요청을 멈추게 하고, 두 번째 신호는 막혀 있는 호출도 끊는다([[CCR-INFRA-001]] 8.1). 신호는 노트북 실행기가 넘긴다(시간 한도 · 사람이 끊음). 실행기 밖(작업 사본)의 실행만 저장소 루트의 `.env`를 읽는다. 실행기 안(`BATCH_RUNNER=laptop`)에서는 읽지 않는다.
+**입구(`__main__.py`)** — `main`이 비밀값을 Actions에 가릴 값으로 먼저 알리고(`::add-mask::`), 로그를 설정하고, 신호 처리기를 건 뒤 `run_batch` 또는 `run_collect`를 부른다. `run_batch`는 서비스 넷(`Services`)을 조립해 `Pipeline`을 돌리고 결과가 성공이면 0, 아니면 1로 끝난다. 쓰기 여부 값이 깨졌으면 2, 신호로 멈추면 130이다. 첫 신호는 새 요청을 멈추게 하고, 두 번째 신호는 막혀 있는 호출도 끊는다([[CCR-INFRA-001]] 8.1). 로컬 실행만 저장소 루트의 `.env`를 읽는다.
 
 ### 4.8 infra — 바깥 요청 도구
 
@@ -879,18 +869,19 @@ ensure_allowed(http, origin, paths) -> None           robots.txt. 막히면 Robo
 Settings.load(env, path?) -> Settings                settings.toml + OPENAI_MODEL
 Secrets.from_env(env) -> Secrets                      OPENAI_API_KEY · KAGGLE_API_TOKEN
 RunContext.from_env(env, now?) -> RunContext         쓰기 여부 · 기준일 · 실행 식별자 · 데이터 폴더 · 추가분 폴더
-read_dotenv(path) -> dict                            작업 사본의 실행용 .env
+read_dotenv(path) -> dict                            로컬 실행용 .env
+register_actions_masks(values, emit?) -> None        ::add-mask::
 SecretFilter(values)                                 로그 메시지와 예외 원문을 가린다
 setup_logging(secrets) -> None
 kst_date_of(moment) -> date · parse_to_kst_date(text) -> date | None · kst_midnight_utc(day) -> datetime
 clean_text(value) -> str · html_text(value) -> str
 ```
 
-**규칙** — `RunContext.from_env`는 노트북 실행기 안(`BATCH_RUNNER=laptop`)에서 `DRY_RUN`이 `true`도 `false`도 아니면 `RunModeError`를 낸다. 값이 비었다고 쓰기 모드로 돌지 않는다([[CCR-INFRA-001]] 8.1). 실행기 밖은 늘 쓰지 않는다. 기준일은 실행기가 정해 넘긴 `RUN_STARTED_AT`을 KST로 바꾼 날짜다([[CCR-INFRA-001#C13]]). 입력은 실행기가 넘기는 `BATCH_RUNNER` · `DRY_RUN` · `RUN_STARTED_AT` · `RUN_ID` · `RUN_KIND` · `APPEND_DIR` · `WORK_DIR` · `IGNORE_DISCARDS`와 `STATE_DIR`(데이터 폴더를 바로 줄 때. 테스트가 쓴다)이다. 가릴 값은 비밀값 둘이다. 가리기는 로그 기록에만 걸리므로 비밀값을 `print`하지 않는다([[CCR-INFRA-001]] 5.4). 노션 ID의 두 표기를 만들던 `secret_variants`는 노션과 함께 없앴고, Actions에 가릴 값을 알리던 `register_actions_masks`(`::add-mask::`)는 2026-10-06에 GitHub와 함께 없앴다.
+**규칙** — `RunContext.from_env`는 Actions 안에서 `DRY_RUN`이 `true`도 `false`도 아니면 `RunModeError`를 낸다. 값이 비었다고 쓰기 모드로 돌지 않는다([[CCR-INFRA-001]] 8.1). Actions 밖은 늘 쓰지 않는다. 기준일은 첫 스텝이 남긴 `RUN_STARTED_AT`을 KST로 바꾼 날짜다([[CCR-INFRA-001#C13]]). 가릴 값은 비밀값 둘이다. 노션 ID의 두 표기를 만들던 `secret_variants`는 노션과 함께 없앴다.
 
 ### 4.10 마무리 단계
 
-`batch/finish.py`. 표준 라이브러리와 git만 쓴다. 배치가 어디서 멈추든 노트북 실행기의 다음 단계로 노트북의 python3에서 돈다([[CCR-INFRA-001]] 8.1 · 8.2).
+`batch/finish.py`. 표준 라이브러리와 git만 쓴다. 배치가 어디서 멈추든 같은 잡의 다음 스텝으로 돈다([[CCR-INFRA-001]] 8.1 · 8.2).
 
 ```
 finish(env, git: Git) -> Outcome                     1~7단계. 되풀이 다섯 번
@@ -903,14 +894,14 @@ base_date_of(started_at) -> str
 Git(workdir, remote, token)
     .fresh_main() -> None                            얕게 받기. 되풀이 때는 main 최신 판으로 맞춘다
     .commit_and_push(message) -> None                세 경로만 스테이징
-main() -> int                                        환경 RUN_ID · APPEND_DIR · WORK_DIR · REMOTE_URL · PUSH_TOKEN · RUN_KIND · RUN_STARTED_AT
+main() -> int
 ```
 
-**규칙** — 세 파일의 줄 형식을 [[CCR-DOM-003]]대로 스스로 안다. 이 실행의 식별자를 가진 줄이 이미 있으면 얹지 않는다. 목록 파일에 이미 있는 식별자의 추가분 줄은 붙이지 않는다([[CCR-INFRA-001]] 8.2 3). 배치가 줄을 남기지 않았으면 결과 중단의 줄(기준일 · 실행 식별자 · 실행 종류 · 결과 · 남김 기록의 수만)을 쓰고 실패로 끝낸다. 형식이 맞지 않는 추가분 줄은 붙이지 않고 실패로 끝낸다. `data/status.json`은 읽지도 스테이징하지도 않는다. 원격은 `REMOTE_URL`(싱크독 git 입구), 토큰은 `PUSH_TOKEN`(싱크독 개인 토큰), 작업 폴더는 `WORK_DIR/finish-main`이다. `RUN_ID` · `APPEND_DIR` · `WORK_DIR` · `REMOTE_URL` 가운데 하나라도 없으면 1로 끝난다. 토큰은 받기와 push 명령에만 명령 줄 설정으로 주고 명령을 찍지 않는다. 실행 종류는 `RUN_KIND`가 `schedule`이면 예약, 그 밖은 수동이다. 커밋 작성자 · 커미터는 `ccr-batch <ccr-batch@localhost>`(`BOT_NAME` · `BOT_EMAIL`)이고, 메시지에 기준일과 실행 식별자를 적는다. git log에서 사람 · 페이지의 커밋과 갈린다([[CCR-INFRA-001]] 8.2).
+**규칙** — 세 파일의 줄 형식을 [[CCR-DOM-003]]대로 스스로 안다. 이 실행의 식별자를 가진 줄이 이미 있으면 얹지 않는다. 목록 파일에 이미 있는 식별자의 추가분 줄은 붙이지 않는다([[CCR-INFRA-001]] 8.2 3). 배치가 줄을 남기지 않았으면 결과 중단의 줄(기준일 · 실행 식별자 · 실행 종류 · 결과 · 남김 기록의 수만)을 쓰고 실패로 끝낸다. 형식이 맞지 않는 추가분 줄은 붙이지 않고 실패로 끝낸다. `data/status.json`은 읽지도 스테이징하지도 않는다. 토큰은 받기와 push 명령에만 명령 줄 설정으로 주고 명령을 찍지 않는다. 커밋 작성자는 `github-actions[bot]`, 메시지에 기준일과 실행 식별자를 적는다.
 
 ### 4.11 페이지
 
-`frontend/src/`. 화면은 [[CCR-UI-001]]의 UI-1이고, 요소 번호는 그 문서의 요소 표다. 토큰을 넣던 UI-2와 그 클래스 둘(`SettingsDialog` · `TokenStore`)은 2026-10-06에 페이지 토큰을 없애며 지웠다([[CCR-INFRA-001]] 5.8). 컴포넌트는 함수 컴포넌트이고 `data-el` 속성에 요소 번호를 붙여 사용자가 브라우저에서 번호대로 확인한다.
+`frontend/src/`. 화면은 [[CCR-UI-001]]의 UI-1 · UI-2이고, 요소 번호는 그 문서의 요소 표다. 컴포넌트는 함수 컴포넌트이고 `data-el` 속성에 요소 번호를 붙여 사용자가 브라우저에서 번호대로 확인한다.
 
 #### CompetitionList 대회 목록 화면
 
@@ -918,15 +909,16 @@ main() -> int                                        환경 RUN_ID · APPEND_DIR
 
 ```
 CompetitionList(): JSX                              UI-1. 두 파일을 읽고 Row로 합쳐 그린다
-  상태: entries · statusFile · loading · readError · updatedAt · filters · foldOpen · page · pageSize · save
-  refresh(): void                                   새로 고침(2). readListFile · readStatusFile을 함께 부르고, 받은 상태 파일을 store.load로 넘긴다
+  상태: entries · statusFile · loading · readError · updatedAt · filters · foldOpen · page · pageSize · save · noToken · dialogOpen · hasToken
+  refresh(): void                                   새로 고침(2). readListFile · readStatusForView를 함께 부르고, 받은 상태 파일을 store.load로 넘긴다
   active · folded                                   Row를 거르고 접수마감일 순으로 줄 세운 뒤, 열린 것과 접힌 구역(9)으로 가른다
   shown · view                                      펼쳐 있으면 열린 줄 뒤에 접힌 줄을 잇고(shown), paginate로 지금 쪽을 자른다(view). 쪽 나누기(13)
   changeFilters(next) · changePageSize(size) · goToPage(page) · toggleFold()   3 · 13.2 · 13.3과 13.5 · 9. 첫 쪽으로 · 보던 첫 줄이 든 쪽으로 · 넘기고 표 머리로 · 펼치면 접힌 줄이 시작하는 쪽으로
-  onStatus(id, title, value) · onHide(id, title) · onRestore(id, title) · onStar(id, title, starred)   7.4 · 7.5 · 9.1 · 7.7. StatusStore로 넘긴다
+  onStatus(id, title, value) · onHide(id, title) · onRestore(id, title) · onStar(id, title, starred)   7.4 · 7.5 · 9.1 · 7.7. 토큰이 없으면 토큰 없음(11)
 kstToday(now?: Date): string                        브라우저의 KST 날짜. 마감 지남과 D-n의 기준
 sortByDeadline(rows: Row[]): Row[]                  순수 함수. 접수마감일 오름차순, 없으면 맨 뒤. tests/가 본다
 isExpired(entry: ListEntry, today: string): boolean  순수 함수. 마감일이 오늘보다 이르면 참
+readStatusForView(token: string | null, readVersion?, readRaw?): Promise<StatusFile>   토큰이 있으면 판 읽기, 없거나 실패하면 raw. 읽는 함수는 넣어 줄 수 있어 tests/가 본다
 paginate(items: T[], page: number, size: number): PageOf<T>   components/Pager. 순수 함수. 쪽 번호를 1 ~ 마지막 쪽으로 맞추고 그 쪽의 줄을 자른다. tests/가 본다
 pageOfRow(index: number, size: number): number      components/Pager. 순수 함수. 0부터 센 줄 번호가 든 쪽(1부터)
 ```
@@ -936,7 +928,8 @@ pageOfRow(index: number, size: number): number      components/Pager. 순수 함
 | `FilterBar` | components/FilterBar.tsx | 3 · 3.1 ~ 3.4 |
 | `CompetitionTable` | components/CompetitionTable.tsx | 7 · 7.1 ~ 7.7 · 9 · 9.1 |
 | `Pager` | components/Pager.tsx | 13 · 13.1 ~ 13.5 |
-| `Notice` | components/Notice.tsx | 8 · 12 · 12.2 · 10(빈 상태) |
+| `Notice` | components/Notice.tsx | 8 · 11 · 11.1 · 12 · 12.1 · 12.2 · 10(빈 상태) |
+| `SettingsDialog` | components/SettingsDialog.tsx | 20 ~ 20.7 |
 
 **규칙이 사는 곳**
 - 정렬은 접수마감일 오름차순 하나뿐이다. 마감일이 없는 항목은 맨 뒤다. 같은 마감일이면 대회명 순이다.
@@ -946,9 +939,26 @@ pageOfRow(index: number, size: number): number      components/Pager. 순수 함
 - 상태 파일에 값이 없는 항목은 `시작 전` · 감추지 않음이다. 목록에 없는 식별자의 값은 버린다.
 - 거르기 값은 `localStorage`에 기억한다. 저장소에는 쓰지 않는다. 별표만 보기(3.4)를 켜면 `status.starred`인 줄만 남긴다. 접힌 줄에도 같다.
 - `미참`(`skipped`)인 줄은 `CompetitionTable`이 흐리게 그린다. 상태 셀렉트와 단추는 그대로다([[CCR-UI-001#UI-1]] 3장).
-- 쓰는 조작 넷(상태 · 지우기 · 되살리기 · 별표)은 모두 `StatusStore`로 간다. 막는 조건이 없다. 페이지에 토큰이 없고, 쓰기의 실패는 `StatusStore`가 값을 되돌리고 저장 실패(12)로 알린다([[CCR-UC-001#UC-H1]] 4b). 2026-10-06까지는 토큰이 없으면 부르지 않고 토큰 없음(11)을 띄웠다.
+- 쓰는 조작 넷(상태 · 지우기 · 되살리기 · 별표)은 모두 `StatusStore`로 간다. 토큰이 없으면 부르지 않고 토큰 없음(11)을 띄운다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
 - 읽지 못하면(`DataReadError`) 읽지 못했다는 알림과 새로 고침을 보인다. 목록 파일이 없으면(404) 빈 상태(10)다([[CCR-UC-001#UC-A2]] 1b).
-- 두 파일은 페이지 서버에서 같은 길(`readListFile` · `readStatusFile`)로 받는다. 페이지 서버는 읽을 때 원본을 받아 캐시가 없으므로, 방금 바꾼 값이 새로 고친 뒤에도 그대로 보인다. 2026-10-06까지는 raw의 CDN 캐시(5분) 때문에 토큰이 있으면 상태 파일을 Contents API의 판 읽기로 받았다([[CCR-INFRA-001]] 6.4 · [[CCR-API-001]] 1.4).
+- 상태 파일은 토큰이 있으면 Contents API의 판 읽기(`readStatusVersion`)로 받는다. raw는 CDN이 5분 캐시해, 방금 바꾼 값이 새로 고친 뒤 옛 값으로 보이기 때문이다. 판 읽기가 실패하면(토큰 만료 · 권한 · 연결) raw로 받고, 토큰 문제는 저장할 때 드러난다. 목록 파일은 늘 raw다([[CCR-INFRA-001]] 6.4 · [[CCR-API-001]] 1.4).
+
+#### SettingsDialog 설정 대화상자
+
+`components/SettingsDialog.tsx`. UI-2를 그린다([[CCR-UI-001#UI-2]]).
+
+```
+SettingsDialog({open, tokens: TokenStore, onClose}): JSX   열려 있을 때만 DialogBody를 그린다. 열 때마다 새로 붙어 칸과 알림이 빈 채 시작한다
+  상태: value · checking · problem · has
+  onSave(): Promise<void>                           20.4. readStatusVersion(value)로 검증한 뒤 tokens.set
+  onClear(): void                                   20.5. tokens.clear
+tokenProblem(status: number): string                순수 함수. 401 · 403과 그 밖의 거절 코드를 사람 말로
+```
+
+**규칙이 사는 곳**
+- 저장 전에 반드시 판 읽기로 검증한다. 200이나 404(상태 파일이 아직 없음)면 저장하고 닫는다. 401 · 403이면 저장하지 않고 이유를 칸 아래에 보인다([[CCR-UC-001#UC-H2]] 4 · 4a · [[CCR-API-001]] 2.3). 공개 저장소라 쓰기 권한은 이 검증으로 가르지 못하고 첫 저장에서 드러난다([[CCR-UC-001#UC-H2]] 4b).
+- 토큰 값은 입력 칸(password)에만 있고, 저장한 뒤 다시 보여 주지 않는다. 20.6은 있음 · 없음만이다.
+- 대화상자가 열린 동안 UI-1의 조작은 막는다. 바깥 누름과 Esc로 닫힌다.
 
 #### StatusStore 상태 저장
 
@@ -958,7 +968,7 @@ pageOfRow(index: number, size: number): number      components/Pager. 순수 함
 classDiagram
     class StatusStore {
         «control»
-        +constructor(api: ContentsApi, onChange: (file, save) => void)
+        +constructor(github: GitHubApi, tokens: TokenStore, onChange: (file, save) => void)
         +load(file: StatusFile) void
         +setStatus(id: string, title: string, value: StatusValue) void
         +hide(id: string, title: string) void
@@ -969,7 +979,7 @@ classDiagram
         -enqueue(change: Change) void
         -drain() Promise~void~
         -commit(change: Change) Promise~void~
-        -write(change: Change, message: string) Promise~string~
+        -write(token: string, change: Change, message: string) Promise~string~
         -revert(change: Change, error) void
     }
     class Status {
@@ -985,7 +995,7 @@ classDiagram
 mergeChange(file: StatusFile, change: Change, now: string): StatusFile   순수 함수. 그 대회의 값만 얹는다
 commitMessage(change: Change): string                                    status: <대회명> → <상태> · 지움 · 되살림 · 별표 · 별표 뗌. 대회명 60자
 nowIso(date?: Date): string                                              UTC 초 단위의 ISO 문자열. Change.at과 updated_at
-defaultContents: ContentsApi                                             api/contents의 두 함수. 테스트는 가짜 ContentsApi를 넣는다
+defaultGitHub: GitHubApi                                                 api/github의 두 함수. 테스트는 가짜 GitHubApi를 넣는다
 ```
 
 페이지 코드는 클래스 안에서만 쓰는 메서드를 밑줄 대신 TypeScript의 `private`로 가린다. 그림의 `-`가 그것이다.
@@ -993,130 +1003,60 @@ defaultContents: ContentsApi                                             api/con
 | 메서드 | 유스케이스 | 실패 |
 |---|---|---|
 | `load` | [[CCR-UC-001#UC-A2]] 1 | 없다 |
-| `setStatus` · `hide` · `restore` · `star` · `unstar` | [[CCR-UC-001#UC-H1]] 1 · 1b · 1c · 2 | 없다. 바꿈을 줄 세우고, 실패는 `commit`에서 드러난다 |
+| `setStatus` · `hide` · `restore` · `star` · `unstar` | [[CCR-UC-001#UC-H1]] 1 · 1b · 1c · 2 | 토큰이 없으면 부르지 않는다(화면이 막는다) |
 | `commit` | [[CCR-UC-001#UC-H1]] 3 · 4 · 5 · 4a · 4b | 409 · 422면 한 번 다시 읽고 다시 쓴다. 그래도 실패하거나 다른 오류면 `drain`이 `revert`를 부른다 |
 | `retry` | [[CCR-UI-001#UI-1]] 12.2 | 마지막으로 실패한 바꿈을 다시 줄 세운다. 바꾸기 전 값과 시각은 그때 새로 잡는다 |
 
 **규칙이 사는 곳**
 - 화면을 먼저 바꾼다. `onChange`로 얹은 파일과 저장 중을 알린 뒤 커밋한다([[CCR-UC-001#UC-H1]] 2).
 - 한 번에 요청 하나. 앞 커밋의 응답이 오기 전의 바꿈은 큐에 서고 차례로 보낸다. 같은 판으로 두 번 보내면 둘째가 409로 거절되기 때문이다([[CCR-API-001]] 1.4).
-- 커밋마다 판 읽기부터 한다. 화면이 읽어 `load`로 넘긴 파일(`readStatusFile`)은 표시용이고 쓰기의 기준이 아니다([[CCR-INFRA-001]] 6.4). 읽은 파일에 이번 바꿈만 얹어 쓴다. 다른 탭이나 브라우저가 바꾼 다른 대회의 값은 남는다.
-- 판이 어긋나면(409 · 422) 최신 판을 다시 읽고 한 번 더 쓴다. 다시 실패하면 값을 되돌리고 실패를 알린다. 그 밖의 오류(400 · 403 · 502 · 그 밖의 5xx · 연결 오류 · 시간 초과)는 되돌리고 알린다. 스스로 되풀이하지 않는다([[CCR-API-001]] 2.3).
+- 커밋마다 판 읽기부터 한다. 화면이 읽어 `load`로 넘긴 파일(판 읽기나 raw)은 표시용이고 쓰기의 기준이 아니다([[CCR-INFRA-001]] 6.4). 읽은 파일에 이번 바꿈만 얹어 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다.
+- 판이 어긋나면(409 · 422) 최신 판을 다시 읽고 한 번 더 쓴다. 다시 실패하면 값을 되돌리고 실패를 알린다. 그 밖의 오류(401 · 403 · 404 · 5xx · 연결 오류)는 되돌리고 알린다. 스스로 되풀이하지 않는다([[CCR-API-001]] 2.3).
 - 되돌리기는 바꾸기 전 값으로다. 큐에 남은 바꿈은 버리고 함께 알린다.
 - 성공한 응답의 새 판(`content.sha`)은 기억하지 않는다. 다음 커밋도 판 읽기부터 하므로 쓸 곳이 없다. 판은 로그에도 찍지 않는다.
 
 #### RepoFiles 저장소 파일 읽기 · 쓰기
 
-`api/data.ts`와 `api/contents.ts`. 페이지가 거는 요청은 이 둘뿐이고, 모두 같은 출처의 노트북 페이지 서버로 간다(4.12 · [[CCR-INFRA-001]] 8.11). 주소는 `config.ts`가 갖는다.
+`api/data.ts`와 `api/github.ts`. 페이지가 바깥에 거는 요청은 이 둘뿐이다([[CCR-INFRA-001]] 8.11).
 
 ```
 api/data.ts
-  readListFile(): Promise<ListEntry[]>              GET /data/competitions.jsonl. 404면 []. 줄마다 JSON, 읽히지 않는 줄은 건너뛴다
-  readStatusFile(): Promise<StatusFile>             GET /data/status.json. 404면 {}
+  readListFile(): Promise<ListEntry[]>              raw. 404면 []. 줄마다 JSON, 읽히지 않는 줄은 건너뛴다
+  readStatusFile(): Promise<StatusFile>             raw. 404면 {}
   parseListFile(text: string): ListEntry[]          순수 함수. 식별자가 겹치면 앞의 것
   parseStatusFile(text: string): StatusFile         순수 함수. 객체가 아니면 DataReadError. 모양이 다른 값은 빼고, starred가 없거나 불 값이 아니면 false
-api/contents.ts
-  readStatusVersion(): Promise<StatusVersion>       GET /api/contents/data/status.json. 404면 {sha: null, file: {}}
-  writeStatusFile(file: StatusFile, sha: string | null, message: string): Promise<string>   PUT /api/contents/data/status.json. 새 sha
+api/github.ts
+  readStatusVersion(token: string): Promise<StatusVersion>                 GET contents. 404면 {sha: null, file: {}}
+  writeStatusFile(token: string, file: StatusFile, sha: string | null, message: string): Promise<string>   PUT contents. 새 sha
   encodeStatusFile(file: StatusFile): string        순수 함수. 키 정렬 · 두 칸 들여쓰기 · 끝 줄바꿈 · UTF-8 Base64
   decodeContent(base64: string): string             순수 함수. 줄바꿈 뗀 뒤 디코딩
-config.ts
-  dataUrl(file: string, now?: number): string       같은 출처의 데이터 파일 주소. ?t=<현재 시각 ms>를 붙인다
 ```
 
 | 함수 | 엔드포인트 | 유스케이스 |
 |---|---|---|
-| `readListFile` | [[CCR-API-001#GET/localhost:8090/data/competitions.jsonl]] | [[CCR-UC-001#UC-A2]] 1 |
-| `readStatusFile` | [[CCR-API-001#GET/localhost:8090/data/status.json]] | [[CCR-UC-001#UC-A2]] 1 |
-| `readStatusVersion` | [[CCR-API-001#GET/localhost:8090/api/contents/data/status.json]] | [[CCR-UC-001#UC-H1]] 3 · 4a |
-| `writeStatusFile` | [[CCR-API-001#PUT/localhost:8090/api/contents/data/status.json]] | [[CCR-UC-001#UC-H1]] 4 |
+| `readListFile` · `readStatusFile` | [[CCR-API-001#GET/raw.githubusercontent.com/…/data/{file}]] | [[CCR-UC-001#UC-A2]] 1 |
+| `readStatusVersion` | [[CCR-API-001#GET/api.github.com/…/contents/data/status.json]] | [[CCR-UC-001#UC-A2]] 1 · [[CCR-UC-001#UC-H1]] 3 · 4a · [[CCR-UC-001#UC-H2]] 4 |
+| `writeStatusFile` | [[CCR-API-001#PUT/api.github.com/…/contents/data/status.json]] | [[CCR-UC-001#UC-H1]] 4 |
 
 **규칙이 사는 곳**
-- 데이터 파일 주소에는 `?t=<현재 시각 ms>`를 붙여(`dataUrl`) 브라우저 캐시를 피한다. 페이지 서버에는 CDN 캐시가 없다([[CCR-INFRA-001]] 6.4). 5xx · 연결 오류 · 시간 초과면 한 번 다시 받고, 그래도 실패하면 `DataReadError`다([[CCR-API-001]] 1.4 · 2.3).
-- 판 읽기 · 쓰기는 GitHub Contents API와 같은 모양이라 `StatusStore`의 흐름이 GitHub 때와 같다. 헤더(`Accept` · `X-GitHub-Api-Version` · `Authorization`)는 보내지 않는다. 브라우저에는 토큰이 없다([[CCR-INFRA-001]] 5.8 · [[CCR-API-001]] 1.4).
-- `writeStatusFile`은 `sha`가 `null`이면 `sha` 없이 보내 새 파일을 만든다. `author` · `committer`에는 `config.ts`의 커밋 작성자(저장소 주인의 이름과 noreply 주소)를 둘 다 적는다. 페이지 서버가 `author`(없으면 `committer`)를 커밋의 작성자와 커미터로 쓰고, 빠지면 400이다. git log에서 배치의 커밋(`ccr-batch`)과 갈린다([[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 1.4).
-- 판 읽기는 200 · 404, 쓰기는 200 · 201이 아니면 `ContentsError(status)`를 낸다. 가르는 일은 `StatusStore`가 한다.
+- raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. 이것은 브라우저 캐시를 피할 뿐 CDN 캐시(5분)는 피하지 못한다([[CCR-INFRA-001]] 6.4). `Authorization`을 보내지 않는다. 5xx · 연결 오류면 한 번 다시 받고, 그래도 실패하면 `DataReadError`다([[CCR-API-001]] 1.4 · 2.3).
+- Contents API에는 헤더 셋을 보낸다. 토큰은 `Authorization` 헤더에만 있고 주소 · 콘솔 · 오류 메시지에 싣지 않는다([[CCR-INFRA-001]] 5.8).
+- `writeStatusFile`은 `sha`가 `null`이면 `sha` 없이 보내 새 파일을 만든다. `author` · `committer`에는 `config.ts`의 커밋 작성자(저장소 주인의 이름과 noreply 주소)를 둘 다 적는다. 빼면 GitHub가 토큰 주인 계정의 기본 이메일을 넣어 개인 주소가 공개 커밋에 남는다. `committer`만 빼도 그 자리에 기본 이메일이 들어간다([[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 1.4).
+- 판 읽기는 200 · 404, 쓰기는 200 · 201이 아니면 `GitHubError(status, rateLimited)`를 낸다. 403에 `x-ratelimit-remaining: 0`이 붙어 오면 `rateLimited`가 참이다. 가르는 일은 `StatusStore`와 `SettingsDialog`가 한다.
 
-### 4.12 노트북 페이지 서버
+#### TokenStore 토큰 보관
 
-`batch/page_server.py`. 대회 목록 페이지(4.11)의 빌드 결과와 원본 main의 두 데이터 파일을 `127.0.0.1:8090`에만 내고, 상태 파일 쓰기를 받아 원본에 커밋한다([[CCR-INFRA-001#C14]] · [[CCR-INFRA-001]] 8.11). `finish.py`처럼 표준 라이브러리와 git만 쓰고 배치 패키지를 불러오지 않는다. 엔드포인트는 [[CCR-API-001]] 3.3이고, 판 읽기 · 쓰기는 GitHub Contents API와 같은 모양이다. 2026-10-06에 GitHub Pages와 페이지 토큰 대신 더했다(사용자 결정 2026-10-06 — 노트북에서 살린다 · 늘 떠 있게). 띄우기 · 다시 띄우기 · 빌드는 `scripts/page.sh`가 한다.
+`store/token.ts`. `localStorage`의 키 하나(`ccr.token`)다([[CCR-INFRA-001]] 5.8).
 
 ```
-allowed(host: str, origin: str | None, port: int, write: bool) -> bool   Host가 그 포트의 localhost · 127.0.0.1인가. 쓰기는 Origin도
-main() -> int                                        입구. 환경 CCR_REMOTE · CCR_TOKEN · PAGE_PORT(기본 8090) · PAGE_DIST · PAGE_MIRROR
+TokenStore
+  get(): string | null
+  set(token: string): void
+  clear(): void
+  has(): boolean
 ```
 
-**입구(`main`)** — `CCR_REMOTE`가 없으면 1로 끝난다. 사본(`PAGE_MIRROR`, 기본 `~/.local/share/ccr/page.git`)을 열고 원본을 한 번 받는다. 받지 못해도 띄운다. `127.0.0.1:{PAGE_PORT}`에만 열고(`_serve`, 요청마다 스레드), 정적 파일은 `PAGE_DIST`(기본 저장소의 `frontend/dist`)다. Ctrl-C면 닫고 0이다. 환경 값은 `scripts/page.sh`가 넘긴다. 원본 주소와 토큰은 `batch.env`의 것이다([[CCR-INFRA-001]] 8.11).
-
-#### Mirror 원본 사본
-
-```mermaid
-classDiagram
-    class Mirror {
-        «adapter»
-        +Path path
-        +str remote
-        +refresh(force: bool) None
-        +read(file: str) Blob
-        +write(file: str, data: bytes, sha: str, message: str, author: Person) str
-        -commit(file: str, data: bytes, message: str, author: Person) tuple
-        -push(commit: str) bool
-    }
-    class Blob {
-        +str sha
-        +bytes data
-    }
-    class Person {
-        +str name
-        +str email
-    }
-    Mirror ..> Blob : 돌려준다
-    Mirror ..> Person : 커밋 작성자
-```
-
-`Mirror(path, remote, token)`. 원본의 bare 사본이고 작업 트리가 없다. 없으면 bare로 만들고, git 배관 명령으로 읽고 쓴다. 그림은 `| None`을 뺐다. `read`는 파일이 없으면 `None`이고, `write`의 `sha`는 새 파일이면 `None`이다. 시그니처는 [[CCR-MS-001]] 2.9다.
-
-| 메서드 | 부르는 곳 | 유스케이스 | 실패 |
-|---|---|---|---|
-| `refresh` | `PageHandler.serve_get` · `write` · `main` | [[CCR-UC-001#UC-A2]] 1 · [[CCR-UC-001#UC-H1]] 3 | `RemoteError` |
-| `read` | `PageHandler.serve_get` · `write` | [[CCR-UC-001#UC-A2]] 1 · [[CCR-UC-001#UC-H1]] 3 | 없으면 `None`. 꺼내지 못하면 `RemoteError` |
-| `write` | `PageHandler.serve_put` | [[CCR-UC-001#UC-H1]] 4 · 4a · 4c | `Conflict` · `ShaRequired` · `RemoteError` |
-
-**규칙이 사는 곳**
-- 읽기 전에 원본 main을 얕게 받는다. 1초에 한 번까지(`FETCH_INTERVAL`)이고, 받기는 한 번에 하나다. 그래서 캐시가 없다. 배치가 올린 직후의 목록과 방금 쓴 상태가 곧바로 보인다([[CCR-INFRA-001]] 6.4).
-- 쓰기는 한 번에 하나다(잠금). 원본을 새로 받아 판(`sha`)을 견준다. 파일이 있는데 판이 없으면 `ShaRequired`, 판이 다르면 `Conflict`이고 아무것도 올리지 않는다. 맞으면 main 위에 그 파일만 바꾼 커밋 하나를 임시 색인으로 만들어 git 입구로 push한다. 그사이 배치가 push해 거절되면 처음부터 다시 한다. 세 번까지(`PUSH_ATTEMPTS`)이고, 끝내 못 올리면 `RemoteError`다([[CCR-API-001#PUT/localhost:8090/api/contents/data/status.json]]).
-- 커밋의 작성자 · 커미터는 받은 `author`다. 페이지는 저장소 주인의 noreply 주소를 보낸다(4.11 `RepoFiles`).
-- 토큰(`CCR_TOKEN`, 싱크독 개인 토큰)은 원본에 닿는 받기 · push 명령에만 명령 줄 설정(`http.extraheader`)으로 준다. 사본의 설정 · 로그 · 응답에 싣지 않는다. git 명령마다 60초 한도다(`GIT_TIMEOUT`)([[CCR-INFRA-001]] 5.5).
-
-#### PageHandler 요청 처리
-
-```mermaid
-classDiagram
-    class PageHandler {
-        «boundary»
-        +do_GET() None
-        +do_PUT() None
-        +serve_get() None
-        +serve_put() None
-        -guarded(write: bool) bool
-        -fresh() None
-    }
-    PageHandler --> Mirror
-```
-
-`http.server`의 `BaseHTTPRequestHandler`를 잇는다. 요청 하나에 하나다.
-
-| 메서드 | 부르는 곳 | 유스케이스 | 실패 |
-|---|---|---|---|
-| `serve_get` | `do_GET` | [[CCR-UC-001#UC-A2]] 1 · [[CCR-UC-001#UC-H1]] 3 | 403 · 404로 답한다 |
-| `serve_put` | `do_PUT` | [[CCR-UC-001#UC-H1]] 4 · 4a · 4b | 400 · 403 · 404 · 409 · 422 · 502로 답한다 |
-
-**규칙이 사는 곳**
-- `do_GET` · `do_PUT`은 `http.server`가 이름을 정한 훅이라 `serve_get` · `serve_put`을 부르기만 한다. 훅의 이름이 싱크독의 MS 항목 패턴에 맞지 않아 항목을 `serve_*`에 둔다([[CCR-MS-001]] 0장).
-- 요청마다 먼저 `allowed`로 Host를 보고, 쓰기는 Origin도 본다. 아니면 403이다. 다른 사이트가 이름을 127.0.0.1로 돌리거나(DNS rebinding) 폼으로 쓰는 것(CSRF)을 막는다([[CCR-INFRA-001]] 5.8).
-- 읽기 경로는 셋이다. `/data/competitions.jsonl` · `/data/status.json`은 원본 main의 파일 그대로, `/api/contents/data/status.json`은 `{sha, content}`다. 모두 `Cache-Control: no-store`이고 쿼리(`?t=`)는 보지 않는다. 받기(`refresh`)가 실패하면 로그만 남기고 마지막으로 받은 판을 낸다. 그 밖의 GET은 빌드 결과(`PAGE_DIST`)의 정적 파일이고 `/`는 `index.html`, 폴더 밖이거나 없는 파일은 404다.
-- 쓰기 경로는 `/api/contents/data/status.json` 하나이고 다른 경로는 404다. 본문(1MB까지)의 `message` · `content`(Base64) · `sha` · `author`(없으면 `committer`)가 없거나 모양이 틀리면 400이다. `Mirror.write`의 `Conflict` · `ShaRequired` · `RemoteError`를 409 · 422 · 502로 바꾼다. `sha` 없이 새로 만들었으면 201, 아니면 200이고, 본문은 `{"content": {"sha": 새 블롭 해시}}`다.
-- 오류 본문은 `{"message": "…"}`이고 토큰을 싣지 않는다([[CCR-API-001]] 2.3).
+**규칙** — 값은 `localStorage`에만 둔다. 쿠키 · 주소 · 콘솔에 두지 않는다. `localStorage`에 닿지 못하는 브라우저(사생활 보호 모드 등)에서는 `get`이 `null`이고 `set`은 조용히 실패한 뒤 `has`가 거짓이다. 페이지는 읽기만 되는 상태로 돈다.
 
 ## 5. 판단한 것
 
@@ -1128,7 +1068,7 @@ classDiagram
 
 **결정 4. 목록 경계는 포트 없이 `crud.py`로 둔다.** 배치 쪽 구현은 파일 하나를 읽고 추가분에 더하는 것뿐이고 바뀔 계획이 없다. 테스트는 임시 폴더의 파일로 본다. 소스와 판별 모델에만 포트를 둔 것은 구현이 여섯이거나(소스), 테스트가 모델 호출 없이 선별을 돌려야 하기(판별) 때문이다. 노션 때 있던 HTTP 층(`infra/notion.py`)은 함께 없앴다. 배치가 저장소에 HTTP로 거는 요청은 없다.
 
-**결정 5. 기록 경계가 데이터 폴더를 스스로 꺼낸다(`prepare`).** 실행기 밖의 실행(개발 PC의 작업 사본)이 원본 main(`origin/main`) 최신 판을 읽어야 하는데([[CCR-UC-001#UC-A1]] 1b7), 노트북 실행기에 단계를 더하면 실행기를 거치지 않는 그 실행에는 그 단계가 없다. 그래서 git으로 꺼내는 일을 기록 경계에 둔다. 실행기 안의 실행은 실행기가 새로 받은 main의 `data/`를 그대로 읽어 꺼내지 않는다. 2026-10-06까지는 Actions의 브랜치 실행과 개발자 PC가 이 길을 함께 탔다. 꺼내지 못하면 처리 이력 읽기 실패로 끝난다. 목록 파일도 같은 사본에 함께 꺼낸다. 목록 경계에 같은 일을 또 두면 git을 두 번 부르고, 두 경계가 서로 다른 판을 읽을 수 있다. `Pipeline`이 `RecordService.start`를 먼저 부르는 차례로 의존을 만들지 않는다(3.1).
+**결정 5. 기록 경계가 데이터 폴더를 스스로 꺼낸다(`prepare`).** 기본 브랜치가 아닌 실행이 origin/main 최신 판을 읽어야 하는데([[CCR-UC-001#UC-A1]] 1b7), 워크플로에 스텝을 더하면 로컬 실행에는 그 스텝이 없다. git으로 꺼내는 일을 기록 경계에 두면 Actions의 브랜치 실행과 개발자 PC가 같은 길을 탄다. 꺼내지 못하면 처리 이력 읽기 실패로 끝난다. 목록 파일도 같은 사본에 함께 꺼낸다. 목록 경계에 같은 일을 또 두면 git을 두 번 부르고, 두 경계가 서로 다른 판을 읽을 수 있다. `Pipeline`이 `RecordService.start`를 먼저 부르는 차례로 의존을 만들지 않는다(3.1).
 
 **결정 6. 판별 스레드의 결과는 한 흐름이 받는다.** 추가분 파일은 한 곳만 쓴다는 [[CCR-INFRA-001]] 6.2를 지키기 위해서다. 판별 스레드는 답만 돌려주고, 받는 쪽이 받은 차례대로 버림을 적는다.
 
@@ -1140,7 +1080,7 @@ classDiagram
 
 **결정 10. 상태 파일에 쓰는 길은 `StatusStore` 하나다(2026-09-29).** 상태 · 지우기 · 되살리기 · 별표가 각자 커밋하면 같은 판으로 두 요청이 나가 둘째가 409로 거절된다([[CCR-API-001]] 1.4). 한 클래스가 큐를 갖고 하나씩 보내면 화면은 먼저 바뀌고 커밋은 차례로 들어간다. 여럿을 잠깐 모아 한 커밋으로 보내는 것은 UI 명세 5장의 미결로 남겼다.
 
-**결정 11. 페이지 테스트는 브라우저 없는 순수 모듈만 vitest로 본다(2026-09-29).** 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 · Base64가 그것이다. 화면은 사용자가 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 브라우저 테스트 도구를 더하면 의존성과 테스트 시간이 늘고, 화면이 하나라 얻는 것이 적다.
+**결정 11. 페이지 테스트는 브라우저 없는 순수 모듈만 vitest로 본다(2026-09-29).** 파싱 · 정렬 · 상태 얹기 · 커밋 메시지 · Base64가 그것이다. 화면은 사용자가 요소 번호대로 눌러 확인한다(싱크독 규약 DEV-14). 브라우저 테스트 도구를 더하면 의존성과 CI 시간이 늘고, 화면이 하나라 얻는 것이 적다.
 
 **결정 12. 소스 요청은 쿠키를 남기지 않는다(2026-10-01).** Kaggle은 응답마다 익명 세션 쿠키(`ka_sessionid`)를 심고, 그 쿠키가 실린 다음 요청을 토큰이 있어도 401로 거절한다. `robots.txt`의 404 응답도 쿠키를 심으므로 첫 목록 요청부터 막힌다([[CCR-API-001]] 1.1). Kaggle 어댑터만 쿠키를 지우게 하면, 어댑터가 부르지 않는 robots.txt 요청이 심은 쿠키를 놓친다. 그래서 클라이언트를 만드는 `new_client`가 모든 도메인을 막은 쿠키 정책을 준다. 나머지 다섯 소스도 쿠키 없이 같은 날 예약 실행과 같은 건수를 받았다. 테스트의 가짜 HTTP도 같은 클라이언트에 가짜 전송만 끼운다.
 
@@ -1148,7 +1088,7 @@ classDiagram
 
 ## 6. 미결사항
 
-2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`). 2026-10-01에는 사용자 요청으로 쪽 나누기(`Pager`)를 더했다(4.11 `CompetitionList`). 같은 날 미참 상태와 별표(`skipped` · `starred` · `star` · `unstar` · 별표만 보기)도 더했다(사용자 요청, 2.1 · 2.3 · 2.4 · 4.11). 같은 날 Kaggle을 실측해 어댑터 미결을 닫았다. 쪽은 `page`로 넘기고, 소스 요청은 쿠키를 남기지 않는다(4.8 · 결정 12). Kaggle끼리는 원천 ID가 다르면 다른 대회로 본다(결정 13). 2026-10-06에는 GitHub를 빼고 노트북으로 옮겼다(사용자 결정 2026-10-06 — 노트북 cron · 노트북에서 살린다). `RunContext.in_actions`를 `in_runner`로, `api/github.ts`를 `api/contents.ts`로 바꾸고, `register_actions_masks` · `TokenStore` · `SettingsDialog` · `readStatusForView`를 지우고, 노트북 페이지 서버(4.12)와 1장의 층 표를 더했다.
+2026-09-28에 같은 대회 판정 규칙(결정 7)과 wevity의 두 미결을 닫았다. 아침 보정값은 09:02에 −1로 쟀고, 상세의 `viewok` 302는 API 명세에 적었다([[CCR-API-001#GET/www.wevity.com/?c=find&gbn=view]]). 2026-09-29에 노션 경계를 목록 경계로 바꾸고 페이지의 구조를 더했다(결정 9 · 10 · 11). 2026-09-30에 2.4와 4.11을 페이지 코드에 맞췄다. `sortByDeadline`의 쓰지 않는 인자와 `tokenProblem`의 닿지 않는 404 문구는 fix(#10)으로 코드에서 지웠다(사용자 결정, [[CCR-CODE-001]] 3장). 같은 날 페이지의 상태 커밋에 저장소 주인의 noreply 주소를 작성자로 적기로 했다(사용자 결정, 4.11 `RepoFiles`). raw 캐시를 잰 뒤에는 토큰이 있으면 상태 파일을 판 읽기로 받게 했다(사용자 결정, 4.11 `CompetitionList`). 2026-10-01에는 사용자 요청으로 쪽 나누기(`Pager`)를 더했다(4.11 `CompetitionList`). 같은 날 미참 상태와 별표(`skipped` · `starred` · `star` · `unstar` · 별표만 보기)도 더했다(사용자 요청, 2.1 · 2.3 · 2.4 · 4.11). 같은 날 Kaggle을 실측해 어댑터 미결을 닫았다. 쪽은 `page`로 넘기고, 소스 요청은 쿠키를 남기지 않는다(4.8 · 결정 12). Kaggle끼리는 원천 ID가 다르면 다른 대회로 본다(결정 13).
 
 - [ ] 처리 이력이 커질 때 아는 대회 가르기의 시간. 기록 5,000줄 · 후보 600건으로 흉내 내 2.2초였다. 연 수천 줄이면 몇 해는 넉넉하다([[CCR-DOM-001]] 6장의 덜어내기 미결과 함께 본다)
 - [ ] 페이지의 `ListEntry` 타입을 ERD에서 만들어 낼지. 지금은 파이썬과 TypeScript에 손으로 같게 적는다(결정 9). 필드가 늘면 그때 본다

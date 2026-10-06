@@ -52,30 +52,58 @@ export function EmptyState({ el }: { el: string }) {
   )
 }
 
-/** 저장 실패의 짧은 이유(CCR-API-001 2.3). 페이지 서버의 응답 코드로 가른다 */
+/** 토큰 없음(11). 쓰는 조작을 눌렀는데 토큰이 없을 때. 화면 값은 바꾸지 않는다 */
+export function NoTokenNotice({
+  el,
+  elOpen,
+  onOpenSettings,
+}: {
+  el: string
+  elOpen: string
+  onOpenSettings: () => void
+}) {
+  return (
+    <div className="cc-alert warn" data-el={el} role="alert">
+      <Icon kind="warn" />
+      <span>저장하려면 GitHub 토큰이 필요합니다. 읽기는 그대로 됩니다.</span>
+      <span className="sp" />
+      <button className="cc-btn primary" type="button" data-el={elOpen} onClick={onOpenSettings}>
+        설정 열기
+      </button>
+    </div>
+  )
+}
+
+/** 저장 실패의 짧은 이유(CCR-API-001 2.3) */
 export function saveFailureText(error: SaveError): string {
-  const { status } = error
+  const { status, rateLimited } = error
   if (status === null)
-    return '저장하지 못했습니다. 페이지 서버에 닿지 못했거나 응답이 없었습니다. 값을 이전으로 되돌렸습니다.'
+    return '저장하지 못했습니다. 연결이 끊겼거나 응답이 없었습니다. 값을 이전으로 되돌렸습니다.'
+  if (rateLimited)
+    return `저장하지 못했습니다 (${status}). GitHub 요청 한도에 닿았습니다. 잠시 뒤 다시 시도해 주세요. 값을 이전으로 되돌렸습니다.`
+  if (status === 401 || status === 403)
+    return `저장하지 못했습니다 (${status}). 토큰이 만료됐거나 권한이 없습니다. 값을 이전으로 되돌렸습니다.`
+  if (status === 404)
+    return `저장하지 못했습니다 (${status}). 토큰이 이 저장소에 닿지 않습니다. 값을 이전으로 되돌렸습니다.`
   if (status === 409 || status === 422)
-    return `저장하지 못했습니다 (${status}). 다른 탭이나 브라우저가 먼저 썼거나 판이 맞지 않습니다. 값을 이전으로 되돌렸습니다.`
-  if (status === 502)
-    return `저장하지 못했습니다 (${status}). 페이지 서버·싱크독에 닿지 못했습니다. 값을 이전으로 되돌렸습니다.`
-  if (status === 403)
-    return `저장하지 못했습니다 (${status}). 이 주소로는 저장할 수 없습니다. http://localhost:8090 으로 열어 주세요. 값을 이전으로 되돌렸습니다.`
-  return `저장하지 못했습니다 (${status}). 페이지 서버 쪽 오류입니다. 값을 이전으로 되돌렸습니다.`
+    return `저장하지 못했습니다 (${status}). 다른 기기가 먼저 썼거나 판이 맞지 않습니다. 값을 이전으로 되돌렸습니다.`
+  return `저장하지 못했습니다 (${status}). GitHub 쪽 오류입니다. 값을 이전으로 되돌렸습니다.`
 }
 
 /** 저장 실패(12). 값을 되돌린 뒤 뜬다 */
 export function SaveFailedNotice({
   el,
+  elOpen,
   elRetry,
   error,
+  onOpenSettings,
   onRetry,
 }: {
   el: string
+  elOpen: string
   elRetry: string
   error: SaveError
+  onOpenSettings: () => void
   onRetry: () => void
 }) {
   return (
@@ -83,6 +111,9 @@ export function SaveFailedNotice({
       <Icon kind="cross" />
       <span>{saveFailureText(error)}</span>
       <span className="sp" />
+      <button className="cc-btn" type="button" data-el={elOpen} onClick={onOpenSettings}>
+        설정 열기
+      </button>
       <button className="cc-btn primary" type="button" data-el={elRetry} onClick={onRetry}>
         다시 시도
       </button>

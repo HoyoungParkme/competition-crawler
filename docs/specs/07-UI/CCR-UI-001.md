@@ -2,7 +2,7 @@
 doc_id: CCR-UI-001
 type: UI
 title: 화면 설계·와이어프레임 — 대회 목록 페이지
-status: draft
+status: approved
 upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
 ---
 
@@ -10,11 +10,11 @@ upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
 
 ## 0. 이 문서가 다루는 것
 
-사람이 마주하는 화면은 대회 목록 페이지 하나다([[CCR-PRD-001#R10]] · [[CCR-INFRA-001#C14]]). 노트북 페이지 서버가 노트북 안(`http://localhost:8090`)에서 낸다. 배치가 원본에 올린 목록 파일을 보여 주고, 사람이 상태를 바꾸거나 대회를 지우면 페이지 서버를 거쳐 상태 파일에 커밋한다. 화면은 목록(UI-1) 하나다. 그 위에 뜨던 설정 대화상자(UI-2)는 2026-10-06에 페이지 토큰을 없애면서 폐기했다. 검색·자유 정렬·통계·손으로 추가하기는 두지 않는다([[CCR-PRD-001]] 2장).
+사람이 마주하는 화면은 대회 목록 페이지 하나다([[CCR-PRD-001#R10]] · [[CCR-INFRA-001#C14]]). 배치가 저장소에 올린 목록 파일을 보여 주고, 사람이 상태를 바꾸거나 대회를 지우면 상태 파일에 커밋한다. 화면은 둘이다. 목록(UI-1)과, 그 위에 뜨는 설정 대화상자(UI-2)다. 검색·자유 정렬·통계·손으로 추가하기는 두지 않는다([[CCR-PRD-001]] 2장).
 
-와이어프레임은 클로드의 Artifact Design 캔버스에서 1280×800 아트보드로 그렸고, 그 html을 아래 배치 블록에 그대로 옮겼다. 캔버스: https://claude.ai/artifact/UyUFTESag4eF8X3ZyYCjRr (비공개). 쪽 나누기 줄(13)은 2026-10-01에 사용자 요청으로 배치 블록에 바로 더했고 캔버스에는 없다. 2026-10-06에는 설정(6) · 토큰 없음(11 · 11.1) · 저장 실패의 「설정 열기」(12.1)를 배치 블록에서 바로 뺐고 캔버스에는 남아 있다. 뺀 번호는 다시 쓰지 않는다. 배치 블록의 `data-el` 번호가 요소 표의 `#`이다. 표 안의 대회 이름과 날짜는 예시이고, 실측이 없는 값은 `[대회명]`처럼 자리만 잡았다.
+와이어프레임은 클로드의 Artifact Design 캔버스에서 1280×800 아트보드로 그렸고, 그 html을 아래 배치 블록에 그대로 옮겼다. 캔버스: https://claude.ai/artifact/UyUFTESag4eF8X3ZyYCjRr (비공개). 쪽 나누기 줄(13)은 2026-10-01에 사용자 요청으로 배치 블록에 바로 더했고 캔버스에는 없다. 배치 블록의 `data-el` 번호가 요소 표의 `#`이다. 표 안의 대회 이름과 날짜는 예시이고, 실측이 없는 값은 `[대회명]`처럼 자리만 잡았다.
 
-정하지 않는 것: 데이터 파일의 필드 이름(ERD), 페이지 서버 API의 모양(API 명세), 컴포넌트와 파일 이름(클래스 명세).
+정하지 않는 것: 데이터 파일의 필드 이름(ERD), 저장소 API의 모양(API 명세), 컴포넌트와 파일 이름(클래스 명세).
 
 ## 1. 유스케이스 대응
 
@@ -22,14 +22,14 @@ upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
 |---|---|
 | [[CCR-UC-001#UC-A2]] 새로 들어온 대회를 훑고 참가할 것을 고른다 | UI-1 |
 | [[CCR-UC-001#UC-H1]] 페이지에서 상태를 바꾸거나 대회를 지운다 | UI-1 |
-| [[CCR-UC-001#UC-H2]] 페이지에 토큰을 넣거나 지운다 — 2026-10-06 폐기 | UI-2(폐기) |
+| [[CCR-UC-001#UC-H2]] 페이지에 토큰을 넣거나 지운다 | UI-2 |
 
 ## 2. 화면 목록
 
 | 화면 | 경로 | 한 줄 목적 |
 |---|---|---|
-| UI-1 대회 목록 | `/` (`http://localhost:8090`) | 마감일 순 목록을 보고, 상태를 바꾸고, 관심 없는 대회를 지운다 |
-| UI-2 설정 대화상자 | — | 2026-10-06 폐기. 저장소에 쓸 GitHub 토큰을 넣거나 지우던 대화상자다 |
+| UI-1 대회 목록 | `/` (`https://hoyoungparkme.github.io/competition-crawler/`) | 마감일 순 목록을 보고, 상태를 바꾸고, 관심 없는 대회를 지운다 |
+| UI-2 설정 대화상자 | `/`(UI-1 위에 뜸) | 저장소에 쓸 GitHub 토큰을 넣거나 지운다 |
 
 ## UI-1 대회 목록
 
@@ -37,9 +37,9 @@ upstream: [CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001]
 |---|---|
 | 경로 | `/` |
 | 주 유스케이스 | [[CCR-UC-001#UC-A2]] · [[CCR-UC-001#UC-H1]] |
-| 진입 / 이탈 | 주소를 열면 바로 이 화면 / 없음. 링크(7.2)는 새 창으로 열린다 |
-| 읽는 것 | 원본 `main`의 `data/competitions.jsonl`·`data/status.json`. 노트북 페이지 서버가 꺼내 준다([[CCR-INFRA-001]] 6.4) |
-| 쓰는 것 | `data/status.json`만. 상태 셀렉트(7.4)·지우기(7.5)·별표(7.7)·되살리기(9.1)가 페이지 서버를 거쳐 커밋한다([[CCR-INFRA-001]] 8.11) |
+| 진입 / 이탈 | 주소를 열면 바로 이 화면 / 없음. 링크(7.2)는 새 창으로 열리고, 설정(6)은 이 화면 위에 UI-2를 띄운다 |
+| 읽는 것 | 기본 브랜치의 `data/competitions.jsonl`·`data/status.json`([[CCR-INFRA-001]] 6.4) |
+| 쓰는 것 | `data/status.json`만. 상태 셀렉트(7.4)·지우기(7.5)·별표(7.7)·되살리기(9.1)가 커밋한다([[CCR-INFRA-001]] 8.11) |
 
 ### 배치
 ```html
@@ -108,6 +108,7 @@ a{color:#1f5f6b}a:hover{color:#143f47}
     <div style="flex-grow: 1;"></div>
     <span class="cc-toast" data-el="8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>저장 중…</span>
     <button class="cc-btn ghost" data-el="2" type="button">새로 고침</button>
+    <button class="cc-btn" data-el="6" type="button" aria-label="설정">설정</button>
   </header>
 
   <div class="cc-bar" data-el="3">
@@ -182,13 +183,24 @@ a{color:#1f5f6b}a:hover{color:#143f47}
   <div style="flex-grow: 1;"></div>
   <div class="cc-foot" data-el="1.3">
     <span>목록은 배치가 매일 08:50에 올리고, 상태는 이 페이지가 저장소에 저장한다</span>
-    <span>싱크독 CCR · main</span>
+    <span>HoyoungParkme/competition-crawler · main</span>
   </div>
 </div>
 
 <div class="var">빈 상태 (10) — 배치가 아직 한 번도 돌지 않았거나 목록 파일이 없을 때</div>
 <div class="cc-board">
 <div class="cc-empty" data-el="10">아직 대회가 없습니다.<br>배치가 매일 08:50에 저장소에 목록을 올립니다. 첫 실행 뒤 다시 열어 주세요.</div>
+</div>
+
+<div class="var">토큰 없음 (11) — 상태를 바꾸려 눌렀는데 토큰이 없을 때</div>
+<div class="cc-board">
+<div class="cc-alert warn" data-el="11">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+      <span>저장하려면 GitHub 토큰이 필요합니다. 읽기는 그대로 됩니다.</span>
+      <span class="sp"></span>
+      <button class="cc-btn primary" type="button" data-el="11.1">설정 열기</button>
+    </div>
+    <div class="cc-row"><span style="width: 90px; color: #7a766b;">10-14</span><a href="#" style="flex-grow: 1;">[대회명]</a><select class="cc-state" disabled><option>시작 전</option></select></div>
 </div>
 
 <div class="var">저장 중 (8) — 셀렉트를 바꾼 직후. 화면은 먼저 바뀌고 커밋이 끝나면 표시가 사라진다</div>
@@ -200,12 +212,13 @@ a{color:#1f5f6b}a:hover{color:#143f47}
     <div class="cc-row"><span style="width: 90px; color: #7a766b;">10-06</span><a href="#" style="flex-grow: 1;">2026 국립공원 위성 모니터링 AI 챌린지</a><select class="cc-state" style="background: #e3ecdd; border-color: #8fae82;"><option>진행 중</option></select></div>
 </div>
 
-<div class="var">저장 실패 (12) — 판이 어긋나 한 번 다시 썼는데도 안 됐거나, 페이지 서버·싱크독에 닿지 못했을 때. 값은 바꾸기 전으로 되돌린다</div>
+<div class="var">저장 실패 (12) — 판이 어긋나 한 번 다시 썼는데도 안 됐거나, 토큰이 거절됐을 때. 값은 바꾸기 전으로 되돌린다</div>
 <div class="cc-board">
 <div class="cc-alert err" data-el="12">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6m0-6 6 6"></path></svg>
-      <span>저장하지 못했습니다 (502). 페이지 서버·싱크독에 닿지 못했습니다. 값을 이전으로 되돌렸습니다.</span>
+      <span>저장하지 못했습니다 (401). 토큰이 만료됐거나 권한이 없습니다. 값을 이전으로 되돌렸습니다.</span>
       <span class="sp"></span>
+      <button class="cc-btn" type="button" data-el="12.1">설정 열기</button>
       <button class="cc-btn primary" type="button" data-el="12.2">다시 시도</button>
     </div>
     <div class="cc-row"><span style="width: 90px; color: #7a766b;">10-06</span><a href="#" style="flex-grow: 1;">2026 국립공원 위성 모니터링 AI 챌린지</a><select class="cc-state"><option>시작 전</option></select></div>
@@ -223,8 +236,9 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 | # | 이름 | 종류 | 보여주는 것 | 누르면 |
 |---|---|---|---|---|
 | 1 | 머리 | 영역 | 제목(1.1)과 요약 줄(1.2: 정렬 기준 · 마지막 갱신 시각 · 열린 대회 수), 바닥 줄(1.3: 데이터가 어디서 오는지) | — |
-| 2 | 새로 고침 | 버튼 | — | 두 파일을 페이지 서버에서 다시 읽는다. 페이지 서버가 읽을 때마다 원본을 받아 캐시가 없으므로, 배치가 막 올린 목록과 방금 바꾼 상태가 곧바로 보인다([[CCR-INFRA-001]] 6.4) |
+| 2 | 새로 고침 | 버튼 | — | 두 파일을 다시 읽는다. 목록 파일은 raw로, 상태 파일은 토큰이 있으면 Contents API로 읽는다. raw는 CDN이 5분까지 캐시해 배치가 막 올린 목록은 조금 늦게 보일 수 있다([[CCR-INFRA-001]] 6.4) |
 | 3 | 거르기 줄 | 영역 | 출처(3.1)·상태(3.2) 셀렉트와 「마감 지남·지운 대회 보기」(3.3) · 「별표만 보기」(3.4) | 바꾸면 표(7)가 곧바로 걸러지고 첫 쪽으로 간다. 저장소에는 쓰지 않고 브라우저에만 기억한다 |
+| 6 | 설정 | 버튼 | 토큰이 없으면 「설정」 옆에 점을 찍어 알린다 | UI-2를 띄운다 |
 | 7 | 목록 표 | 표 | 접수마감일 오름차순. 마감일 없는 대회는 맨 뒤. 열: 마감(7.1) · 별표(7.7)와 대회명(7.2), 판별 근거(7.6) · 출처(7.3) · 수집일 · 상태(7.4) · 지우기(7.5). 한 번에 13.2의 개수만큼 보인다. `미참`인 줄은 흐리게 그린다 | — |
 | 7.1 | 마감 | 글 | `MM-DD`와 남은 날(D-n). 7일 안이면 강조 | — |
 | 7.2 | 대회명 | 링크 | 목록 항목의 대회명. Kaggle은 영문 그대로 | 상세 링크를 새 창으로 연다 |
@@ -237,7 +251,8 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 | 9 | 접힌 구역 | 영역 | 마감 지난 대회 수와 지운 대회 수. 3.3을 켜거나 여기를 누르면 접힌 줄이 열린 줄 뒤에 이어진다. 지운 대회에는 되살리기(9.1) | 펼치기·접기. 여기를 눌러 펼치면 접힌 줄이 시작하는 쪽으로 넘어간다 |
 | 9.1 | 되살리기 | 버튼 | 지운 대회의 줄에만 | 감춤을 풀어 원래 자리로 돌려보낸다. 상태 파일에 커밋한다 |
 | 10 | 빈 상태 | 글 | 목록 파일이 없거나 비었을 때 표 대신 | — |
-| 12 | 저장 실패 | 알림 | 커밋이 끝내 실패했을 때. 값을 바꾸기 전으로 되돌린 뒤 뜬다. 응답 코드와 짧은 이유 — 판이 어긋났다, 또는 페이지 서버·싱크독에 닿지 못했다 | 「다시 시도」(12.2)는 최신 판을 다시 읽고 같은 바꿈을 다시 보낸다 |
+| 11 | 토큰 없음 | 알림 | 7.4·7.5·7.7·9.1을 눌렀는데 토큰이 없을 때. 화면은 바꾸지 않는다 | 「설정 열기」(11.1)가 UI-2를 띄운다 |
+| 12 | 저장 실패 | 알림 | 커밋이 끝내 실패했을 때. 값을 바꾸기 전으로 되돌린 뒤 뜬다. 응답 코드와 짧은 이유 | 「다시 시도」(12.2)는 최신 판을 다시 읽고 같은 바꿈을 다시 보낸다. 「설정 열기」(12.1)는 UI-2 |
 | 13 | 쪽 나누기 줄 | 영역 | 표(7)와 접힌 구역(9) 사이. 보이는 범위(13.1) · 한 번에 볼 개수(13.2) · 이전(13.3) · 쪽 번호(13.4) · 다음(13.5). 보일 줄이 하나도 없으면 두지 않는다 | — |
 | 13.1 | 보이는 범위 | 글 | `40개 중 1–20`. 펼쳐 있으면 접힌 줄까지 센다 | — |
 | 13.2 | 한 번에 볼 개수 | 셀렉트 | `10개` · `20개` · `50개` · `100개`. 기본은 20개다. 고른 값은 브라우저에 기억한다 | 바꾸면 보던 첫 줄이 든 쪽으로 간다 |
@@ -255,10 +270,10 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 - 별표만 보기(3.4)는 거르기라 브라우저에만 기억한다. 별표 자체(7.7)는 상태처럼 상태 파일에 커밋한다.
 - 상태를 바꾸거나 지우면 **화면을 먼저 바꾸고** 커밋한다. 판이 어긋나면(409·422) 최신 상태 파일을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다. 그래도 실패하면 값을 되돌리고 12를 띄운다([[CCR-UC-001#UC-H1]] 4a · 4b).
 - 커밋 메시지는 페이지가 만든다. `status: <대회명> → <상태>` 꼴이고, 별표는 `status: <대회명> 별표` · `status: <대회명> 별표 뗌`이다([[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 1.4).
-- 페이지는 토큰을 갖지 않는다. 읽기도 쓰기도 같은 출처의 페이지 서버에 보내고, 원본에 쓰는 자격은 페이지 서버가 갖는다([[CCR-INFRA-001]] 8.11). 2026-10-06까지 있던 설정(6)과 토큰 없음(11)은 없앴다.
+- 토큰이 없으면 읽기는 그대로 되고, 쓰는 조작을 하면 11이 뜬다. 화면 값은 바꾸지 않는다([[CCR-UC-001#UC-A2]] 4b).
 - 목록에 없는 식별자의 상태 값은 무시한다([[CCR-INFRA-001]] 6.2).
 - 페이지는 외부 스크립트를 싣지 않는다. 폰트는 Google Fonts `css2` 링크 하나다([[CCR-INFRA-001]] 5.6).
-- 페이지는 노트북에서 `http://localhost:8090`(또는 `http://127.0.0.1:8090`)으로 연다. 페이지 서버는 다른 이름으로 온 요청을 403으로 거절하고, 쓰기는 Origin도 본다([[CCR-API-001]] 1.4). 폰이나 다른 PC에서는 열리지 않는다.
+- 요청 주소·콘솔 로그에 토큰을 싣지 않는다([[CCR-INFRA-001]] 5.8).
 
 ### 시나리오
 **S-1 아침에 훑고 상태를 바꾼다** — [[CCR-UC-001#UC-A2]] · [[CCR-SCN-001#S8]]
@@ -267,9 +282,12 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 3. 상태(7.4)를 `진행 중`으로 고른다. 화면이 바뀌고 저장 중(8)이 떴다 사라진다.
 4. 관심 없는 대회는 지우기(7.5)를 누른다. 줄이 사라지고 접힌 구역(9)의 수가 하나 는다.
 
-**S-2 토큰 없이 처음 연다** — 2026-10-06 폐기. 페이지 토큰이 없어져, 처음 열어도 넣을 것 없이 곧바로 상태를 바꾼다(S-1).
+**S-2 토큰 없이 처음 연다** — [[CCR-UC-001#UC-A2]] 4b · [[CCR-UC-001#UC-H2]]
+1. 표는 보인다. 상태(7.4)를 바꾸려 하면 토큰 없음(11)이 뜨고 값은 그대로다.
+2. 「설정 열기」로 UI-2를 띄워 토큰을 넣는다.
+3. 돌아와 다시 고르면 저장된다.
 
-**S-3 다른 탭이나 브라우저가 먼저 썼다** — [[CCR-UC-001#UC-H1]] 4a
+**S-3 다른 기기가 먼저 썼다** — [[CCR-UC-001#UC-H1]] 4a
 1. 상태를 바꾼다. 커밋이 판 어긋남으로 거절된다.
 2. 페이지가 최신 상태 파일을 다시 읽고 이번 바꿈만 얹어 다시 쓴다. 사용자는 저장 중(8)이 조금 길어진 것만 본다.
 3. 그래도 실패하면 값을 되돌리고 저장 실패(12)를 띄운다.
@@ -286,7 +304,93 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 
 ## UI-2 설정 대화상자
 
-2026-10-06 폐기 — 페이지 토큰을 없앴다. 브라우저는 토큰을 갖지 않고 노트북 페이지 서버가 원본에 쓰므로, 토큰을 넣고 지우던 이 대화상자도 없다([[CCR-UC-001#UC-H2]] 폐기 · [[CCR-INFRA-001]] 8.11). 요소 20 ~ 20.7과 시나리오 S-4 · S-5도 함께 없어졌고, 그 번호는 다시 쓰지 않는다.
+| 항목 | 내용 |
+|---|---|
+| 경로 | `/` (UI-1 위에 뜬다. 주소는 바뀌지 않는다) |
+| 주 유스케이스 | [[CCR-UC-001#UC-H2]] |
+| 진입 / 이탈 | UI-1의 설정(6)·토큰 없음(11.1)·저장 실패(12.1)에서 / 닫기(20.7)·저장(20.4) 뒤 UI-1로 |
+| 쓰는 것 | 브라우저 `localStorage`의 토큰. 저장소에는 아무것도 쓰지 않는다 |
+
+### 배치
+```html
+<style>
+body{margin:0;font-family:"IBM Plex Sans KR",system-ui,sans-serif;background:#f4f2ec;color:#1d1c19}
+a{color:#1f5f6b}a:hover{color:#143f47}
+.cc-btn{font:inherit;font-size:14px;padding:9px 14px;border-radius:8px;border:1px solid #c9c4b7;background:#fff;color:#1d1c19;cursor:pointer;min-height:40px}
+.cc-btn.primary{background:#1f5f6b;border-color:#1f5f6b;color:#fff}
+.cc-btn.ghost{border-color:transparent;background:transparent;color:#5c594f}
+.cc-btn.danger{color:#8f2f16;border-color:#d9b1a3}
+.cc-dim{position:absolute;inset:0;background:rgba(29,28,25,.42);display:flex;align-items:center;justify-content:center}
+.cc-dlg{width:560px;background:#fff;border:1px solid #c9c4b7;border-radius:14px;padding:24px 28px;box-shadow:0 20px 50px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:16px}
+.cc-dlg h2{margin:0;font-size:18px;font-weight:600}
+.cc-dlg p{margin:0;font-size:14px;line-height:1.55;color:#3f3d36}
+.cc-dlg ol{margin:0;padding-left:20px;font-size:13px;line-height:1.6;color:#3f3d36}
+.cc-in{font:inherit;font-size:14px;padding:10px 12px;border-radius:8px;border:1px solid #c9c4b7;width:100%;box-sizing:border-box;min-height:44px}
+.cc-lbl{font-size:13px;color:#5c594f;display:flex;flex-direction:column;gap:6px}
+.cc-ok{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:6px 12px;border-radius:8px;background:#e3ecdd;border:1px solid #8fae82;color:#25451b}
+.cc-ghosttbl{opacity:.55;filter:saturate(.6)}
+.cc-ghosttbl div{height:44px;border-bottom:1px solid #eceae3;background:#fff}
+</style>
+<div data-el="0" style="width: 100%; max-width: 1280px; min-height: 800px; box-sizing: border-box; position: relative; background: #f4f2ec; overflow: hidden;">
+  <div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-size: 22px; font-weight: 600;">대회 목록</div>
+    <div class="cc-ghosttbl" style="border: 1px solid #d9d5cb; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;">
+      <div style="background: #faf9f5;"></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
+  </div>
+  <div class="cc-dim">
+    <div class="cc-dlg" role="dialog" aria-labelledby="cc-dlg-title" data-el="20">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h2 id="cc-dlg-title" data-el="20.1">설정 — 저장소 토큰</h2>
+        <div style="flex-grow: 1;"></div>
+        <span class="cc-ok" data-el="20.6"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4 10-10"></path></svg>토큰 있음 · 쓰기 가능</span>
+      </div>
+      <p>상태를 바꾸거나 대회를 지우면 이 페이지가 저장소의 <code>data/status.json</code>에 커밋합니다. 그러려면 GitHub 토큰이 필요하고, 토큰은 이 브라우저에만 저장됩니다.</p>
+      <ol data-el="20.2">
+        <li>GitHub → Settings → Developer settings → <strong>Fine-grained tokens</strong> → Generate new token</li>
+        <li>Repository access: <strong>Only select repositories</strong> → HoyoungParkme/competition-crawler</li>
+        <li>Permissions → Repository → <strong>Contents: Read and write</strong>. 그 밖은 두지 않음. 만료 기한을 둠</li>
+      </ol>
+      <label class="cc-lbl">토큰
+        <input class="cc-in" type="password" placeholder="github_pat_…" data-el="20.3" autocomplete="off">
+      </label>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="cc-btn danger" type="button" data-el="20.5">이 브라우저에서 토큰 지우기</button>
+        <div style="flex-grow: 1;"></div>
+        <button class="cc-btn ghost" type="button" data-el="20.7">닫기</button>
+        <button class="cc-btn primary" type="button" data-el="20.4">확인하고 저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### 요소
+| # | 이름 | 종류 | 보여주는 것 | 누르면 |
+|---|---|---|---|---|
+| 20 | 대화상자 | 대화상자 | UI-1을 흐리게 덮는다. 바깥을 누르거나 Esc로 닫힌다 | — |
+| 20.1 | 제목 | 글 | 「설정 — 저장소 토큰」 | — |
+| 20.2 | 만드는 법 | 글 | GitHub에서 fine-grained 토큰을 만드는 세 단계. 저장소는 이 저장소 하나, 권한은 Contents 읽기·쓰기만, 만료 기한을 둘 것([[CCR-INFRA-001]] 5.8) | — |
+| 20.3 | 토큰 입력 | 입력(password) | 붙여 넣는 칸. 값은 가려 보인다. 자동 완성 끔 | — |
+| 20.4 | 확인하고 저장 | 버튼 | — | 토큰으로 상태 파일을 한 번 읽어 본다. 읽히면 `localStorage`에 두고 닫는다. 상태 파일이 아직 없어 404가 와도 읽힌 것으로 본다. 안 읽히면 이유(401·403)를 칸 아래에 보이고 저장하지 않는다([[CCR-UC-001#UC-H2]] 4a) |
+| 20.5 | 토큰 지우기 | 버튼 | 토큰이 있을 때만 | `localStorage`에서 지운다. 페이지는 읽기만 되는 상태로 돌아간다. GitHub 쪽 폐기는 사용자가 한다 |
+| 20.6 | 토큰 상태 | 표시 | 「토큰 있음 · 쓰기 가능」 또는 「토큰 없음 · 읽기만」. 값은 보여 주지 않는다 | — |
+| 20.7 | 닫기 | 버튼 | — | 바꾼 것 없이 닫는다 |
+
+### 규칙
+- 토큰 값은 한 번 넣은 뒤 다시 보여 주지 않는다. 있음·없음만 보인다([[CCR-UC-001#UC-H2]] 1).
+- 저장 전에 반드시 상태 파일을 읽어 검증한다. 검증에 실패한 값은 저장하지 않는다. 저장소가 공개라 쓰기 권한까지는 가르지 못하고, 모자라면 첫 저장에서 저장 실패(12)로 드러난다([[CCR-UC-001#UC-H2]] 4b).
+- 토큰은 `localStorage`에만 둔다. 쿠키·주소·콘솔에 두지 않는다([[CCR-INFRA-001]] 5.8).
+- 대화상자를 여는 동안 UI-1의 조작은 막는다.
+
+### 시나리오
+**S-4 토큰을 넣는다** — [[CCR-UC-001#UC-H2]]
+1. 20.2대로 GitHub에서 토큰을 만든다.
+2. 20.3에 붙여 넣고 20.4를 누른다. 검증이 지나면 20.6이 「토큰 있음」으로 바뀌고 닫힌다.
+
+**S-5 샌 것 같아 바꾼다** — [[CCR-UC-001#UC-H2]] 5a
+1. GitHub에서 옛 토큰을 폐기하고 새로 만든다.
+2. UI-2를 열어 20.3에 새 값을 넣고 20.4. 옛 값은 덮인다.
 
 ## 3. 공통 틀
 
@@ -298,7 +402,7 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 </style>
 ```
 
-색은 셋이다. 바탕 `#f4f2ec`, 글 `#1d1c19`, 강조 `#1f5f6b`(링크·주 버튼). 보조 글의 회색은 `#45423a`(요약 줄 · 거르기 · 표 머리)와 `#57534a`(판별 근거 · 바닥 줄) 둘이다. 흰 표 위에서 7.6:1, 바탕 위에서 6.8:1 이상의 대비다. 상태 셀렉트는 값마다 색이 다르다. 배경(테두리 · 글)은 `시작 전` 흰색(`#c9c4b7` · `#1d1c19`), `진행 중` `#e3ecdd`(`#8fae82` · `#25451b`), `제출` `#e6eef0`(`#9fbcc3` · `#163e46`), `완료` `#ebe5f3`(`#b4a5cc` · `#3d2f5a`), `미참` `#ecebe4`(`#c9c4b7` · `#57534a`)이고, 글의 대비는 모두 6.4:1 이상이다. 알림은 경고 `#fff7e6`, 실패 `#fbe9e4`, 안내 `#e6eef0`. 글꼴은 IBM Plex Sans KR 하나다. 크기는 본문 16px, 보조 글(판별 근거 · 요약 줄 · 거르기 · 상태 셀렉트 · 표 안의 지우기와 되살리기 · 쪽 나누기의 범위와 「한 번에」 · 저장 중 · 알림) 14px, 표 머리 · 출처 칩 · 바닥 줄 13px, 날짜(마감 7.1 · 수집일)와 쪽 번호(13.4) 15px, 제목 22px이다. 대회명 링크(7.2)는 `#174a54`로 굵게(600) 쓰고 밑줄은 가리킬 때만 긋는다. 누르는 것의 높이는 머리 · 거르기 · 쪽 나누기에서 40px, 표 안(상태 셀렉트 · 지우기 · 되살리기 · 별표)에서 36px이다. 표의 칸 너비는 마감 132 · 출처 136 · 수집일 84 · 상태 116 · 마지막 칸 108px이고, 남는 너비는 대회명이 갖는다. 칸 여백은 위아래 12px · 좌우 16px이다. 표의 줄은 가리키면 `#faf9f5`로 칠하고, 키보드로 옮긴 포커스는 강조색 2px 테두리로 보인다. 별표는 빈 별 `#57534a`, 채운 별 `#a8650f`(흰 바탕 대비 4.6:1)이고, `미참`인 줄의 흐린 칸은 불투명도 0.55다. 값은 `frontend/src/styles.css`에 토큰으로 옮기고 컴포넌트에 직접 쓰지 않는다([[CCR-INFRA-001]] 4장).
+색은 셋이다. 바탕 `#f4f2ec`, 글 `#1d1c19`, 강조 `#1f5f6b`(링크·주 버튼). 보조 글의 회색은 `#45423a`(요약 줄 · 거르기 · 표 머리)와 `#57534a`(판별 근거 · 바닥 줄) 둘이다. 흰 표 위에서 7.6:1, 바탕 위에서 6.8:1 이상의 대비다. 상태 셀렉트는 값마다 색이 다르다. 배경(테두리 · 글)은 `시작 전` 흰색(`#c9c4b7` · `#1d1c19`), `진행 중` `#e3ecdd`(`#8fae82` · `#25451b`), `제출` `#e6eef0`(`#9fbcc3` · `#163e46`), `완료` `#ebe5f3`(`#b4a5cc` · `#3d2f5a`), `미참` `#ecebe4`(`#c9c4b7` · `#57534a`)이고, 글의 대비는 모두 6.4:1 이상이다. 알림은 경고 `#fff7e6`, 실패 `#fbe9e4`, 안내 `#e6eef0`. 글꼴은 IBM Plex Sans KR 하나다. 크기는 본문 16px, 보조 글(판별 근거 · 요약 줄 · 거르기 · 상태 셀렉트 · 표 안의 지우기와 되살리기 · 쪽 나누기의 범위와 「한 번에」 · 저장 중 · 알림 · 대화상자의 안내) 14px, 표 머리 · 출처 칩 · 바닥 줄 13px, 날짜(마감 7.1 · 수집일)와 쪽 번호(13.4) 15px, 제목 22px이다. 대회명 링크(7.2)는 `#174a54`로 굵게(600) 쓰고 밑줄은 가리킬 때만 긋는다. 누르는 것의 높이는 머리 · 거르기 · 쪽 나누기 · 대화상자에서 40px, 표 안(상태 셀렉트 · 지우기 · 되살리기 · 별표)에서 36px이다. 표의 칸 너비는 마감 132 · 출처 136 · 수집일 84 · 상태 116 · 마지막 칸 108px이고, 남는 너비는 대회명이 갖는다. 칸 여백은 위아래 12px · 좌우 16px이다. 표의 줄은 가리키면 `#faf9f5`로 칠하고, 키보드로 옮긴 포커스는 강조색 2px 테두리로 보인다. 별표는 빈 별 `#57534a`, 채운 별 `#a8650f`(흰 바탕 대비 4.6:1)이고, `미참`인 줄의 흐린 칸은 불투명도 0.55다. 값은 `frontend/src/styles.css`에 토큰으로 옮기고 컴포넌트에 직접 쓰지 않는다([[CCR-INFRA-001]] 4장).
 
 글자 크기와 회색은 2026-10-01에 키우고 진하게 했다. 글이 잘 보이지 않는다는 사용자 의견을 따른 것이다. 처음 값(본문 14px · 작은 글 12px · 회색 `#7a766b`)에서 판별 근거는 흰 표 위에서 4.5:1, 바닥 줄은 바탕 위에서 4.05:1이었다. 위 배치 블록의 와이어프레임은 처음 값으로 그렸고, 크기와 색은 이 절이 우선한다.
 
@@ -308,12 +412,12 @@ a{color:#1f5f6b}a:hover{color:#143f47}
 
 ```mermaid
 flowchart LR
-    UI1[UI-1 대회 목록] -->|대회명 7.2| EXT([상세 페이지 · 새 창])
+    UI1[UI-1 대회 목록] -->|설정 6 · 토큰 없음 11.1 · 저장 실패 12.1| UI2[UI-2 설정 대화상자]
+    UI2 -->|저장 20.4 · 닫기 20.7| UI1
+    UI1 -->|대회명 7.2| EXT([상세 페이지 · 새 창])
 ```
-
-2026-10-06까지는 설정(6) · 토큰 없음(11.1) · 저장 실패(12.1)에서 UI-2로 가는 길이 있었다.
 
 ## 5. 미결사항
 
-- [x] 표를 폰 폭에서 어떻게 접을지. 사용자는 PC로 아침에 여는 것을 전제로 그렸다([[CCR-RFQ-001]] 4장). 폰에서 열면 가로 스크롤로 둔다 — 2026-10-06에 뜻이 사라졌다. 페이지 서버가 127.0.0.1에만 열어 폰에서는 열리지 않는다([[CCR-INFRA-001]] 8.11)
+- [ ] 표를 폰 폭에서 어떻게 접을지. 사용자는 PC로 아침에 여는 것을 전제로 그렸다([[CCR-RFQ-001]] 4장). 폰에서 열면 가로 스크롤로 둔다
 - [ ] 여럿을 빨리 바꿀 때 커밋을 하나씩 보낼지, 잠깐 모아 한 커밋으로 보낼지. 지금은 하나씩이다

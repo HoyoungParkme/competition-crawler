@@ -14,66 +14,59 @@ from collector.core.settings import (
     read_dotenv,
 )
 
-RUNNER = {
-    "BATCH_RUNNER": "laptop",
+ACTIONS = {
+    "GITHUB_ACTIONS": "true",
     "RUN_STARTED_AT": "2026-09-26T23:50:12Z",
-    "RUN_ID": "local-20260926T235012",
-    "RUN_KIND": "schedule",
-    "WORK_DIR": "/tmp/ccr-run",
+    "RUN_ID": "123-1",
+    "GITHUB_EVENT_NAME": "schedule",
+    "GITHUB_REF": "refs/heads/main",
+    "RUNNER_TEMP": "/tmp/runner",
 }
 
 
-def test_scheduled_runner_run_writes() -> None:
-    ctx = RunContext.from_env({**RUNNER, "DRY_RUN": "false"})
+def test_scheduled_run_on_main_writes() -> None:
+    ctx = RunContext.from_env({**ACTIONS, "DRY_RUN": "false"})
     assert ctx.write is True
-    assert ctx.in_runner is True
     assert ctx.base_date == date(2026, 9, 27)
     assert ctx.kind == "schedule"
-    assert ctx.run_id == "local-20260926T235012"
-    assert ctx.state_dir == REPO_ROOT / "data"  # 실행기가 새로 받은 main
+    assert ctx.run_id == "123-1"
+    assert ctx.state_dir == REPO_ROOT / "data"
     assert ctx.state_from_main is False
-    assert ctx.append_dir == Path("/tmp/ccr-run/append")
+    assert ctx.append_dir == Path("/tmp/runner/append")
 
 
 @pytest.mark.parametrize("value", ["", "True", "1", "yes"])
-def test_broken_dry_run_value_in_runner_does_nothing(value: str) -> None:
+def test_broken_dry_run_value_in_actions_does_nothing(value: str) -> None:
     with pytest.raises(RunModeError):
-        RunContext.from_env({**RUNNER, "DRY_RUN": value})
+        RunContext.from_env({**ACTIONS, "DRY_RUN": value})
 
 
-def test_outside_runner_never_writes_and_reads_main_state() -> None:
+def test_outside_actions_never_writes_and_reads_main_state() -> None:
     ctx = RunContext.from_env({"DRY_RUN": "false"}, now=datetime(2026, 9, 27, 0, 0, tzinfo=UTC))
     assert ctx.write is False
-    assert ctx.in_runner is False
     assert ctx.state_from_main is True
     assert ctx.run_id.startswith("local-")
 
 
-@pytest.mark.parametrize("name", ["GITHUB_ACTIONS", "CI"])
-def test_old_actions_marker_does_not_write(name: str) -> None:
-    ctx = RunContext.from_env({name: "true", "DRY_RUN": "false", "RUN_KIND": "schedule"})
+def test_branch_run_reads_main_state() -> None:
+    ctx = RunContext.from_env({**ACTIONS, "DRY_RUN": "true", "GITHUB_REF": "refs/heads/feat/x"})
     assert ctx.write is False
     assert ctx.state_from_main is True
 
 
-def test_runner_preview_reads_fresh_main_and_does_not_write() -> None:
-    ctx = RunContext.from_env({**RUNNER, "DRY_RUN": "true"})
-    assert ctx.write is False
-    assert ctx.state_dir == REPO_ROOT / "data"
-
-
 def test_ignore_discards_only_when_not_writing() -> None:
-    writing = RunContext.from_env({**RUNNER, "DRY_RUN": "false", "IGNORE_DISCARDS": "true"})
+    writing = RunContext.from_env({**ACTIONS, "DRY_RUN": "false", "IGNORE_DISCARDS": "true"})
     assert writing.ignore_discards is False
     assert writing.ignore_discards_requested is True
-    preview = RunContext.from_env({**RUNNER, "DRY_RUN": "true", "IGNORE_DISCARDS": "true"})
+    preview = RunContext.from_env({**ACTIONS, "DRY_RUN": "true", "IGNORE_DISCARDS": "true"})
     assert preview.ignore_discards is True
 
 
 def test_manual_kind() -> None:
-    ctx = RunContext.from_env({**RUNNER, "DRY_RUN": "true", "RUN_KIND": "manual"})
+    ctx = RunContext.from_env(
+        {**ACTIONS, "DRY_RUN": "true", "GITHUB_EVENT_NAME": "workflow_dispatch"}
+    )
     assert ctx.kind == "manual"
-    assert RunContext.from_env({**RUNNER, "DRY_RUN": "true", "RUN_KIND": ""}).kind == "manual"
 
 
 def test_empty_secrets_count_as_missing() -> None:

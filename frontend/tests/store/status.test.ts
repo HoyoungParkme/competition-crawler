@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ContentsError, type StatusVersion } from '../../src/api/contents'
+import { GitHubError, type StatusVersion } from '../../src/api/github'
 import type { StatusFile } from '../../src/domain/types'
 import {
   commitMessage,
@@ -7,9 +7,10 @@ import {
   nowIso,
   StatusStore,
   type Change,
-  type ContentsApi,
+  type GitHubApi,
   type SaveState,
 } from '../../src/store/status'
+import { TokenStore } from '../../src/store/token'
 
 const NOW = '2026-09-30T01:00:00Z'
 
@@ -95,24 +96,37 @@ describe('nowIso', () => {
   })
 })
 
-/** 판(sha)을 흉내 내는 가짜 페이지 서버. 같은 sha로 두 번 쓰면 409 */
-class FakeContents implements ContentsApi {
+class MemoryTokens extends TokenStore {
+  private value: string | null = 'token'
+  override get() {
+    return this.value
+  }
+  override set(token: string) {
+    this.value = token
+  }
+  override clear() {
+    this.value = null
+  }
+}
+
+/** 판(sha)을 흉내 내는 가짜 GitHub. 같은 sha로 두 번 쓰면 409 */
+class FakeGitHub implements GitHubApi {
   file: StatusFile = {}
   sha: string | null = null
   writes: string[] = []
-  failNext: ContentsError | null = null
+  failNext: GitHubError | null = null
   reads = 0
   async readStatusVersion(): Promise<StatusVersion> {
     this.reads += 1
     return { sha: this.sha, file: { ...this.file } }
   }
-  async writeStatusFile(file: StatusFile, sha: string | null, message: string) {
+  async writeStatusFile(_token: string, file: StatusFile, sha: string | null, message: string) {
     if (this.failNext) {
       const error = this.failNext
       this.failNext = null
       throw error
     }
-    if (sha !== this.sha) throw new ContentsError(409)
+    if (sha !== this.sha) throw new GitHubError(409)
     this.file = file
     this.sha = `sha-${this.writes.length + 1}`
     this.writes.push(message)
@@ -124,10 +138,10 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 describe('StatusStore', () => {
   it('changes the screen first, then commits one request at a time', async () => {
-    const server = new FakeContents()
+    const github = new FakeGitHub()
     const states: SaveState[] = []
     const files: StatusFile[] = []
-    const store = new StatusStore(server, (file, state) => {
+    const store = new StatusStore(github, new MemoryTokens(), (file, state) => {
       files.push(file)
       states.push(state)
     })
@@ -138,33 +152,33 @@ describe('StatusStore', () => {
     expect(states[0]).toEqual({ saving: true, error: null })
     await flush()
     await flush()
-    expect(server.writes).toEqual(['status: 대회 1 → 진행 중', 'status: 대회 2 지움'])
-    expect(server.file['DACON:2']!.hidden).toBe(true)
+    expect(github.writes).toEqual(['status: 대회 1 → 진행 중', 'status: 대회 2 지움'])
+    expect(github.file['DACON:2']!.hidden).toBe(true)
     expect(states.at(-1)).toEqual({ saving: false, error: null })
   })
 
   it('re-reads the version and writes once more when the sha is stale', async () => {
-    const server = new FakeContents()
-    server.sha = 'other-device'
-    server.file = { 'DACON:9': { status: 'done', hidden: false, starred: false, updated_at: 'x' } }
-    server.failNext = new ContentsError(409)
+    const github = new FakeGitHub()
+    github.sha = 'other-device'
+    github.file = { 'DACON:9': { status: 'done', hidden: false, starred: false, updated_at: 'x' } }
+    github.failNext = new GitHubError(409)
     const states: SaveState[] = []
-    const store = new StatusStore(server, (_file, state) => states.push(state))
+    const store = new StatusStore(github, new MemoryTokens(), (_file, state) => states.push(state))
     store.load({})
     store.setStatus('DACON:1', '대회 1', 'submitted')
     await flush()
     await flush()
-    expect(server.reads).toBe(2)
-    expect(server.writes).toEqual(['status: 대회 1 → 제출'])
-    expect(server.file['DACON:9']!.status).toBe('done') // 다른 기기의 값은 남는다
+    expect(github.reads).toBe(2)
+    expect(github.writes).toEqual(['status: 대회 1 → 제출'])
+    expect(github.file['DACON:9']!.status).toBe('done') // 다른 기기의 값은 남는다
     expect(states.at(-1)!.error).toBeNull()
   })
 
   it('reverts to the previous value and drops the queue when the commit fails', async () => {
-    const server = new FakeContents()
-    server.failNext = new ContentsError(502)
+    const github = new FakeGitHub()
+    github.failNext = new GitHubError(401)
     let last: { file: StatusFile; state: SaveState } | null = null
-    const store = new StatusStore(server, (file, state) => {
+    const store = new StatusStore(github, new MemoryTokens(), (file, state) => {
       last = { file, state }
     })
     store.load({
@@ -183,27 +197,27 @@ describe('StatusStore', () => {
     })
     expect(file['DACON:2']).toBeUndefined()
     expect(state.saving).toBe(false)
-    expect(state.error!.status).toBe(502)
+    expect(state.error!.status).toBe(401)
     expect(state.error!.change.kind).toBe('status')
-    expect(server.writes).toEqual([])
+    expect(github.writes).toEqual([])
 
     store.retry()
     await flush()
     await flush()
-    expect(server.writes).toEqual(['status: 대회 1 → 완료'])
+    expect(github.writes).toEqual(['status: 대회 1 → 완료'])
     expect(last!.state).toEqual({ saving: false, error: null })
   })
 
   it('gives up after a second version mismatch', async () => {
-    const server = new FakeContents()
-    server.sha = 'a'
-    const original = server.writeStatusFile.bind(server)
-    server.writeStatusFile = async (...args) => {
-      server.sha = `moved-${server.reads}` // 읽을 때마다 판이 또 바뀐다
+    const github = new FakeGitHub()
+    github.sha = 'a'
+    const original = github.writeStatusFile.bind(github)
+    github.writeStatusFile = async (...args) => {
+      github.sha = `moved-${github.reads}` // 읽을 때마다 판이 또 바뀐다
       return original(...args)
     }
     let last: SaveState | null = null
-    const store = new StatusStore(server, (_file, state) => {
+    const store = new StatusStore(github, new MemoryTokens(), (_file, state) => {
       last = state
     })
     store.load({})
@@ -211,6 +225,6 @@ describe('StatusStore', () => {
     await flush()
     await flush()
     expect(last!.error!.status).toBe(409)
-    expect(server.reads).toBe(2)
+    expect(github.reads).toBe(2)
   })
 })

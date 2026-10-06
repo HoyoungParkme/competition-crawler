@@ -1,6 +1,6 @@
 """마무리 단계. 이번 실행의 추가분을 기본 브랜치 최신 판 위에 다시 얹어 한 커밋으로 올린다.
 
-CCR-UC-001 UC-A1 9 · *a2 · CCR-INFRA-001 8.2. 노트북의 git과 파이썬 표준 라이브러리만 쓰고,
+CCR-UC-001 UC-A1 9 · *a2 · CCR-INFRA-001 8.2. 러너에 있는 git과 파이썬 표준 라이브러리만 쓰고,
 배치 패키지를 불러오지 않는다. 세 파일(목록 · 처리 이력 · 실행 요약)의 형식은 ERD(CCR-DOM-003)를
 따라 여기서 따로 안다. 페이지가 쓰는 `data/status.json`은 읽지도 스테이징하지도 않는다.
 토큰은 받기와 push 명령에만 명령 줄 설정으로 주고, 명령을 그대로 찍지 않는다.
@@ -28,8 +28,8 @@ RUN_REQUIRED = ("run_id", "base_date", "kind", "result")
 ATTEMPTS = 5
 GIT_TIMEOUT = 60
 KST = timezone(timedelta(hours=9))
-BOT_NAME = "ccr-batch"
-BOT_EMAIL = "ccr-batch@localhost"
+BOT_NAME = "github-actions[bot]"
+BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com"
 
 
 class GitError(Exception):
@@ -242,7 +242,7 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
     """CCR-MS-001#finish.finish"""
     run_id = env["RUN_ID"]
     base_date = base_date_of(env.get("RUN_STARTED_AT"))
-    kind = "schedule" if env.get("RUN_KIND") == "schedule" else "manual"
+    kind = "schedule" if env.get("GITHUB_EVENT_NAME") == "schedule" else "manual"
     additions = read_additions(Path(env["APPEND_DIR"]), run_id)
     failed = additions.rejected > 0
     aborted = additions.run is None
@@ -304,11 +304,13 @@ def finish(env: Mapping[str, str], git: Git) -> Outcome:
 def main() -> int:
     """CCR-MS-001#finish.main"""
     env = os.environ
-    for name in ("RUN_ID", "APPEND_DIR", "WORK_DIR", "REMOTE_URL"):
+    for name in ("RUN_ID", "APPEND_DIR", "RUNNER_TEMP", "GITHUB_REPOSITORY"):
         if not env.get(name):
             print(f"환경 변수 {name}이 없다")
             return 1
-    git = Git(Path(env["WORK_DIR"]) / "finish-main", env["REMOTE_URL"], env.get("PUSH_TOKEN"))
+    server = env.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
+    remote = f"{server}/{env['GITHUB_REPOSITORY']}.git"
+    git = Git(Path(env["RUNNER_TEMP"]) / "finish-main", remote, env.get("GITHUB_TOKEN"))
     outcome = finish(env, git)
     print(outcome.note)
     return outcome.code

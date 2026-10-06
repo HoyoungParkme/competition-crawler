@@ -2,7 +2,7 @@
 doc_id: CCR-SEQ-001
 type: SEQ
 title: 시퀀스 — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-UC-001, CCR-DOM-002, CCR-DOM-003, CCR-API-001, CCR-INFRA-001, CCR-UI-001]
 ---
 
@@ -12,14 +12,14 @@ upstream: [CCR-UC-001, CCR-DOM-002, CCR-DOM-003, CCR-API-001, CCR-INFRA-001, CCR
 
 유스케이스([[CCR-UC-001]])의 흐름을 클래스 명세([[CCR-DOM-002]])의 객체 사이 메시지로 옮긴다. 한 실행이 시간순으로 무엇을 부르는지, 실패하면 어디서 갈라지는지를 본다. 함수 안의 처리는 [[CCR-MS-001]]이 맡는다.
 
-배치의 시퀀스(SEQ-1 ~ SEQ-10)는 노트북의 crontab이 부르는 노트북 실행기(`scripts/daily.sh`)나 관리자의 손 실행(`scripts/daily.sh --manual`)에서 시작한다. 대회 목록 페이지의 시퀀스(SEQ-11)는 참가자가 노트북의 브라우저에서 시작한다. 토큰을 넣던 SEQ-12는 2026-10-06에 폐기했다. 2026-09-29에 노션을 페이지로 바꾸면서 노션 생명선을 지우고 목록 서비스와 페이지의 생명선을 더했다. 2026-10-06에 GitHub를 빼면서 스케줄러(GitHub Actions) · 워크플로 · GitHub · 토큰 보관 생명선을 crontab · 노트북 실행기 · 페이지 서버로 바꾸고, 기본 브랜치 생명선을 원본으로 고쳤다.
+배치의 시퀀스(SEQ-1 ~ SEQ-10)는 스케줄러(GitHub Actions)나 관리자의 수동 실행에서 시작한다. 대회 목록 페이지의 시퀀스(SEQ-11 · SEQ-12)는 참가자가 브라우저에서 시작한다. 2026-09-29에 노션을 페이지로 바꾸면서 노션 생명선을 지우고 목록 서비스와 페이지의 생명선을 더했다.
 
 ### 0.1 생명선
 
 | 생명선 | 약어 | 실체 | 종류 | 정의한 곳 |
 |---|---|---|---|---|
-| 스케줄러 | CR | 노트북의 crontab(`50 8-23 * * *`)과 관리자의 손 실행(`--manual`) | 외부 | [[CCR-INFRA-001]] 8.1 |
-| 노트북 실행기 | DS | `scripts/daily.sh`의 단계 | 실행 환경 | [[CCR-INFRA-001]] 8.1 |
+| 스케줄러 | GH | GitHub Actions. 예약 · 수동 실행과 신호 | 외부 | [[CCR-INFRA-001]] 8.1 |
+| 워크플로 | WF | `.github/workflows/daily.yml`의 스텝 | 실행 환경 | [[CCR-INFRA-001]] 8.1 |
 | 입구 | M | `collector/__main__.py` | Boundary | [[CCR-DOM-002]] 4.7 |
 | 실행의 흐름 | P | `Pipeline` | Control | [[CCR-DOM-002#Pipeline]] |
 | 수집 | CS | `CollectService` | Control | [[CCR-DOM-002#CollectService]] |
@@ -31,26 +31,25 @@ upstream: [CCR-UC-001, CCR-DOM-002, CCR-DOM-003, CCR-API-001, CCR-INFRA-001, CCR
 | OpenAI | AI | Responses API | 외부 | [[CCR-API-001#POST/api.openai.com/v1/responses]] |
 | 목록 | LS | `ListService` → `ListCrud` | Control | [[CCR-DOM-002#ListService]] |
 | 기록 | RS | `RecordService` → `RecordCrud` | Control | [[CCR-DOM-002#RecordService]] |
-| 데이터 파일 | FS | `data/competitions.jsonl` · `data/processed.jsonl` · `data/runs.jsonl`과 추가분 `$WORK_DIR/append/` | 파일 | [[CCR-DOM-003]] |
+| 데이터 파일 | FS | `data/competitions.jsonl` · `data/processed.jsonl` · `data/runs.jsonl`과 추가분 `$RUNNER_TEMP/append/` | 파일 | [[CCR-DOM-003]] |
 | 마무리 단계 | F | `batch/finish.py` | Control | [[CCR-DOM-002]] 4.10 |
-| 원본 | G | 싱크독 서버 저장소의 `main`. git 입구(`http://localhost:8000/git/CCR.git`)로 받고 올린다 | 외부 | [[CCR-INFRA-001]] 8.2 |
-| 관리자 | AD | 손 실행을 돌리고 끊는 사람 | 액터 | [[CCR-UC-001]] 1장 |
+| 기본 브랜치 | G | 원격 저장소의 `main` | 외부 | [[CCR-INFRA-001]] 8.2 |
 | 참가자 | U | 브라우저 앞의 사람 | 액터 | [[CCR-UC-001]] 1장 |
-| 화면 | UI | `CompetitionList` | Boundary | [[CCR-DOM-002#CompetitionList]] |
+| 화면 | UI | `CompetitionList` · `SettingsDialog` | Boundary | [[CCR-DOM-002#CompetitionList]] · [[CCR-DOM-002#SettingsDialog]] |
 | 상태 저장 | ST | `StatusStore` | Control | [[CCR-DOM-002#StatusStore]] |
-| 저장소 파일 | RF | `api/data.ts` · `api/contents.ts` | Boundary | [[CCR-DOM-002#RepoFiles]] |
-| 페이지 서버 | PS | `batch/page_server.py`(`PageHandler` · `Mirror`). `http://localhost:8090` | Boundary | [[CCR-INFRA-001]] 8.11 · [[CCR-API-001]] 3.3 |
+| 저장소 파일 | RF | `api/data.ts` · `api/github.ts` | Boundary | [[CCR-DOM-002#RepoFiles]] |
+| 토큰 보관 | TK | `TokenStore`(localStorage) | store | [[CCR-DOM-002#TokenStore]] |
+| GitHub | GHB | `raw.githubusercontent.com` · Contents API | 외부 | [[CCR-API-001]] 3.3 |
 
 ## SEQ-1 하루치를 돌린다
 
-[[CCR-UC-001#UC-A1]] 기본 흐름 1 ~ 10. 노트북 실행기의 단계([[CCR-INFRA-001]] 8.1)와 배치 안의 흐름을 한 그림에 둔다. 각 단계의 안은 SEQ-2 ~ SEQ-7이다.
+[[CCR-UC-001#UC-A1]] 기본 흐름 1 ~ 10. 워크플로의 일곱 스텝([[CCR-INFRA-001]] 8.1의 다섯 차례. 코드 받기에 정의 확인이, 환경에 의존성 설치가 붙는다)과 배치 안의 흐름을 한 그림에 둔다. 각 단계의 안은 SEQ-2 ~ SEQ-7이다.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant CR as 스케줄러
-    participant DS as 노트북 실행기
-    participant G as 원본
+    participant GH as 스케줄러
+    participant WF as 워크플로
     participant M as 입구
     participant P as Pipeline
     participant CS as CollectService
@@ -58,17 +57,11 @@ sequenceDiagram
     participant LS as ListService
     participant RS as RecordService
     participant F as finish.py
-    CR->>DS: 08:50 ~ 23:50 매시 50분(또는 손 실행 --manual)
-    DS->>DS: 줄 서기(flock, 15분까지) · batch.env 읽기
-    DS->>DS: RUN_STARTED_AT · RUN_ID · WORK_DIR
-    DS->>G: main을 WORK_DIR에 얕게 받기(토큰은 명령 줄에만)
-    DS->>DS: 받은 main의 실행기로 넘긴다
-    opt 예약 실행인데 오늘 schedule 줄이 runs.jsonl에 있다
-        DS-->>CR: 건너뛰고 끝(cron.log에 한 줄)
-    end
-    DS->>DS: uv sync --frozen --no-dev
-    DS->>M: timeout 8분 · python -m collector(비밀값은 이 단계에만)
-    M->>M: 로그(비밀값 가림) · 신호 처리기
+    GH->>WF: 08:50 KST 예약(또는 수동)
+    WF->>WF: 시작 시각 · 실행 식별자 · 추가분 폴더를 잡 환경에
+    WF->>WF: main 최신 커밋 받기 · .github/ 바뀜 확인 · uv sync
+    WF->>M: exec python -m collector (시크릿은 이 스텝에만)
+    M->>M: 가릴 값 알리기 · 로그 · 신호 처리기
     M->>P: run()
     P->>RS: start() — 데이터 폴더 꺼내기 · 추가분 비우기
     P->>CS: collect_all(기준일)
@@ -83,25 +76,17 @@ sequenceDiagram
     P->>RS: append(남김) × 묶음
     P->>RS: zero_count_warnings · write_run(줄)
     P-->>M: RunLine
-    M-->>DS: 종료 코드(성공 0 · 실패 1)
-    DS->>F: 마무리(미리보기가 아니면 늘. 3분까지 · 토큰은 이 단계에만)
-    F->>G: 세 파일을 한 커밋으로 git 입구에 push(SEQ-7)
-    F-->>DS: 올렸으면 0
-    opt 배치나 마무리가 0이 아니다
-        DS->>DS: 윈도 알림(notify.sh) — run_id · 로그 경로
-    end
+    M-->>WF: 종료 코드(성공 0 · 실패 1)
+    WF->>F: 마무리(always · main · 쓰는 실행)
+    F-->>WF: 올렸으면 0
 ```
 
 **읽을 때 볼 것**
-- 기준일은 실행기가 줄 서기를 마친 뒤 정한 `RUN_STARTED_AT`에서 배치와 마무리 단계가 각자 구한다. 배치가 어디서 멈추든 같은 날짜다([[CCR-INFRA-001#C13]]).
-- 예약 실행은 하루 한 번이다. 노트북이 08:50에 꺼져 있거나 잠들어 있었으면 켜진 뒤 첫 매시 50분에 돈다. 그날(KST) `runs.jsonl`에 `kind=schedule` 줄이 이미 있으면 건너뛴다. 실패한 실행도 줄을 남기므로 다시 돌지 않는다([[CCR-INFRA-001#C2]]).
-- 줄을 못 남긴 예약 실행(마무리 push 실패 · 싱크독 꺼짐 · 실행기가 죽음)은 그날 `schedule` 줄이 없어 다음 매시 50분에 다시 돈다. 23:50까지 되풀이하고 실패할 때마다 알림이 뜬다. 고장이 낫는 대로 그날 안에 저절로 메워진다.
-- 늘 받은 main의 실행기가 나머지를 돈다. cron이 부른 작업 사본의 실행기는 main을 받아 넘기기만 한다. 작업 사본에서 고치는 중인 실행기가 운영에 섞이지 않는다.
-- 파일 쓰기(두 `append` · `write_run`)는 추가분 폴더에만 한다. 커밋은 마무리 단계가 세 파일을 한 번에 한다([[CCR-UC-001#UC-A1]] 9). 배치는 원본에 아무것도 보내지 않는다.
-- 마무리 단계는 배치 단계가 실패하거나 끊겨도 돈다. 미리보기에서는 돌지 않는다(SEQ-8). 실행기는 늘 main을 새로 받아 돌므로 쓰는 실행은 기본 브랜치의 것뿐이다([[CCR-INFRA-001#C12]]).
-- 배치에 반드시 있어야 하는 비밀값은 없다. OpenAI 키와 Kaggle 토큰이 배치 단계의 환경 변수로 들어갈 뿐이다([[CCR-UC-001#UC-A1]] 1d1). 싱크독 토큰은 main을 받는 명령과 마무리 단계에만 간다.
+- 기준일은 1단계가 잡 환경에 남긴 `RUN_STARTED_AT`에서 배치와 마무리 단계가 각자 구한다. 배치가 어디서 멈추든 같은 날짜다([[CCR-INFRA-001#C13]]).
+- 파일 쓰기(두 `append` · `write_run`)는 추가분 폴더에만 한다. 커밋은 마무리 단계가 세 파일을 한 번에 한다([[CCR-UC-001#UC-A1]] 9). 배치는 GitHub에 HTTP 요청을 보내지 않는다.
+- 마무리 단계는 배치 스텝이 실패하거나 끊겨도 돈다(`if: always()`). 목록에 쓰지 않는 실행과 기본 브랜치가 아닌 실행에서는 돌지 않는다.
+- 반드시 있어야 하는 시크릿은 없다. OpenAI 키와 Kaggle 토큰이 배치 스텝의 환경 변수로 들어갈 뿐이다([[CCR-UC-001#UC-A1]] 1d1).
 - 배치가 스스로 실패로 판단해 끝나면(종료 코드 1) 줄이 남고 실패 사유가 줄에 있다. 예상하지 못한 오류로 멈춰도 종료 코드는 1이지만 줄이 없어, 마무리 단계가 중단 줄을 쓴다(SEQ-10).
-- 배치나 마무리 단계가 0이 아닌 코드로 끝나면 실행기가 윈도 알림(「CCR 일배치 실패」)을 띄운다. 성공과 건너뜀은 조용하다. 실행의 출력은 `~/.local/state/ccr/logs/{run_id}.log`에 남는다.
 
 ## SEQ-2 소스 하나를 수집한다
 
@@ -189,7 +174,7 @@ sequenceDiagram
 ```
 
 **읽을 때 볼 것**
-- 목록 파일을 먼저 읽고 처리 이력의 문제를 본다. 어느 쪽이든 실패면 판별도 적재도 하지 않고 SEQ-6으로 간다([[CCR-UC-001#UC-A1]] 5a). 데이터 폴더는 SEQ-1의 `start()`가 이미 꺼내 두었다(실행기 밖이면 origin/main의 세 파일).
+- 목록 파일을 먼저 읽고 처리 이력의 문제를 본다. 어느 쪽이든 실패면 판별도 적재도 하지 않고 SEQ-6으로 간다([[CCR-UC-001#UC-A1]] 5a). 데이터 폴더는 SEQ-1의 `start()`가 이미 꺼내 두었다(기본 브랜치 밖이면 origin/main의 세 파일).
 - 목록 항목은 참가자가 페이지에서 지워도 남아 있어 지운 대회도 아는 대회다. 판정 1단계는 출처 · 원천 ID로 보고, 링크는 예비다([[CCR-DOM-001#ListEntry]]).
 - 묶기는 합친 묶음 안의 모든 짝이 같다고 나올 때만 합친다. 다르다고 나온 짝은 물론, 판단하지 않은 짝(유사도 0.90 미만)이 하나라도 있으면 합치지 않는다([[CCR-DOM-002]] 5장 결정 7).
 - 아는 대회는 1단계로 같은 구성원이 하나라도 있거나, 구성원 하나 이상과 같고 어느 구성원과도 다르지 않은 것이다. 묶을 때와 달리 모든 구성원과 같을 필요는 없다. 이름만으로 같았으면(연도 · 날짜를 맞대 보지 못함) 빼기만 하고 적지 않는다.
@@ -309,7 +294,7 @@ sequenceDiagram
 ```
 
 **읽을 때 볼 것**
-- 경고 셋(소스 0건 · 판별 미룸 · 요약 파일 손상)은 어느 것도 결과를 바꾸지 않는다([[CCR-UC-001#UC-S7]] 3). 그날 조치할 고장(오늘 마감을 넣지 못함)은 커밋 실패로만 일어나고 실행 실패의 윈도 알림으로 드러난다([[CCR-UC-001#UC-A1]] 9a5).
+- 경고 셋(소스 0건 · 판별 미룸 · 요약 파일 손상)은 어느 것도 결과를 바꾸지 않는다([[CCR-UC-001#UC-S7]] 3). 그날 조치할 고장(오늘 마감을 넣지 못함)은 커밋 실패로만 일어나고 Actions 실패로 드러난다([[CCR-UC-001#UC-A1]] 9a5).
 - 줄에는 정해진 값만 들어간다. 원문 실패 사유와 판별 근거는 로그에만 간다([[CCR-DOM-003#runs]]).
 - `keep_count`는 SEQ-7이 채운다.
 
@@ -320,16 +305,16 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant DS as 노트북 실행기
+    participant WF as 워크플로
     participant F as finish.py
     participant FS as 추가분
-    participant G as 원본 main
-    DS->>F: python3 batch/finish.py(3분까지 · REMOTE_URL · PUSH_TOKEN은 이 단계에만)
+    participant G as main
+    WF->>F: python3 batch/finish.py (토큰은 이 스텝에만)
     F->>FS: 추가분 세 파일 읽기 · 형식 확인
     loop 다섯 번까지
-        F->>G: WORK_DIR/finish-main에 얕게 받기(되풀이면 fetch · reset)
+        F->>G: 얕게 받기(되풀이면 fetch · reset)
         alt runs.jsonl에 이 실행의 줄이 있다
-            F-->>DS: 앞선 올리기가 들어갔다. 끝
+            F-->>WF: 앞선 올리기가 들어갔다. 끝
         end
         F->>F: 목록 추가분을 끝에 붙이기(이미 있는 식별자는 건너뜀)
         F->>F: 처리 이력 추가분을 끝에 붙이기
@@ -339,46 +324,42 @@ sequenceDiagram
         else 없다(배치가 멈춤)
             F->>F: 중단 줄 붙이기 · 실패로 끝내기로 표시
         end
-        F->>G: 세 경로만 커밋(ccr-batch) · git 입구로 push
+        F->>G: 세 경로만 커밋(github-actions[bot]) · push
         alt push 성공
-            F-->>DS: 끝(표시에 따라 0 · 1)
-        else 거절(되감기) · 끊김
+            F-->>WF: 끝(표시에 따라 0 · 1)
+        else 거절 · 끊김
             F->>F: 처음부터 다시
         end
     end
-    F-->>DS: 끝내 실패(1)
+    F-->>WF: 끝내 실패(1)
 ```
 
 **읽을 때 볼 것**
-- 텍스트 병합이나 rebase에 맡기지 않고 최신 판 위에 다시 얹는다. 그사이 관리자가 버림 줄을 지운 커밋이 남는다. 페이지 서버가 그사이 올린 상태 파일 커밋도 받은 `main`에 이미 들어 있어 부딪히지 않는다. `data/status.json`은 읽지도 스테이징하지도 않는다([[CCR-INFRA-001]] 8.2).
+- 텍스트 병합이나 rebase에 맡기지 않고 최신 판 위에 다시 얹는다. 그사이 관리자가 버림 줄을 지운 커밋이 남는다. 페이지가 그사이 올린 상태 파일 커밋도 받은 `main`에 이미 들어 있어 부딪히지 않는다. `data/status.json`은 읽지도 스테이징하지도 않는다([[CCR-INFRA-001]] 8.2).
 - 남김 줄 수는 얹은 뒤에 센다. 배치가 세면 올리다 빠진 줄만큼 커진다.
 - 형식이 맞지 않는 추가분 줄은 붙이지 않고, 올린 뒤 실패로 끝낸다.
 - 토큰은 받기와 push 명령에만 명령 줄 설정으로 준다. 명령을 로그에 찍지 않는다.
-- 원본은 싱크독 git 입구(`REMOTE_URL`)이고 토큰은 싱크독 개인 토큰(`PUSH_TOKEN`)이다. git 입구는 비밀번호 칸만 보고, `main`의 되감기 push를 거절한다. 커밋 작성자는 `ccr-batch <ccr-batch@localhost>`라 git log에서 사람 · 페이지 커밋과 갈린다.
-- push가 들어오면 싱크독이 그 커밋을 읽지만, `data/`만 바뀐 커밋이라 명세 판도 코드 그래프도 만들지 않는다.
 
 ## SEQ-8 미리보기로 돌린다
 
-[[CCR-UC-001#UC-A1]] 1b · 1b5 · 1b6 · 1b7. 손 실행에 `--dry-run`을 주거나(`scripts/daily.sh --manual --dry-run`), 실행기 밖(작업 사본)에서 돌 때다. 작업 사본은 늘 미리보기다.
+[[CCR-UC-001#UC-A1]] 1b · 1b5 · 1b6 · 1b7. 수동 실행에서 `dry_run`을 켜거나, 기본 브랜치가 아닌 곳이나 개발자 PC에서 돌 때다.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant DS as 노트북 실행기 · 작업 사본
+    participant WF as 워크플로
     participant M as 입구
     participant P as Pipeline
     participant LS as ListService
     participant RS as RecordService
-    participant G as 원본 main
-    DS->>M: DRY_RUN=true(실행기의 --dry-run) · 작업 사본은 늘
+    participant G as main
+    WF->>M: DRY_RUN=true
     M->>M: RunContext — 쓰지 않음 · 버림 무시 여부
     M->>P: run()
     P->>RS: start()
-    alt 작업 사본(실행기 밖)
+    alt 기본 브랜치 밖 · 개발자 PC
         RS->>G: git fetch origin main
         RS->>RS: origin/main의 세 파일을 임시 폴더로
-    else 실행기 안
-        RS->>RS: 실행기가 받은 main의 data/를 그대로
     end
     P->>LS: load()
     P->>RS: load()
@@ -387,17 +368,16 @@ sequenceDiagram
     LS-->>P: 항목(쓰지 않음)
     P->>RS: append · write_run
     RS-->>P: 쓰지 않음
-    M-->>DS: 종료 코드
-    Note over DS: 마무리 단계는 돌지 않는다
+    M-->>WF: 종료 코드
+    Note over WF: 마무리 단계는 돌지 않는다
 ```
 
 **읽을 때 볼 것**
 - 판별 모델은 실제로 부른다. 무엇이 들어갈지 보려면 판별 결과가 필요하다. 이 호출도 비용에 들어간다([[CCR-UC-001#UC-A1]] 1b4).
-- 버림 기록을 없는 것으로 보라는 입력(실행기의 `--ignore-discards`, 작업 사본의 `IGNORE_DISCARDS=true`)은 이 모드에서만 먹는다. 쓰는 실행에서는 무시하고 로그에 적는다.
-- 작업 사본에서 origin/main을 받지 못하면 처리 이력 읽기 실패로 끝난다. 작업 사본에 있는 오래된 파일로 돌지 않는다. 목록 파일도 같은 사본에서 읽는다([[CCR-DOM-002]] 5장 결정 5).
+- 버림 기록을 없는 것으로 보라는 입력(`ignore_discards`)은 이 모드에서만 먹는다. 쓰는 실행에서는 무시하고 로그에 적는다.
+- origin/main을 받지 못하면 처리 이력 읽기 실패로 끝난다. 브랜치의 오래된 사본으로 돌지 않는다. 목록 파일도 같은 사본에서 읽는다([[CCR-DOM-002]] 5장 결정 5).
 - 시크릿 없이도 돈다. OpenAI 키가 없으면 판별 미룸이 될 뿐이다.
-- 실행기 안(`BATCH_RUNNER=laptop`)에서 `DRY_RUN`이 `true`도 `false`도 아니면 입구가 아무것도 하지 않고 종료 코드 2로 끝난다.
-- 판별 기준을 바꿔 미리 보려면 작업 사본에서 고친 코드로 `uv run python -m collector`를 돌린다. 늘 미리보기이고 main의 최신 이력 위에서 판별한다. 그다음 기본 브랜치에 한 커밋으로 합쳐 원본에 push한다. 옛 「기본 브랜치가 아닌 브랜치에서 미리보기」의 자리다.
+- Actions 안에서 `DRY_RUN`이 `true`도 `false`도 아니면 입구가 아무것도 하지 않고 종료 코드 2로 끝난다.
 
 ## SEQ-9 실패로 기록 단계로 건너뛴다
 
@@ -432,116 +412,138 @@ sequenceDiagram
 
 ## SEQ-10 신호로 멈춘다
 
-[[CCR-UC-001#UC-A1]] \*a · \*a2. 배치 단계의 시간 한도(8분) · 사람이 끊음 · 예상하지 못한 오류다.
+[[CCR-UC-001#UC-A1]] \*a · \*a2. 스텝 시간 한도(8분) · 수동 취소 · 예상하지 못한 오류다.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant AD as 관리자
-    participant DS as 노트북 실행기
+    participant GH as 스케줄러
     participant M as 입구
     participant P as Pipeline
     participant F as finish.py
-    alt 시간 한도(배치 단계 8분)
-        DS->>M: SIGTERM(timeout)
-    else 사람이 끊음
-        AD->>DS: Ctrl-C(손 실행) · SIGTERM(예약 실행)
-        DS->>M: 받은 신호를 배치 단계에 넘긴다
-    end
-    M->>M: 멈춤 표시. 새 요청을 멈추고 정리한다
+    GH->>M: SIGINT(시간 한도 · 취소)
+    M->>M: 멈춤 표시
     P->>P: 다음 확인 지점에서 Stopped
     M->>M: 판별 스레드를 기다리지 않고 종료 코드 130
-    opt 막힌 호출에 걸려 곧바로 끝나지 않음
-        alt 시간 한도
-            DS->>M: 10초 뒤 SIGKILL
-        else 사람이 끊음
-            AD->>DS: 두 번째 신호
-            DS->>M: 넘긴다 → 막힌 호출도 끊는다
-        end
+    opt 7.5초 뒤 SIGTERM
+        GH->>M: 두 번째 신호 → 막힌 호출도 끊는다
     end
-    DS->>F: 마무리 단계(미리보기가 아니면 늘)
+    GH->>F: 마무리 단계(always)
     F->>F: 배치의 줄이 없다 → 중단 줄(SEQ-7)
-    F-->>DS: 1
-    alt 사람이 끊음
-        DS->>DS: 알리지 않는다
-    else 시간 한도
-        DS->>DS: 윈도 알림
-    end
 ```
 
 **읽을 때 볼 것**
-- 배치는 신호를 받으면 줄을 쓰지 않는다. 끊긴 실행의 줄은 마무리 단계가 중단(`aborted`)으로 쓴다.
-- 시간 한도는 실행기가 배치를 `timeout -s TERM -k 10s 8m`으로 띄워 건다. 8분이 지나면 SIGTERM 한 번이고, 10초 안에 끝나지 않으면 SIGKILL이다. 두 번째 신호가 없으므로 막힌 호출은 SIGKILL이 끊는다.
-- 사람은 손 실행이면 터미널에서 Ctrl-C로, 예약 실행이면 실행기 프로세스에 SIGTERM을 보내 끊는다. 실행기는 받은 신호를 배치 단계에 넘긴다. 배치는 첫 신호에 새 요청을 멈추고 정리하고, 두 번째 신호에 하던 호출도 끊는다. 사람이 끊은 실행은 윈도 알림을 띄우지 않는다. 2026-10-06까지는 Actions가 시간 한도와 취소에 SIGINT를, 7.5초 뒤 SIGTERM을 보냈다.
-- 예약 실행을 끊어도 중단 줄이 남으므로 그날 예약 실행은 더 돌지 않는다. 다시 돌리려면 손 실행이다.
+- 배치는 신호를 받으면 줄을 쓰지 않는다. 끊긴 실행의 줄은 마무리 단계가 중단으로 쓴다.
 - 목록과 처리 이력은 묶음마다 추가분에 반영돼 있어 넣은 데까지는 올라간다. 끊기는 순간 막 더한 항목 하나가 처리 이력에서 빠질 수 있다. 다음 실행이 목록 항목으로 그 대회를 알아보므로 다시 들어오지는 않는다([[CCR-INFRA-001]] 8.5).
 - 예상하지 못한 오류(파이썬 예외)도 줄을 남기지 않고 종료 코드 1로 끝나, 마무리 단계가 중단으로 쓴다.
 
 ## SEQ-11 페이지를 열고 상태를 바꾼다
 
-[[CCR-UC-001#UC-A2]] 1 ~ 6 · 1b · [[CCR-UC-001#UC-H1]] 1 ~ 5 · 1b · 1c · 4a · 4b · 4c. 화면은 [[CCR-UI-001#UI-1]], 페이지 서버는 [[CCR-API-001]] 3.3이다.
+[[CCR-UC-001#UC-A2]] 1 ~ 6 · 1b · 4b · [[CCR-UC-001#UC-H1]] 1 ~ 5 · 1a · 1b · 1c · 4a · 4b · 4c. 화면은 [[CCR-UI-001#UI-1]]이다.
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant U as 참가자
     participant UI as CompetitionList
-    participant RF as api/data · contents
-    participant PS as 페이지 서버
-    participant G as 원본
+    participant RF as api/data · github
+    participant GHB as GitHub
+    participant TK as TokenStore
     participant ST as StatusStore
     U->>UI: 페이지를 연다(또는 새로 고침 2)
-    UI->>RF: readListFile() · readStatusFile()
-    RF->>PS: GET /data/competitions.jsonl?t=… · GET /data/status.json?t=…
-    PS->>G: main 받기(1초에 한 번까지. 닿지 못하면 마지막으로 받은 판)
-    alt 404
-        PS-->>RF: 목록은 빈 목록 · 상태는 빈 객체
-    else 5xx · 연결 오류
-        RF->>PS: 한 번 다시
+    UI->>TK: get()
+    UI->>RF: readListFile()
+    RF->>GHB: GET raw …/data/competitions.jsonl?t=…
+    alt 토큰 있음
+        UI->>RF: readStatusVersion(token)
+        RF->>GHB: GET contents/data/status.json?ref=main(캐시 없음)
+        opt 401 · 403 · 5xx · 연결 오류
+            UI->>RF: readStatusFile()
+            RF->>GHB: GET raw …/status.json?t=…
+        end
+    else 토큰 없음
+        UI->>RF: readStatusFile()
+        RF->>GHB: GET raw …/status.json?t=…(CDN이 5분까지 캐시)
+    end
+    alt raw 404
+        GHB-->>RF: 목록은 빈 목록 · 상태는 빈 객체
+    else raw 5xx · 연결 오류
+        RF->>GHB: 한 번 다시
         RF-->>UI: DataReadError → 읽지 못했다는 알림
     end
-    PS-->>RF: 파일 내용(Cache-Control: no-store)
+    GHB-->>RF: 파일 내용
     RF-->>UI: 항목 · 상태 파일
     UI->>UI: Row로 합쳐 마감일 순 정렬 · 마감 지남 · 지움은 접힌 구역(9)
     U->>UI: 상태 셀렉트(7.4) · 지우기(7.5) · 별표(7.7) · 되살리기(9.1)
-    UI->>ST: setStatus · hide · restore · star · unstar(id, 대회명)
-    ST-->>UI: onChange(얹은 파일, 저장 중) — 화면 먼저
-    ST->>ST: 큐. 앞 커밋이 끝날 때까지 기다림
-    ST->>RF: readStatusVersion()
-    RF->>PS: GET /api/contents/data/status.json
-    PS-->>RF: sha · 내용(404면 sha 없음)
-    ST->>ST: mergeChange — 이번 바꿈만 얹음
-    ST->>RF: writeStatusFile(파일, sha, 메시지)
-    RF->>PS: PUT /api/contents/data/status.json(Base64 · sha · status: … → …)
-    PS->>PS: Host · Origin 확인 · 잠금(한 번에 하나)
-    loop 세 번까지(push가 거절되면 다시)
-        PS->>G: main 받기
-        PS->>PS: 지금 판과 sha 견주기(다르면 409 · 파일이 있는데 sha가 없으면 422)
-        PS->>PS: main 위에 그 파일만 바꾼 커밋(작성자는 본문의 author)
-        PS->>G: git 입구로 push
-    end
-    alt 200 · 201
-        PS-->>RF: content.sha
-        ST-->>UI: onChange(파일, 저장 끝)
-    else 409 · 422(판 어긋남)
-        ST->>RF: 다시 읽고 한 번 더 쓴다
-        ST-->>UI: 그래도 실패면 되돌리고 저장 실패(12)
-    else 400 · 403 · 502 · 연결 오류
-        ST-->>UI: 값 되돌리고 저장 실패(12)
+    UI->>TK: has()
+    alt 토큰 없음
+        UI-->>U: 토큰 없음(11). 값은 그대로
+    else
+        UI->>ST: setStatus · hide · restore · star · unstar(id, 대회명)
+        ST-->>UI: onChange(얹은 파일, 저장 중) — 화면 먼저
+        ST->>ST: 큐. 앞 커밋이 끝날 때까지 기다림
+        ST->>RF: readStatusVersion(token)
+        RF->>GHB: GET contents/data/status.json?ref=main
+        GHB-->>RF: sha · 내용(404면 sha 없음)
+        ST->>ST: mergeChange — 이번 바꿈만 얹음
+        ST->>RF: writeStatusFile(token, 파일, sha, 메시지)
+        RF->>GHB: PUT contents/data/status.json(Base64 · sha · status: … → …)
+        alt 200 · 201
+            GHB-->>RF: content.sha
+            ST-->>UI: onChange(파일, 저장 끝)
+        else 409 · 422(판 어긋남)
+            ST->>RF: 다시 읽고 한 번 더 쓴다
+            ST-->>UI: 그래도 실패면 되돌리고 저장 실패(12)
+        else 401 · 403 · 404 · 5xx · 연결 오류
+            ST-->>UI: 값 되돌리고 저장 실패(12)
+        end
     end
 ```
 
 **읽을 때 볼 것**
-- 두 파일은 페이지 서버의 `/data/…`로 읽는다. 페이지 서버가 읽을 때마다 원본을 받으므로(1초에 한 번까지) 캐시가 없다. 배치가 막 올린 목록과 방금 바꾼 상태가 새로 고치면 곧바로 보인다. 원본(싱크독)에 닿지 못하면 마지막으로 받은 판을 낸다. 쓰기의 기준은 늘 커밋 직전에 다시 읽은 판이다([[CCR-INFRA-001]] 6.4).
-- 상태 파일에 쓰는 길은 `StatusStore` 하나이고 한 번에 요청 하나다. 같은 판으로 두 번 보내면 둘째가 409로 거절되기 때문이다([[CCR-DOM-002]] 5장 결정 10 · [[CCR-API-001]] 1.4).
-- 판이 어긋나면 한 번만 다시 쓴다. 다른 탭이나 브라우저가 먼저 쓴 경우다. 502 · 5xx · 연결 오류는 스스로 되풀이하지 않고 「다시 시도」(12.2)를 기다린다([[CCR-API-001]] 2.3).
-- 배치가 같은 때 push해도 부딪히지 않는다. 파일이 다르고, 페이지 서버는 상태 파일의 판만 견준다. 배치의 push 때문에 git 입구가 페이지 서버의 push를 거절하면, 페이지 서버가 원본을 다시 받아 판을 다시 견준 뒤 다시 얹는다. 세 번까지다([[CCR-UC-001#UC-H1]] 4c).
-- 브라우저는 토큰을 갖지 않는다. 원본에 쓰는 싱크독 토큰은 페이지 서버가 `batch.env`에서 읽어 git 명령에만 준다. 페이지 서버는 `Host`가, 쓰기는 `Origin`도 `localhost:8090` · `127.0.0.1:8090`일 때만 받는다([[CCR-API-001]] 1.4).
-- 2026-10-06까지는 페이지가 GitHub에서 직접 읽고(raw · Contents API) 브라우저의 토큰으로 썼다. 토큰이 없을 때의 알림(UI-1 11)과 토큰을 넣는 흐름(SEQ-12)은 그때 없어졌다.
+- 목록 파일은 raw로 읽는다. 상태 파일은 토큰이 있으면 Contents API로 읽고, 없거나 실패하면 raw로 읽는다. raw는 CDN이 5분 캐시하고 `?t=`로도 피하지 못해, 방금 바꾼 상태가 새로 고친 뒤 옛 값으로 보이기 때문이다. 쓰기의 기준은 늘 커밋 직전에 다시 읽은 판이다([[CCR-INFRA-001]] 6.4).
+- GitHub에 쓰는 길은 `StatusStore` 하나이고 한 번에 요청 하나다. 같은 판으로 두 번 보내면 둘째가 409로 거절되기 때문이다([[CCR-DOM-002]] 5장 결정 10 · [[CCR-API-001]] 1.4).
+- 판이 어긋나면 한 번만 다시 쓴다. 5xx · 연결 오류는 스스로 되풀이하지 않고 「다시 시도」(12.2)를 기다린다([[CCR-API-001]] 2.3).
+- 배치가 같은 때 커밋해도 부딪히지 않는다. 파일이 다르고, Contents API는 파일 단위의 판으로 견준다([[CCR-UC-001#UC-H1]] 4c).
+- 토큰은 `Authorization` 헤더에만 실린다. raw 읽기에는 보내지 않는다([[CCR-INFRA-001]] 5.8).
 
 ## SEQ-12 토큰을 넣는다
 
-2026-10-06 폐기 — 페이지 토큰을 없앴다. 브라우저는 토큰을 갖지 않고 노트북 페이지 서버가 원본에 쓴다(SEQ-11). 토큰을 넣고 검증하던 이 흐름도 그 화면 · 유스케이스와 함께 없어졌다([[CCR-UC-001#UC-H2]] · [[CCR-UI-001#UI-2]]).
+[[CCR-UC-001#UC-H2]] 1 ~ 6 · 3a · 4a · 4b. 화면은 [[CCR-UI-001#UI-2]]다.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 참가자
+    participant UI as SettingsDialog
+    participant RF as api/github
+    participant GHB as GitHub
+    participant TK as TokenStore
+    U->>UI: 설정(6) · 설정 열기(11.1 · 12.1)
+    UI->>TK: has()
+    UI-->>U: 토큰 있음 · 없음(20.6). 값은 보이지 않음
+    U->>UI: 토큰 붙여 넣기(20.3) · 확인하고 저장(20.4)
+    UI->>RF: readStatusVersion(입력한 토큰)
+    RF->>GHB: GET contents/data/status.json?ref=main
+    alt 200 · 404(파일 없음)
+        GHB-->>RF: 판 · 내용
+        UI->>TK: set(토큰)
+        UI-->>U: 닫힘. 쓰기 권한은 SEQ-11의 첫 저장에서 드러난다
+    else 401 · 403
+        RF-->>UI: GitHubError(status)
+        UI-->>U: 이유를 칸 아래에. 저장하지 않음
+    end
+    opt 토큰 지우기(20.5)
+        U->>UI: 지우기
+        UI->>TK: clear()
+        UI-->>U: 읽기만 되는 상태
+    end
+```
+
+**읽을 때 볼 것**
+- 저장 전에 반드시 판 읽기로 검증한다. 검증에 실패한 값은 저장하지 않는다([[CCR-UC-001#UC-H2]] 4 · 4a).
+- 404는 상태 파일이 아직 없다는 뜻뿐이다. 이 저장소는 공개이고 fine-grained 토큰은 늘 모든 공개 저장소를 읽을 수 있어, 판 읽기로는 쓰기 권한을 가르지 못한다. 쓰기 권한이 모자란 토큰은 저장된 뒤 SEQ-11의 첫 쓰기가 거절되어(403 · 404) 드러나고, 값이 되돌아가며 저장 실패(12)가 뜬다([[CCR-UC-001#UC-H2]] 4b · [[CCR-API-001]] 2.3).
+- 토큰은 `localStorage`에만 둔다. 서버가 없어 다른 곳으로 가지 않는다. 지우기는 브라우저에서만 지우고, GitHub 쪽 폐기는 참가자가 한다([[CCR-UC-001#UC-H2]] 3a).
 
 ## 1. 대응표
 
@@ -557,12 +559,12 @@ sequenceDiagram
 | SEQ-8 | [[CCR-UC-001#UC-A1]] 1b | [[CCR-MS-001#RunContext.from_env]] · [[CCR-MS-001#record.export_main_state]] · [[CCR-MS-001#ListService.load]] |
 | SEQ-9 | [[CCR-UC-001#UC-A1]] 1d · 2b · 5a | [[CCR-MS-001#Pipeline._run]] |
 | SEQ-10 | [[CCR-UC-001#UC-A1]] \*a | [[CCR-MS-001#__main__.main]] · [[CCR-MS-001#finish.finish]] |
-| SEQ-11 | [[CCR-UC-001#UC-A2]] · [[CCR-UC-001#UC-H1]] | [[CCR-DOM-002#CompetitionList]] · [[CCR-DOM-002#StatusStore]] · [[CCR-DOM-002#RepoFiles]] · [[CCR-MS-001#Mirror.write]] |
-| SEQ-12 | 2026-10-06 폐기 | — |
+| SEQ-11 | [[CCR-UC-001#UC-A2]] · [[CCR-UC-001#UC-H1]] | [[CCR-DOM-002#CompetitionList]] · [[CCR-DOM-002#StatusStore]] · [[CCR-DOM-002#RepoFiles]] |
+| SEQ-12 | [[CCR-UC-001#UC-H2]] | [[CCR-DOM-002#SettingsDialog]] · [[CCR-DOM-002#TokenStore]] · [[CCR-DOM-002#RepoFiles]] |
 
 ## 2. 되먹일 것
 
-시퀀스를 그리며 코드와 실측에서 찾은 것 가운데 상위 문서를 고쳐야 하는 것이다. 이 문서는 상위 문서를 고치지 않는다. 1 ~ 6은 2026-09-28에 상위 문서에 반영했다. 7은 2026-09-29에 찾았고 2026-09-30에 반영했다([[CCR-INFRA-001]] v7 · [[CCR-DOM-003]] v4). 아래 글은 반영하던 때의 것이다. 5의 워크플로 스텝은 2026-10-06에 노트북 실행기의 단계가 됐다.
+시퀀스를 그리며 코드와 실측에서 찾은 것 가운데 상위 문서를 고쳐야 하는 것이다. 이 문서는 상위 문서를 고치지 않는다. 1 ~ 6은 2026-09-28에 상위 문서에 반영했다. 7은 2026-09-29에 찾았고 2026-09-30에 반영했다([[CCR-INFRA-001]] v7 · [[CCR-DOM-003]] v4).
 
 1. **[[CCR-API-001]] wevity 상세 요청.** `gbn=view`가 같은 사이트의 `gbn=viewok`로 302를 보낸다(2026-09-27 실측). 날수 맞춰 보기의 상세 요청은 리디렉션을 따라가도록 구현했다(SEQ-2). 엔드포인트 절과 1.2의 리디렉션 규칙에 이 예외를 적는다.
 2. **[[CCR-PRD-001]] 5.2 · [[CCR-UC-001#UC-S4]] 같은 대회 판정.** 실측 후보 321건에서 판정표가 틀박이 이름의 서로 다른 대회를 이었다(가장 큰 묶음 스무 건). 사용자가 문턱 0.90 · 모든 짝 규칙으로 정했다(2026-09-28, [[CCR-DOM-002]] 5장 결정 7).
@@ -576,4 +578,4 @@ sequenceDiagram
 
 2026-10-01에 SEQ-2의 Kaggle 목록 요청을 실측했다. 다른 소스와 같은 모양이라 그림은 그대로 두고 읽을 때 볼 것에 한 줄을 더했다.
 
-- [ ] SEQ-11의 쓰기는 페이지 서버로 옮긴 뒤 브라우저에서 실측 전이다. 2026-09-30에는 페이지의 실제 저장 코드로 GitHub Contents API에 상태 파일을 만들고(판 없이 쓰기) 고치는(판 위에 쓰기) 흐름을 브라우저 밖에서 보았다([[CCR-CODE-001]] 4장). 2026-10-06에 노트북 페이지 서버로 옮겼다([[CCR-INFRA-001]] 8.11). 노트북 브라우저에서 저장 · 409(다른 탭이 먼저 씀) · 502(싱크독이 꺼짐)와, 배치의 push와 겹쳐 페이지 서버가 다시 얹는 흐름을 실제로 보고 다시 그린다. SEQ-12는 폐기해 볼 것이 없다
+- [ ] SEQ-11의 브라우저 쓰기와 SEQ-12는 실측 전이다. 2026-09-30에 페이지의 실제 저장 코드를 브라우저 밖에서 돌려, 상태 파일을 만들고(판 없이 쓰기) 고치는(판 위에 쓰기) 흐름까지 보았다([[CCR-CODE-001]] 4장). 같은 날 raw 캐시를 재어 상태 파일의 표시용 읽기를 토큰이 있으면 Contents API로 바꿨다([[CCR-INFRA-001]] 6.4). 페이지 토큰을 넣은 뒤 브라우저에서 Contents API의 409 · 422 응답과, 쓰기 권한이 모자란 토큰의 첫 쓰기가 403인지 404인지 실제로 보고 다시 그린다

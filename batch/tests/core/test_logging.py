@@ -3,9 +3,15 @@ from __future__ import annotations
 import logging
 import sys
 
-from collector.core.logging import SecretFilter
+from collector.core.logging import SecretFilter, register_actions_masks
 
 KEY = "sk-proj-0123456789abcdef"
+
+
+def test_actions_masks_are_emitted_for_every_value() -> None:
+    lines: list[str] = []
+    register_actions_masks([KEY, "kaggle-token", ""], emit=lines.append)
+    assert lines == [f"::add-mask::{KEY}", "::add-mask::kaggle-token"]
 
 
 def test_filter_masks_message_and_exception_text() -> None:
