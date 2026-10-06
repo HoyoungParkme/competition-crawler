@@ -27,12 +27,11 @@ BASE = date(2026, 9, 27)
 
 def context(tmp_path: Path, *, write: bool = True) -> RunContext:
     env = {
-        "GITHUB_ACTIONS": "true",
+        "BATCH_RUNNER": "laptop",
         "DRY_RUN": "false" if write else "true",
         "RUN_STARTED_AT": "2026-09-26T23:50:00Z",
         "RUN_ID": "77-1",
-        "GITHUB_EVENT_NAME": "schedule",
-        "GITHUB_REF": "refs/heads/main",
+        "RUN_KIND": "schedule",
         "STATE_DIR": str(tmp_path / "data"),
         "APPEND_DIR": str(tmp_path / "append"),
     }
