@@ -187,7 +187,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 화면 | 없음 |
 | 테스트 | `tests/core/test_settings.py` — 실행기 묶음(쓰기 · KST 기준일 · 종류 · 실행 식별자 · 받은 main · `WORK_DIR/append`) · 실행기 안에서 깨진 `DRY_RUN`은 `RunModeError` · 실행기 밖은 쓰지 않고 main 판을 꺼냄 · 옛 `GITHUB_ACTIONS` · `CI` 표시로는 쓰지 않음 · 실행기 안의 미리보기 · `RUN_KIND`. `tests/run/test_pipeline.py`의 `context()`를 실행기 환경으로. `tests/core/test_logging.py`에서 가릴 값 알리기의 테스트를 지운다. `tests/test_finish.py` — 작성자 · 커미터 `ccr-batch <ccr-batch@localhost>` · `finish.main`은 네 이름 가운데 하나라도 없으면 1 · 실행기가 넘긴 원격 · 작업 폴더 · 종류로 올리고 토큰을 찍지 않음. `uv run ruff check .` · `uv run ruff format --check .`, 싱크독 `check_code.py`. 실물: 노트북에서 손 실행(미리보기 · 쓰기) · 예약 실행 뒤 같은 날 두 번째 예약의 건너뜀 · Ctrl-C로 끊기 · 윈도 알림 시험(한글 제목과 본문) · 실제 원본(싱크독 git 입구)으로 crontab의 첫 예약 실행과 `ccr-batch` 커밋. 커밋 전에 본 결과(2026-10-06, 임시 bare 저장소를 원본으로): 미리보기 · 손 실행 · 예약 실행 뒤 건너뜀이 돌았고, Ctrl-C로 끊으면 배치가 130으로 끝나고 마무리 단계가 중단 줄(`aborted`)을 썼으며 알림은 뜨지 않았다 |
 | 선행 | D5 |
-| 완료 | — |
+| 완료 | `code/e1-laptop-batch` → `main` · 병합 `8116635` · 2026-10-06. 커밋 7개(3장). 임시 bare 원격으로 미리보기 · 손 실행(`ccr-batch` 커밋) · 예약 실행 뒤 같은 날 건너뜀 · Ctrl-C 끊기(배치 130 → 마무리가 중단 줄, 알림 없음)를 돌려 봤다. 원본(싱크독 git 입구)으로 미리보기와 손 실행 한 번(`local-20261006T132730`, 커밋 `4f1fd64`, 싱크독이 읽음)을 했다. crontab `50 8-23 * * *`을 넣고, GitHub daily를 끈 뒤 Actions 시크릿 둘을 지우고 저장소를 보관했다. OpenAI · Kaggle 키는 아직 `batch.env`에 없어 그 실행은 판별을 미루고(6묶음) Kaggle을 건너뛰었다 — 사람이 넣는다. 08:50 예약 실행은 2026-10-07에 처음 돈다 |
 
 #### E2 노트북 페이지
 
@@ -200,7 +200,7 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | 화면 | [[CCR-UI-001#UI-1]] 대회 목록(설정 · 토큰 없음 · 「설정 열기」를 뺀다) |
 | 테스트 | `batch/tests/test_page_server.py`(임시 bare 저장소를 원본으로 서버를 띄운다) — 두 데이터 파일을 캐시 없이 · 판 읽기의 블롭 해시와 Base64 · 맞는 판이면 그 파일만 바꾼 커밋 하나(작성자 · 커미터 · 곧바로 보임) · 어긋난 판 409와 판 없음 422는 아무것도 올리지 않음 · 첫 쓰기가 파일을 만듦(201) · 그사이 배치가 push하면 다시 얹음 · Host · Origin 지킴 · 정적 파일과 틀린 요청(폴더 밖 · 다른 경로 · Base64 아님 · `message` 없음) · 원본이 사라지면 마지막 판을 내고 쓰기는 502(토큰이 새지 않음). `frontend/tests/` — `api/contents.test.ts`(옛 `github.test.ts`, 토큰 없이 같은 출처로) · `store/status.test.ts` · `pages/CompetitionList.test.ts`(토큰 갈래의 테스트를 지운다). `npm test` · `npm run lint` · `npm run build`, 싱크독 `check_code.py` · `check_ui.py`(UI-1). 사람이 노트북 브라우저에서 `http://localhost:8090`을 열어 요소 번호대로 눌러 본다(DEV-17) — 상태 · 지우기 · 되살리기 · 별표가 원본에 커밋되고 새로 고침에 곧바로 보인다. `scripts/page.sh`의 다시 띄우기 · 다시 빌드 · 빌드 실패 알림 |
 | 선행 | E1 |
-| 완료 | — |
+| 완료 | `code/e2-laptop-page` → `main` · 병합 `2a1b2ac` · 2026-10-06. 커밋 8개(3장). 페이지 서버 pytest 10 · vitest 33 · tsc · eslint · prettier · 빌드 · check_code 142/142 · check_ui UI-1 31/31. 임시 bare 원격으로 `page.sh`를 돌려 빌드 · 띄우기 · PUT 커밋 · Origin 없는 PUT 403 · 다시 불러도 그대로 · 토큰이 바뀌면 다시 띄움을 봤다. crontab `@reboot` · `*/5`를 넣고, 노트북 브라우저로 http://localhost:8090 을 열어 열린 대회 42 · 거르기 · 쪽 나누기 · 바닥 줄(「싱크독 CCR · main」)을 보고, 별표 붙이기 · 떼기가 원본 커밋 둘(`7f89639` · `b1cf44c`)로 남아 곧바로 보이는 것을 확인했다(콘솔 오류 0, 싱크독이 읽음) |
 
 ## 2. 통합 테스트
 
@@ -283,10 +283,27 @@ upstream: [CCR-MS-001, CCR-SEQ-001, CCR-DOM-002, CCR-DOM-003, CCR-INFRA-001, CCR
 | `9d25c60` | fix(#21) · A | `http.new_client` — 소스가 심는 쿠키를 남기지 않는 클라이언트, 테스트의 가짜 HTTP도 같은 클라이언트로. 이슈 #21 |
 | `f5af5a4` | fix(#21) · B1 | `KaggleSource.collect` — `page`로 넘기고 빈 쪽에서 멈춘다, `parse_page`는 대회 목록만. 2026-10-01에 저장한 실제 응답 두 쪽으로 테스트. 이슈 #21 |
 | `82212ac` | fix(#23) · B4 | `matching.judge_pair` — Kaggle끼리는 원천 ID가 다르면 1단계에서 다른 대회. 이슈 #23 |
+| `5d9b9f1` | E1 | `RunContext.from_env` — 노트북 실행기 안(`BATCH_RUNNER=laptop`)에서만 쓴다, 테스트 |
+| `bc2ee6e` | E1 | `__main__.main` — 실행기 안에서는 `.env`를 읽지 않고 `register_actions_masks`를 지운다 |
+| `3cab11c` | E1 | `finish.main` · `finish.finish` · `Git.commit_and_push` — 실행기가 넘긴 원격 · 토큰 · 작업 폴더, 작성자 `ccr-batch`, 테스트 |
+| `915ee24` | E1 | `USER_AGENT` — GitHub 주소를 뺀다 |
+| `9b4b5f5` | E1 | `scripts/daily.sh` · `notify.sh` — 노트북 실행기와 윈도 알림 |
+| `bcf955e` | E1 | `.github` 지움 — `daily.yml` · `pages.yml` · `dependabot.yml` |
+| `4d6985b` | E1 | `README.md` · `AGENTS.md` — 노트북에서 돌리는 법 |
+| `23698bb` | E2 | `page_server.py` — 노트북 페이지 서버(`Mirror` · `allowed` · `PageHandler` · `main`), 테스트 |
+| `9645962` | E2 | `scripts/page.sh` — 늘 띄우고, main의 frontend나 페이지 서버가 바뀌면 다시 빌드 |
+| `ae250f0` | E2 | `contents.ts` · `data.ts` · `config.ts` — GitHub raw · Contents API 대신 같은 출처의 페이지 서버, 테스트 |
+| `595585c` | E2 | `StatusStore` — 토큰 없이 `ContentsApi`로, 테스트 |
+| `6285ed9` | E2 | `CompetitionList` · `Notice` — 설정 · 토큰 요소(6 · 11 · 11.1 · 12.1)를 빼고 문구를 페이지 서버로, 테스트 |
+| `4ed5ed5` | E2 | `SettingsDialog` · `TokenStore` 지움 — UI-2 폐기 |
+| `4052f92` | E2 | `vite.config.ts` — `base: '/'` |
+| `5c2fd2d` | E2 | `README.md` · `AGENTS.md` — 노트북 페이지(localhost:8090)와 `page.sh` crontab |
 
 PR은 둘이다. [#1](https://github.com/HoyoungParkme/competition-crawler/pull/1)(`feat/batch` → `main`)은 A ~ C와 검증 반영을, [#2](https://github.com/HoyoungParkme/competition-crawler/pull/2)(`fix/matching-wevity` → `main`)는 fix(#3) · fix(#4)를 담았다. 위 커밋 해시를 그대로 남기려고 둘 다 병합 커밋으로 합쳤다. 이 둘은 규약 DEV-13 · DEV-15보다 앞서 만든 것이라 커밋 메시지의 꼴이 다르다. 이력은 고치지 않는다.
 
 D1 ~ D3은 카드마다 브랜치 · PR 하나이고, 커밋은 `code(D1): 함수 — 요약` 꼴로 함수 하나에 하나다. [#7](https://github.com/HoyoungParkme/competition-crawler/pull/7)(`code/d1-list` → `main`, 병합 커밋 `d791197`, 2026-09-30)이 D1이고 이슈 #5 · #6을 닫았다. [#8](https://github.com/HoyoungParkme/competition-crawler/pull/8)(`code/d2-frontend` → `main`, 병합 커밋 `bbd2d23`, 2026-09-30)이 D2다. 페이지 코드는 MS 밖(TypeScript)이라 커밋을 함수가 아니라 모듈 하나에 하나로 나눴다. [#9](https://github.com/HoyoungParkme/competition-crawler/pull/9)(`code/d3-pages` → `main`, 병합 커밋 `2b820b6`, 2026-09-30)이 D3이다. 워크플로와 안내 문서뿐이라 파일 하나에 커밋 하나다. [#11](https://github.com/HoyoungParkme/competition-crawler/pull/11)(`fix/page-leftovers` → `main`, 병합 커밋 `4d3559f`, 2026-09-30)은 이슈 #10을 고친 fix 둘이다. 끝난 카드의 수정이라 카드는 건드리지 않았다(DEV-15). 병합이 돌린 페이지 배포(실행 36681669374)가 성공했고, 배포된 번들에서 지운 문구가 빠진 것을 확인했다. [#13](https://github.com/HoyoungParkme/competition-crawler/pull/13)(`fix/commit-author` → `main`, 병합 커밋 `8c5c7a1`, 2026-09-30)은 이슈 #12를 고친 fix 둘이다. 명세를 먼저 고쳤다([[CCR-INFRA-001]] v8 · [[CCR-DOM-002]] v8 · [[CCR-API-001]] v6). 병합이 돌린 페이지 배포(실행 36686351923)가 성공했고, 배포된 번들에 noreply 주소가 들어간 것을 확인했다. [#15](https://github.com/HoyoungParkme/competition-crawler/pull/15)(`fix/status-read` → `main`, 병합 커밋 `d36485a`, 2026-09-30)는 이슈 #14를 고친 fix 둘이다. 명세를 먼저 고쳤다([[CCR-INFRA-001]] v9 · [[CCR-DOM-002]] v9 · [[CCR-UI-001]] v3 · [[CCR-API-001]] v7 · [[CCR-SEQ-001]] v6). 병합이 돌린 페이지 배포(실행 36691692088)가 성공했다. 배포된 페이지를 토큰 없이 열면 raw 두 파일만 읽고, 가짜 토큰을 넣고 열면 판 읽기가 401을 받은 뒤 상태 파일을 raw로 읽어 목록 49건을 그렸다. [#16](https://github.com/HoyoungParkme/competition-crawler/pull/16)(`fix/status-read-readme` → `main`, 병합 커밋 `51f436f`, 2026-09-30)은 같은 이슈의 뒷정리로 README의 로컬 읽기 설명을 명세에 맞췄다. #11 · #13 · #15 모두 본문의 `Closes`가 이슈에 이어지지 않아 이슈는 손으로 닫았다. [#18](https://github.com/HoyoungParkme/competition-crawler/pull/18)(`fix/readability` → `main`, 병합 커밋 `2bfe254`, 2026-10-01)은 이슈 #17을 고친 fix 셋이다. 글이 잘 안 보인다는 사용자 의견에 고친 안의 화면을 보이고, 사용자가 고른 대로 명세를 먼저 고쳤다([[CCR-UI-001]] v4 · v5 3장). 바꾼 것은 `styles.css` 하나다. 병합이 돌린 페이지 배포(실행 36796530043)가 성공했고, 배포된 페이지에서 계산된 글 크기와 색이 [[CCR-UI-001]] 3장과 같은 것을 확인했다. 이번에는 본문의 `Closes`가 이슈 #17을 닫았다. [#19](https://github.com/HoyoungParkme/competition-crawler/pull/19)(`code/d4-pager` → `main`, 병합 커밋 `4717c58`, 2026-10-01)가 D4다. 사용자가 고친 안의 화면을 보고 고른 뒤 명세를 먼저 고쳤다([[CCR-UI-001]] v6 · [[CCR-DOM-002]] v10 · 이 문서 v13). 커밋은 모듈 하나에 하나로 넷이고, 병합이 돌린 페이지 배포(실행 36800025511)가 성공했다. [#20](https://github.com/HoyoungParkme/competition-crawler/pull/20)(`code/d5-skip-star` → `main`, 병합 커밋 `96b081e`, 2026-10-01)이 D5다. 명세 아홉을 먼저 고쳤다([[CCR-PRD-001]] v12 · [[CCR-UC-001]] v10 · [[CCR-INFRA-001]] v10 · [[CCR-DOM-001]] v5 · [[CCR-UI-001]] v7 · [[CCR-API-001]] v8 · [[CCR-DOM-003]] v5 · [[CCR-DOM-002]] v11 · [[CCR-SEQ-001]] v7 · 이 문서 v15). 커밋은 모듈 하나에 하나로 일곱이고, 병합이 돌린 페이지 배포(실행 36804148774)가 성공했다. [#22](https://github.com/HoyoungParkme/competition-crawler/pull/22)(`fix/kaggle-paging` → `main`, 병합 커밋 `dc7edd2`, 2026-10-01)는 이슈 #21을 고친 fix 둘이다. 사용자가 Kaggle 토큰을 준 날 실측하니 쪽 넘김과 쿠키가 명세와 달라, 명세를 먼저 고쳤다([[CCR-API-001]] v9 · [[CCR-MS-001]] v6 · [[CCR-DOM-002]] v12 · [[CCR-DOM-001]] v6 · [[CCR-SEQ-001]] v8 · [[CCR-INFRA-001]] v11). [#24](https://github.com/HoyoungParkme/competition-crawler/pull/24)(`fix/kaggle-same-id` → `main`, 병합 커밋 `0968d08`, 2026-10-01)는 이슈 #23을 고친 fix 하나다. #22 병합 뒤 미리보기에서 Kaggle의 서로 다른 두 대회가 한 묶음이 된 것을 보고 명세를 먼저 고쳤다([[CCR-PRD-001]] v13 · [[CCR-DOM-002]] v13 · [[CCR-DOM-001]] v7). 같은 규칙을 적은 [[CCR-UC-001]] v11 · [[CCR-MS-001]] v7은 처음 저장이 도중에 멈춰, 사용자의 지시로 병합 뒤에 저장했다. 끝난 카드의 수정이라 카드는 건드리지 않았다(DEV-15). 둘 다 본문의 `Closes`가 이슈를 닫았다.
+
+E1 · E2는 원본이 싱크독 서버 저장소라 PR이 없다. 카드마다 브랜치 하나를 `--no-ff`로 `main`에 합쳐 git 입구로 push했다 — E1 병합 `8116635`, E2 병합 `2a1b2ac`. 그 앞에 명세 13문서를 `spec/laptop-move` 브랜치로 고쳐 병합 `a904692`로 먼저 합쳤다.
 
 ## 4. 미결사항
 
