@@ -1,6 +1,6 @@
-/** raw.githubusercontent.com에서 목록 파일과 상태 파일을 읽는다(CCR-API-001 GET raw · 1.4 · 2.3). */
+/** 노트북 페이지 서버에서 목록 파일과 상태 파일을 읽는다(CCR-API-001 GET /data/… · 1.4 · 2.3). */
 
-import { FETCH_TIMEOUT_MS, LIST_PATH, STATUS_PATH, rawUrl } from '../config'
+import { FETCH_TIMEOUT_MS, LIST_PATH, STATUS_PATH, dataUrl } from '../config'
 import { isStatusValue, type ListEntry, type Status, type StatusFile } from '../domain/types'
 
 /** 두 번 받아도 읽지 못했다(CCR-UC-001 UC-A2 1b). */
@@ -100,12 +100,12 @@ export function parseStatusFile(text: string): StatusFile {
   return out
 }
 
-/** raw 파일 하나. 404면 null. 5xx · 연결 오류 · 시간 초과면 한 번 다시 받는다. */
-async function fetchRaw(file: string): Promise<string | null> {
+/** 데이터 파일 하나. 404면 null. 5xx · 연결 오류 · 시간 초과면 한 번 다시 받는다. */
+async function fetchData(file: string): Promise<string | null> {
   let lastStatus: number | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const response = await fetch(rawUrl(file), {
+      const response = await fetch(dataUrl(file), {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         cache: 'no-store',
       })
@@ -122,12 +122,12 @@ async function fetchRaw(file: string): Promise<string | null> {
 
 /** 목록 파일을 읽는다. 없으면(404) 빈 목록(첫 실행 전, UI-1 10). */
 export async function readListFile(): Promise<ListEntry[]> {
-  const text = await fetchRaw(LIST_PATH)
+  const text = await fetchData(LIST_PATH)
   return text === null ? [] : parseListFile(text)
 }
 
 /** 상태 파일을 읽는다. 없으면 빈 객체. 표시용이고 쓰기의 기준이 아니다(CCR-INFRA-001 6.4). */
 export async function readStatusFile(): Promise<StatusFile> {
-  const text = await fetchRaw(STATUS_PATH)
+  const text = await fetchData(STATUS_PATH)
   return text === null ? {} : parseStatusFile(text)
 }
