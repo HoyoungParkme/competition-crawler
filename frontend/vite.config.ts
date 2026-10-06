@@ -2,9 +2,9 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// Pages 하위 경로. 저장소 이름이 바뀌면 여기만 고친다(CCR-INFRA-001 4.1)
+// 노트북 페이지 서버가 뿌리(/)에서 낸다(CCR-INFRA-001 8.11)
 export default defineConfig({
-  base: '/competition-crawler/',
+  base: '/',
   plugins: [react()],
   test: {
     include: ['tests/**/*.test.ts'],
