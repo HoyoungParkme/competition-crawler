@@ -6,10 +6,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DataReadError, readListFile, readStatusFile } from '../api/data'
+import { readStatusVersion, type StatusVersion } from '../api/github'
 import { CompetitionTable } from '../components/CompetitionTable'
 import { DEFAULT_FILTERS, FilterBar, type Filters } from '../components/FilterBar'
-import { EmptyState, ReadErrorNotice, SaveFailedNotice, SavingToast } from '../components/Notice'
+import {
+  EmptyState,
+  NoTokenNotice,
+  ReadErrorNotice,
+  SaveFailedNotice,
+  SavingToast,
+} from '../components/Notice'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, Pager, pageOfRow, paginate } from '../components/Pager'
+import { SettingsDialog } from '../components/SettingsDialog'
+import { BRANCH, OWNER, REPO } from '../config'
 import {
   DEFAULT_STATUS,
   type ListEntry,
@@ -17,7 +26,8 @@ import {
   type StatusFile,
   type StatusValue,
 } from '../domain/types'
-import { defaultContents, StatusStore, type SaveState } from '../store/status'
+import { defaultGitHub, StatusStore, type SaveState } from '../store/status'
+import { TokenStore } from '../store/token'
 
 const FILTERS_KEY = 'ccr.filters'
 const PAGE_SIZE_KEY = 'ccr.pageSize'
@@ -35,6 +45,22 @@ export function kstToday(now: Date = new Date()): string {
 /** 접수마감일이 오늘보다 이르면 마감 지남. 마감일이 없으면 지나지 않은 것이다 */
 export function isExpired(entry: ListEntry, today: string): boolean {
   return entry.deadline !== null && entry.deadline < today
+}
+
+/** 화면에 보일 상태 파일. 토큰이 있으면 Contents API의 판 읽기로 받는다. raw는 CDN이 5분 캐시해
+ * 방금 바꾼 값이 옛 값으로 보이기 때문이다(CCR-INFRA-001 6.4). 판 읽기가 실패하면 raw로 받고,
+ * 토큰 문제는 저장할 때 드러난다 */
+export async function readStatusForView(
+  token: string | null,
+  readVersion: (token: string) => Promise<StatusVersion> = readStatusVersion,
+  readRaw: () => Promise<StatusFile> = readStatusFile,
+): Promise<StatusFile> {
+  if (token === null) return readRaw()
+  try {
+    return (await readVersion(token)).file
+  } catch {
+    return readRaw()
+  }
 }
 
 /** 접수마감일 오름차순. 없으면 맨 뒤. 같은 마감일이면 대회명 순. 원본은 바꾸지 않는다 */
@@ -86,9 +112,9 @@ function writePageSize(size: number): void {
   }
 }
 
-/** 두 파일을 함께 받는다(SEQ-11 2 · 3). 페이지 서버가 원본에서 바로 내므로 캐시가 없다(CCR-INFRA-001 6.4) */
-function readFiles(): Promise<[ListEntry[], StatusFile]> {
-  return Promise.all([readListFile(), readStatusFile()])
+/** 두 파일을 함께 받는다(SEQ-11 2 · 3). 목록 파일은 raw, 상태 파일은 토큰이 있으면 판 읽기다 */
+function readFiles(token: string | null): Promise<[ListEntry[], StatusFile]> {
+  return Promise.all([readListFile(), readStatusForView(token)])
 }
 
 function formatTime(date: Date): string {
@@ -100,6 +126,7 @@ function formatTime(date: Date): string {
 }
 
 export function CompetitionList() {
+  const tokens = useMemo(() => new TokenStore(), [])
   const [entries, setEntries] = useState<ListEntry[]>([])
   const [statusFile, setStatusFile] = useState<StatusFile>({})
   const [loading, setLoading] = useState(true)
@@ -111,11 +138,14 @@ export function CompetitionList() {
   const [pageSize, setPageSize] = useState(readPageSize)
   const tableTop = useRef<HTMLDivElement>(null)
   const [save, setSave] = useState<SaveState>({ saving: false, error: null })
+  const [noToken, setNoToken] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [hasToken, setHasToken] = useState(() => tokens.has())
   const today = useMemo(() => kstToday(), [])
 
   const storeRef = useRef<StatusStore | null>(null)
   if (storeRef.current === null) {
-    storeRef.current = new StatusStore(defaultContents, (file, state) => {
+    storeRef.current = new StatusStore(defaultGitHub, tokens, (file, state) => {
       setStatusFile(file)
       setSave(state)
     })
@@ -143,12 +173,12 @@ export function CompetitionList() {
   /** 새로 고침(2). 읽는 동안을 표시하고 두 파일을 다시 읽는다 */
   const refresh = () => {
     setLoading(true)
-    readFiles().then(applyFiles, applyError)
+    readFiles(tokens.get()).then(applyFiles, applyError)
   }
 
   useEffect(() => {
-    readFiles().then(applyFiles, applyError)
-  }, [applyFiles, applyError])
+    readFiles(tokens.get()).then(applyFiles, applyError)
+  }, [applyFiles, applyError, tokens])
 
   useEffect(() => {
     writeFilters(filters)
@@ -204,18 +234,34 @@ export function CompetitionList() {
     setFoldOpen((value) => !value)
   }
 
+  const requireToken = (action: () => void) => {
+    if (!tokens.has()) {
+      setNoToken(true)
+      return
+    }
+    setNoToken(false)
+    action()
+  }
   const onStatus = (id: string, title: string, value: StatusValue) =>
-    store.setStatus(id, title, value)
-  const onHide = (id: string, title: string) => store.hide(id, title)
-  const onRestore = (id: string, title: string) => store.restore(id, title)
+    requireToken(() => store.setStatus(id, title, value))
+  const onHide = (id: string, title: string) => requireToken(() => store.hide(id, title))
+  const onRestore = (id: string, title: string) => requireToken(() => store.restore(id, title))
   const onStar = (id: string, title: string, starred: boolean) =>
-    starred ? store.star(id, title) : store.unstar(id, title)
+    requireToken(() => (starred ? store.star(id, title) : store.unstar(id, title)))
+
+  const openSettings = () => setDialogOpen(true)
+  const closeSettings = useCallback(() => {
+    setDialogOpen(false)
+    const has = tokens.has()
+    setHasToken(has)
+    if (has) setNoToken(false)
+  }, [tokens])
 
   const empty = !loading && readError === null && entries.length === 0
 
   return (
     <>
-      <div className="cc-page" data-el="0">
+      <div className="cc-page" data-el="0" inert={dialogOpen || undefined}>
         <header className="cc-top" data-el="1">
           <div className="cc-titles">
             <h1 data-el="1.1">대회 목록</h1>
@@ -236,14 +282,27 @@ export function CompetitionList() {
           >
             새로 고침
           </button>
+          <button
+            className={`cc-btn${hasToken ? '' : ' dot'}`}
+            data-el="6"
+            type="button"
+            aria-label="설정"
+            title={hasToken ? '설정' : '설정 — 토큰이 없어 읽기만 됩니다'}
+            onClick={openSettings}
+          >
+            설정
+          </button>
         </header>
 
         {readError !== null && <ReadErrorNotice message={readError} onRefresh={refresh} />}
+        {noToken && <NoTokenNotice el="11" elOpen="11.1" onOpenSettings={openSettings} />}
         {save.error !== null && (
           <SaveFailedNotice
             el="12"
+            elOpen="12.1"
             elRetry="12.2"
             error={save.error}
+            onOpenSettings={openSettings}
             onRetry={() => store.retry()}
           />
         )}
@@ -306,9 +365,12 @@ export function CompetitionList() {
         <div className="cc-grow" />
         <div className="cc-foot" data-el="1.3">
           <span>목록은 배치가 매일 08:50에 올리고, 상태는 이 페이지가 저장소에 저장한다</span>
-          <span>싱크독 CCR · main</span>
+          <span>
+            {OWNER}/{REPO} · {BRANCH}
+          </span>
         </div>
       </div>
+      <SettingsDialog open={dialogOpen} tokens={tokens} onClose={closeSettings} />
     </>
   )
 }

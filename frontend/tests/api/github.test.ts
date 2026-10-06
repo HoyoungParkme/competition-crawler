@@ -1,11 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  ContentsError,
-  decodeContent,
-  encodeStatusFile,
-  readStatusVersion,
-  writeStatusFile,
-} from '../../src/api/contents'
+import { decodeContent, encodeStatusFile, writeStatusFile } from '../../src/api/github'
 import { COMMIT_AUTHOR } from '../../src/config'
 
 describe('encodeStatusFile', () => {
@@ -47,7 +41,7 @@ describe('encodeStatusFile', () => {
 })
 
 describe('decodeContent', () => {
-  it('reads content with newlines in it', () => {
+  it('strips the newlines GitHub inserts every 76 characters', () => {
     const encoded = encodeStatusFile({
       'AI팩토리:9304': {
         status: 'submitted',
@@ -87,10 +81,14 @@ describe('writeStatusFile', () => {
 
   it("sends the repository owner's noreply address as author and committer", async () => {
     const sentBody = stubFetch()
-    const sha = await writeStatusFile({}, 'old-sha', 'status: 대회 1 → 진행 중')
+    const sha = await writeStatusFile('token', {}, 'old-sha', 'status: 대회 1 → 진행 중')
     expect(sha).toBe('new-sha')
     const body = sentBody()
-    expect(body).toMatchObject({ message: 'status: 대회 1 → 진행 중', sha: 'old-sha' })
+    expect(body).toMatchObject({
+      message: 'status: 대회 1 → 진행 중',
+      branch: 'main',
+      sha: 'old-sha',
+    })
     expect(body.author).toEqual(COMMIT_AUTHOR)
     expect(body.committer).toEqual(COMMIT_AUTHOR)
     expect(COMMIT_AUTHOR.email).toMatch(/^\d+\+HoyoungParkme@users\.noreply\.github\.com$/)
@@ -98,44 +96,9 @@ describe('writeStatusFile', () => {
 
   it('leaves sha out for a new file and still sends the author', async () => {
     const sentBody = stubFetch()
-    await writeStatusFile({}, null, 'status: 대회 1 지움')
+    await writeStatusFile('token', {}, null, 'status: 대회 1 지움')
     const body = sentBody()
     expect('sha' in body).toBe(false)
     expect(body.committer).toEqual(COMMIT_AUTHOR)
-  })
-})
-
-describe('page server calls', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it('goes to the same origin without a token or GitHub headers', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify({ sha: 'abc', content: encodeStatusFile({}) }), {
-        status: 200,
-      }),
-    )
-    vi.stubGlobal('fetch', fetchMock)
-    expect(await readStatusVersion()).toEqual({ sha: 'abc', file: {} })
-    const [url, init] = fetchMock.mock.calls[0]!
-    expect(url).toBe('/api/contents/data/status.json')
-    expect(JSON.stringify(init?.headers ?? {})).not.toMatch(/Authorization|github/i)
-  })
-
-  it('treats 404 as a file that does not exist yet', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>().mockResolvedValue(new Response('{}', { status: 404 })),
-    )
-    expect(await readStatusVersion()).toEqual({ sha: null, file: {} })
-  })
-
-  it('turns other answers into ContentsError with the status', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>().mockResolvedValue(new Response('{}', { status: 409 })),
-    )
-    await expect(writeStatusFile({}, 'x', 'm')).rejects.toEqual(new ContentsError(409))
   })
 })

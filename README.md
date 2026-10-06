@@ -12,12 +12,12 @@ AI·개발 대회를 매일 아침 여섯 곳에서 모아, 접수 중이고 관
 ## 저장소
 
 ```
-batch/             배치. collector/(본체) · tests/ · settings.toml · finish.py(마무리 단계) · page_server.py(노트북 페이지 서버)
+batch/             배치. collector/(본체) · tests/ · settings.toml · finish.py(마무리 단계)
 data/              competitions.jsonl(목록) · processed.jsonl(처리 이력) · runs.jsonl(실행 요약)는 배치가 커밋한다
                    status.json(진행 상태 · 지움)은 페이지만 쓴다
 frontend/          대회 목록 페이지(React + Vite + TypeScript). src/ · tests/(vitest)
 docs/specs/        명세 원본
-scripts/           daily.sh(노트북 실행기) · page.sh(페이지 띄우기·배포) · notify.sh(윈도 알림)
+scripts/           daily.sh(노트북 실행기) · notify.sh(윈도 알림)
 .env.example       개발 PC 미리보기에 쓰는 환경 변수의 이름
 ```
 
@@ -41,9 +41,6 @@ scripts/           daily.sh(노트북 실행기) · page.sh(페이지 띄우기�
 ```
 # CCR 노트북 일배치 — 08:50~23:50 매시 50분, 그날 예약 실행이 있으면 건너뛴다 (CCR-INFRA-001 C2·8.1)
 50 8-23 * * * $HOME/dev/personal/competition-crawler/scripts/daily.sh >> $HOME/.local/state/ccr/cron.log 2>&1
-# CCR 노트북 페이지 — 켜질 때와 5분마다 떠 있나 보고, main의 frontend가 바뀌면 다시 빌드 (CCR-INFRA-001 8.11)
-@reboot $HOME/dev/personal/competition-crawler/scripts/page.sh >> $HOME/.local/state/ccr/page.log 2>&1
-*/5 * * * * $HOME/dev/personal/competition-crawler/scripts/page.sh >> $HOME/.local/state/ccr/page.log 2>&1
 ```
 
 노트북 시계는 KST입니다(`timedatectl`). cron은 WSL이 켜져 있을 때만 돕니다. cron이 부르는 것은 작업 사본의 실행기지만, 실행기는 원본 `main`을 새로 받아 그 안의 실행기와 코드로 돕니다. 작업 사본에서 고치는 중인 것은 섞이지 않습니다.
@@ -85,18 +82,10 @@ uv run ruff format --check && uv run ruff check
 
 ## 대회 목록 페이지
 
-노트북에서 **http://localhost:8090** 을 엽니다. 노트북 페이지 서버(`batch/page_server.py`)가 127.0.0.1에만 열려 있어 폰·다른 PC에서는 안 열립니다. 토큰은 없습니다 — 페이지 서버가 `batch.env`의 싱크독 토큰으로 원본에 씁니다.
-
-- **보기**: 목록 파일과 상태 파일을 원본 `main`에서 바로 읽으므로 캐시가 없습니다. 배치가 막 올린 목록과 방금 바꾼 상태가 곧바로 보입니다.
-- **상태 바꾸기·지우기·별표**: 바꿀 때마다 `data/status.json`을 바꾼 커밋이 원본에 하나씩 생깁니다(작성자는 저장소 주인 noreply 주소). 다른 탭이나 브라우저가 먼저 썼으면 한 번 다시 씁니다.
-- **띄우기·배포**: crontab의 `page.sh`가 켜질 때와 5분마다 서버가 떠 있나 보고, 원본 `main`의 `frontend/`나 `page_server.py`가 바뀌면 다시 빌드해 다시 띄웁니다. 빌드가 실패하면 이전 빌드를 그대로 내고 윈도 알림 「CCR 페이지 빌드 실패」가 뜹니다. 기록은 `~/.local/state/ccr/page.log`.
-- **저장이 안 될 때**: 「페이지 서버·싱크독에 닿지 못했습니다」면 싱크독(`docker compose ps`)이 떠 있는지, 「이 주소로는 저장할 수 없습니다」면 주소를 `http://localhost:8090`으로 열었는지 봅니다.
-
-개발할 때:
+노트북 페이지 서버로 옮기는 중입니다(카드 E2). 그 전까지 GitHub Pages 페이지는 없습니다.
 
 ```bash
 cd frontend
 npm ci
 npm test && npm run lint && npm run build
-cd ../batch && uv run pytest tests/test_page_server.py
 ```
