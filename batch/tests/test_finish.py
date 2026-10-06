@@ -61,7 +61,7 @@ def env_for(tmp_path: Path, run_id: str = "9-1") -> dict[str, str]:
     return {
         "RUN_ID": run_id,
         "RUN_STARTED_AT": "2026-09-26T23:50:00Z",
-        "GITHUB_EVENT_NAME": "schedule",
+        "RUN_KIND": "schedule",
         "APPEND_DIR": str(append),
     }
 
@@ -132,8 +132,8 @@ def test_appends_list_history_and_run_line_with_keep_count(tmp_path: Path, origi
             "keep_count": 2,
         }
     ]
-    log = git(origin, "log", "-1", "--format=%an|%s", "main")
-    assert log.startswith("github-actions[bot]|실행 기록 2026-09-27 · 9-1")
+    log = git(origin, "log", "-1", "--format=%an <%ae>|%cn|%s", "main")
+    assert log.startswith("ccr-batch <ccr-batch@localhost>|ccr-batch|실행 기록 2026-09-27 · 9-1")
     changed = git(origin, "show", "--name-only", "--format=", "main").split()
     assert changed == [
         "data/competitions.jsonl",
@@ -281,3 +281,51 @@ def test_existing_ids_skips_broken_lines_and_missing_file(tmp_path: Path) -> Non
     path = tmp_path / "competitions.jsonl"
     path.write_text(entry("DACON", "1") + '\n{broken\n{"source": "x"}\n', encoding="utf-8")
     assert finish.existing_ids(path) == {"DACON:1"}
+
+
+@pytest.mark.parametrize("missing", ["RUN_ID", "APPEND_DIR", "WORK_DIR", "REMOTE_URL"])
+def test_main_needs_the_runner_variables(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    missing: str,
+) -> None:
+    env = {
+        "RUN_ID": "local-20260926T235000",
+        "APPEND_DIR": str(tmp_path / "append"),
+        "WORK_DIR": str(tmp_path / "work"),
+        "REMOTE_URL": str(tmp_path / "origin.git"),
+    }
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.delenv(missing)
+    assert finish.main() == 1
+    assert f"환경 변수 {missing}이 없다" in capsys.readouterr().out
+
+
+def test_main_pushes_to_the_remote_from_the_runner(
+    tmp_path: Path,
+    origin: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """원격·작업 폴더·실행 종류는 실행기가 넘긴 이름에서 읽는다. 토큰은 어디에도 찍지 않는다."""
+    env = env_for(tmp_path, run_id="local-20260926T235000")
+    run = {
+        "run_id": "local-20260926T235000",
+        "base_date": "2026-09-27",
+        "kind": "manual",
+        "result": "success",
+    }
+    (Path(env["APPEND_DIR"]) / "runs.jsonl").write_text(json.dumps(run) + "\n", encoding="utf-8")
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("RUN_KIND", "manual")
+    monkeypatch.setenv("WORK_DIR", str(tmp_path / "work"))
+    monkeypatch.setenv("REMOTE_URL", str(origin))
+    monkeypatch.setenv("PUSH_TOKEN", "tok-secret-value")
+    assert finish.main() == 0
+    assert (tmp_path / "work" / "finish-main" / ".git").is_dir()
+    runs = main_file(origin, tmp_path, "runs.jsonl")
+    assert [(r["run_id"], r["kind"]) for r in runs] == [("local-20260926T235000", "manual")]
+    assert "tok-secret-value" not in capsys.readouterr().out
