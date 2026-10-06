@@ -2,7 +2,7 @@
 doc_id: CCR-DOM-003
 type: DOM
 title: ERD·DD — 대회 수집 배치
-status: draft
+status: approved
 upstream: [CCR-DOM-002, CCR-DOM-001, CCR-INFRA-001, CCR-API-001]
 ---
 
@@ -10,22 +10,22 @@ upstream: [CCR-DOM-002, CCR-DOM-001, CCR-INFRA-001, CCR-API-001]
 
 ## 0. 이 문서가 다루는 것
 
-배치와 대회 목록 페이지가 읽고 쓰는 데이터의 모양을 정한다. 데이터베이스는 없다([[CCR-INFRA-001#C4]]). 그 자리에 원본(노트북의 싱크독 서버 저장소) `data/`의 **데이터 파일 넷**이 있다([[CCR-INFRA-001]] 6.2). 2026-09-29까지 있던 노션 `대회목록`은 목록 파일과 상태 파일로 갈라져 들어왔다.
+배치와 대회 목록 페이지가 읽고 쓰는 데이터의 모양을 정한다. 데이터베이스는 없다([[CCR-INFRA-001#C4]]). 그 자리에 저장소 `data/`의 **데이터 파일 넷**이 있다([[CCR-INFRA-001]] 6.2). 2026-09-29까지 있던 노션 `대회목록`은 목록 파일과 상태 파일로 갈라져 들어왔다.
 
 | 테이블 | 실체 | 쓰는 쪽 | 읽는 쪽 |
 |---|---|---|---|
 | `competitions` | `data/competitions.jsonl`. 한 줄이 목록 항목 하나 | 배치(추가분) → 마무리 단계가 커밋 | 배치 · 마무리 단계 · 페이지 · 관리자 |
-| `status` | `data/status.json`. 객체 하나. 키가 식별자, 값이 상태 하나 | 페이지 → 노트북 페이지 서버가 원본에 커밋 | 페이지 |
+| `status` | `data/status.json`. 객체 하나. 키가 식별자, 값이 상태 하나 | 페이지(Contents API로 커밋) | 페이지 |
 | `processed` | `data/processed.jsonl`. 한 줄이 처리 이력 기록 하나 | 배치(추가분) → 마무리 단계가 커밋 | 배치 · 마무리 단계 · 관리자 |
 | `runs` | `data/runs.jsonl`. 한 줄이 실행 하나 | 배치(추가분) · 마무리 단계(중단 줄) → 마무리 단계가 커밋 | 배치 · 마무리 단계 · 관리자 |
 | `run_sources` | `runs` 한 줄 안의 `sources` 객체 | `runs`와 같다 | 배치(소스 0건 경고) |
 | `run_warnings` | `runs` 한 줄 안의 `warnings` 배열 | `runs`와 같다 | 사람 |
 
-**한 곳에 정하고 셋이 따로 따른다.** 배치(`collector`) · 마무리 단계(`finish.py`) · 페이지(`frontend/`)는 코드를 나누지 않고 이 문서를 각자 따른다([[CCR-DOM-001]] 4.2 · [[CCR-INFRA-001]] 8.2 · [[CCR-DOM-002]] 5장 결정 9). 필드 이름을 바꾸면 세 곳을 함께 고친다. 노트북 페이지 서버(`page_server.py`)는 원본의 두 파일을 그대로 내주고 페이지가 만든 상태 파일을 그대로 커밋하므로 필드를 몰라도 된다.
+**한 곳에 정하고 셋이 따로 따른다.** 배치(`collector`) · 마무리 단계(`finish.py`) · 페이지(`frontend/`)는 코드를 나누지 않고 이 문서를 각자 따른다([[CCR-DOM-001]] 4.2 · [[CCR-INFRA-001]] 8.2 · [[CCR-DOM-002]] 5장 결정 9). 필드 이름을 바꾸면 세 곳을 함께 고친다.
 
 **파일의 공통 형식.** 배치가 쓰는 세 파일은 JSON Lines다. UTF-8, 줄바꿈 LF, 한 줄에 JSON 객체 하나. 빈 줄은 건너뛴다. 상태 파일만 JSON 객체 하나다. 페이지가 통째로 읽고 통째로 다시 쓴다([[CCR-INFRA-001]] 6.2). 네 파일 모두 날짜는 KST 날짜를 `YYYY-MM-DD` 문자열로, 시각은 UTC를 `YYYY-MM-DDTHH:MM:SSZ`로 쓴다. 값이 없으면 `null`이다. 한글은 이스케이프하지 않는다(`ensure_ascii=false`).
 
-**자유 문장은 판별 근거 한 줄뿐이다.** 네 파일은 원본에 커밋되어 git 이력에서 지워지지 않고, 싱크독 백업에도 실린다. 2026-10-06까지는 공개 저장소라 누구에게나 보였다. 예외 메시지 · URL 경로의 오류 본문 · 원문 실패 사유는 노트북의 실행 로그에만 간다([[CCR-INFRA-001]] 5.4). 대회명과 링크는 원래 공개된 정보라 적는다. 판별 근거는 대회명과 분류 이유뿐이라 비밀값이 섞일 자리가 없어 목록 파일에 적는다([[CCR-API-001]] 3.2).
+**자유 문장은 판별 근거 한 줄뿐이다.** 네 파일은 공개 저장소에 커밋되고 git 이력에서 지워지지 않는다. 예외 메시지 · URL 경로의 오류 본문 · 원문 실패 사유는 로그에만 간다([[CCR-INFRA-001]] 5.4). 대회명과 링크는 원래 공개된 정보라 적는다. 판별 근거는 대회명과 분류 이유뿐이라 비밀값이 섞일 자리가 없어 목록 파일에 적는다([[CCR-API-001]] 3.2).
 
 ## 1. ERD
 
@@ -54,7 +54,7 @@ erDiagram
         datetime updated_at
     }
     runs {
-        string run_id PK "local-UTC 시작 시각. 옛 줄은 실행 번호-시도 번호"
+        string run_id PK "실행 번호-시도 번호"
         date base_date
         string kind
         string result
@@ -144,9 +144,9 @@ erDiagram
 | starred | bool | 선택. 없거나 불 값이 아니면 `false` | 별표를 붙였는지. 2026-10-01에 더했고 그 전에 쓴 항목에는 없다. 페이지는 바꾼 항목에 늘 적는다 | `true` |
 | updated_at | datetime | 필수 | 마지막으로 바꾼 시각. UTC, 초 단위 | `2026-09-29T00:12:41Z` |
 
-- **페이지만 쓴다.** 페이지가 만든 내용을 노트북 페이지 서버가 원본에 커밋한다. 배치도 마무리 단계도 이 파일을 열지 않는다. 배치의 커밋은 다른 세 파일만 담고, 페이지 서버의 커밋은 이 파일만 담는다([[CCR-INFRA-001]] 6.1 · 8.2).
-- **쓰는 모양.** 키를 문자열 순으로 정렬하고, 두 칸 들여쓰기, 끝에 줄바꿈 하나. 같은 내용이면 같은 바이트가 되게 해 git 이력에서 바뀐 항목만 보이게 한다([[CCR-API-001#PUT/localhost:8090/api/contents/data/status.json]]).
-- **통째로 바꾼다.** 페이지는 페이지 서버에서 최신 판을 읽고, 바꾼 항목만 얹어 파일 전체를 다시 쓴다. 판(`sha`)이 어긋나면 다시 읽고 한 번 더 쓴다([[CCR-API-001]] 2.3). 다른 탭이나 브라우저가 바꾼 다른 항목의 값은 남는다.
+- **페이지만 쓴다.** 배치도 마무리 단계도 이 파일을 열지 않는다. 배치의 커밋은 다른 세 파일만 담고, 페이지의 커밋은 이 파일만 담는다([[CCR-INFRA-001]] 6.1 · 8.2).
+- **쓰는 모양.** 키를 문자열 순으로 정렬하고, 두 칸 들여쓰기, 끝에 줄바꿈 하나. 같은 내용이면 같은 바이트가 되게 해 git 이력에서 바뀐 항목만 보이게 한다([[CCR-API-001#PUT/api.github.com/…/contents/data/status.json]]).
+- **통째로 바꾼다.** 페이지는 Contents API로 최신 판을 읽고, 바꾼 항목만 얹어 파일 전체를 다시 쓴다. 판(`sha`)이 어긋나면 다시 읽고 한 번 더 쓴다([[CCR-API-001]] 2.3). 다른 기기가 바꾼 다른 항목의 값은 남는다.
 - **읽히지 않는 파일.** 객체가 아니면 페이지가 읽지 못했다고 알린다. 값이 위 모양이 아닌 항목은 `not_started` · `hidden=false` · `starred=false`로 본다. 목록에 없는 키는 무시하고, 다시 쓸 때도 지우지 않는다(목록 파일을 되돌린 경우, [[CCR-INFRA-001]] 6.2).
 - 파일이 없으면 빈 객체다. 첫 쓰기가 만든다.
 
@@ -173,7 +173,7 @@ erDiagram
 | deadline | date? | | 접수마감일. 채우는 법은 `start_date`와 같다 | `2026-10-06` |
 | result | string | 필수. `keep` · `discard` | 남김 · 버림 | `keep` |
 | base_date | date? | | 적은 실행의 기준일. 마무리 단계는 이 값이 없어도 받는다 | `2026-09-29` |
-| run_id | string | 필수 | 적은 실행의 식별자. 꼴은 `runs`의 `run_id`와 같다. 예시는 2026-10-06까지의 꼴이다 | `18234567890-1` |
+| run_id | string | 필수 | 적은 실행의 식별자 | `18234567890-1` |
 
 - **필수 넷**(`source` · `source_id` · `result` · `run_id`)이 없거나 빈 줄은 마무리 단계가 붙이지 않는다([[CCR-INFRA-001]] 8.2). 배치는 그런 줄이 있는 처리 이력을 읽지 못한 것으로 보고 실행을 실패로 끝낸다([[CCR-UC-001#UC-S4]] 2b).
 - 날짜가 `YYYY-MM-DD`로 읽히지 않거나 `result`가 둘 가운데 하나가 아닌 줄도 배치는 읽지 못한 것으로 본다.
@@ -193,9 +193,9 @@ erDiagram
 
 | 컬럼 | 타입 | 제약 | 의미 | 예시 |
 |---|---|---|---|---|
-| run_id | string | 필수 · 유일 | 실행 식별자. 노트북 실행기가 시작 시각(UTC, 초 단위)으로 만든 `local-YYYYMMDDTHHMMSS`다. 날짜가 UTC라 09:00 KST 전에 시작한 실행은 `base_date`보다 하루 이르다. 2026-10-06까지 적힌 줄은 Actions의 `실행 번호-시도 번호` 꼴이고 그대로 둔다. 두 꼴 모두 맞는 값이다 | `local-20261006T235008` |
+| run_id | string | 필수 · 유일 | 실행 번호와 시도 번호. `github.run_id`-`github.run_attempt` | `18234567890-1` |
 | base_date | date | 필수 | 기준일. 실행이 시작한 시각의 KST 날짜 | `2026-09-29` |
-| kind | string | 필수. `schedule` · `manual` | 실행 종류. 노트북 실행기가 넘기는 `RUN_KIND`다. crontab이 부른 예약 실행은 `schedule`, 수동 실행(`--manual`)은 `manual` | `schedule` |
+| kind | string | 필수. `schedule` · `manual` | 실행 종류 | `schedule` |
 | result | string | 필수. `success` · `failure` · `aborted` | 결과 | `success` |
 | failure_reason | string? | 결과가 `failure`일 때만 | `all_sources_failed` · `list_read_failed` · `history_read_failed` · `history_shrank` | `null` |
 | keep_count | int | 마무리 단계가 채운다 | 이 실행을 올린 뒤 `processed`에 있는 `result=keep` 줄의 수 | `412` |
@@ -217,7 +217,7 @@ erDiagram
 
 ```json
 {"run_id":"18234567890-1","base_date":"2026-09-29","kind":"schedule","result":"success","failure_reason":null,"keep_count":412,"sources":{"event-us":{"collected":39,"normalized":39,"failure":null},"Kaggle":{"collected":0,"normalized":0,"failure":"missing_config"}},"dropped":{"normalize":0,"expired":140,"known":230,"discarded":12},"loaded":6,"judge_failed":0,"deferred":0,"warnings":[],"duration_s":93.4}
-{"run_id":"local-20261006T235008","base_date":"2026-10-07","kind":"schedule","result":"aborted","keep_count":418}
+{"run_id":"18234567999-1","base_date":"2026-09-30","kind":"schedule","result":"aborted","keep_count":418}
 ```
 
 #### run_sources
