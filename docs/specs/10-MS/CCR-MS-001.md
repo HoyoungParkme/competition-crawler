@@ -2,7 +2,7 @@
 doc_id: CCR-MS-001
 type: MS
 title: MINISPEC — 대회 수집 배치
-status: approved
+status: draft
 upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 ---
 
@@ -12,18 +12,18 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 클래스 명세([[CCR-DOM-002]])의 메서드와 모듈 함수 하나하나가 무엇을 받아 무엇을 하는지다. 시간순 흐름은 [[CCR-SEQ-001]], 타입은 [[CCR-DOM-002]] 2.4, 줄 형식은 [[CCR-DOM-003]]에서만 찾는다.
 
-- 항목 ID는 `클래스.메서드` 또는 `접두어.함수`다. 접두어는 모듈이 있는 곳이다. 파일 이름과 같으면 그 파일(`matching` · `eventus` · `dacon` · `kaggle` · `wevity` · `aifactory` · `contestkorea` · `openai_judge` · `settings` · `logging` · `dates` · `text` · `http` · `robots` · `finish`), 그 밖은 경계 이름이다. `screen` = `domains/screen/service.py`, `list` = `domains/list/`(`models.py`의 `entry_of`), `record` = `domains/record/crud.py`, `__main__` = `collector/__main__.py`. 2026-09-29에 노션 경계의 함수 열넷과 `NotionHttp` · `secret_variants`를 지우고 목록 경계의 함수 열하나를 더했다.
+- 항목 ID는 `클래스.메서드` 또는 `접두어.함수`다. 접두어는 모듈이 있는 곳이다. 파일 이름과 같으면 그 파일(`matching` · `eventus` · `dacon` · `kaggle` · `wevity` · `aifactory` · `contestkorea` · `openai_judge` · `settings` · `logging` · `dates` · `text` · `http` · `robots` · `finish` · `page_server`), 그 밖은 경계 이름이다. `screen` = `domains/screen/service.py`, `list` = `domains/list/`(`models.py`의 `entry_of`), `record` = `domains/record/crud.py`, `__main__` = `collector/__main__.py`. 2026-09-29에 노션 경계의 함수 열넷과 `NotionHttp` · `secret_variants`를 지우고 목록 경계의 함수 열하나를 더했다. 2026-10-06에 GitHub를 빼면서 Actions에 가릴 값을 알리던 `logging.register_actions_masks`를 지우고, 노트북 페이지 서버(`batch/page_server.py`)의 함수 일곱을 더했다(2.9).
 - 처리가 몇 줄이면 간략형(시그니처 · 처리 · 테스트 관점)으로 쓴다.
-- 시그니처는 코드와 글자 그대로 적는다. 이름은 함수 이름만(점 없이), `self` · `cls`는 빼고, 타입과 기본값까지. 코드의 함수 docstring 첫 줄은 `CCR-MS-001#항목`이고, 싱크독 `tools/check_code.py`가 둘을 대조한다(싱크독 개발 규약 SYNC-STD-004 DEV-3 · DEV-14).
+- 시그니처는 코드와 글자 그대로 적는다. 이름은 함수 이름만(점 없이), `self` · `cls`는 빼고, 타입과 기본값까지. 코드의 함수 docstring 첫 줄은 `CCR-MS-001#항목`이고, 싱크독 `tools/check_code.py`가 둘을 대조한다(싱크독 개발 규약 SYNC-STD-004 DEV-3 · DEV-14). 표준 라이브러리가 이름을 정한 훅(`PageHandler`의 `do_GET` · `do_PUT`)은 싱크독의 MS 항목 패턴(`[A-Za-z_]+\.[a-z_]+`)에 맞지 않아 항목을 두지 않는다. 훅은 항목이 있는 메서드(`serve_get` · `serve_put`)를 부르기만 한다.
 - 날짜는 모두 KST 날짜(`date`)다. 기준일은 `RunContext.base_date` 하나다.
 - 테스트 관점은 `batch/tests/`에 있는 테스트가 확인하는 것이다. 테스트가 아니라 손으로 재 본 것은 (실측)이라 적는다.
-- 대회 목록 페이지(`frontend/`)의 함수는 이 문서에 두지 않는다. 모듈과 시그니처는 [[CCR-DOM-002]] 4.11이 정했고, TypeScript라 `check_code.py`의 대상이 아니다. 순수 함수의 테스트는 `frontend/tests/`가 본다([[CCR-DOM-002]] 5장 결정 11).
+- 대회 목록 페이지(`frontend/`)의 함수는 이 문서에 두지 않는다. 모듈과 시그니처는 [[CCR-DOM-002]] 4.11이 정했고, TypeScript라 `check_code.py`의 대상이 아니다. 순수 함수의 테스트는 `frontend/tests/`가 본다([[CCR-DOM-002]] 5장 결정 11). 그 페이지를 내는 노트북 페이지 서버는 파이썬이라 이 문서에 둔다(2.9).
 
 ## 1. 함수 목록
 
 | 모듈 | 함수 |
 |---|---|
-| core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#Secrets.values]] · [[#settings.read_dotenv]] · [[#logging.register_actions_masks]] · [[#SecretFilter.filter]] · [[#logging.setup_logging]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
+| core · shared | [[#RunContext.from_env]] · [[#Settings.load]] · [[#Secrets.from_env]] · [[#Secrets.values]] · [[#settings.read_dotenv]] · [[#SecretFilter.filter]] · [[#logging.setup_logging]] · [[#dates.parse_to_kst_date]] · [[#dates.kst_date_of]] · [[#dates.kst_midnight_utc]] · [[#text.clean_text]] · [[#text.html_text]] |
 | infra | [[#SourceHttp.fetch]] · [[#SourceHttp.remaining]] · [[#SourceHttp.close]] · [[#http.parse_retry_after]] · [[#http.new_client]] · [[#robots.ensure_allowed]] |
 | 수집 | [[#Competition.dates_filled]] · [[#SourceResult.normalized]] · [[#SourceResult.failed]] · [[#Source.collect]] · [[#Source.missing_config]] · [[#CollectService.collect_all]] · [[#CollectService._collect_one]] · [[#eventus.build_query]] · [[#eventus.parse_page]] · [[#eventus.normalize]] · [[#EventUsSource.collect]] · [[#EventUsSource.missing_config]] · [[#dacon.parse_page]] · [[#dacon.normalize]] · [[#dacon.link_for]] · [[#DaconSource.collect]] · [[#DaconSource.missing_config]] · [[#kaggle.parse_page]] · [[#kaggle.normalize]] · [[#kaggle.is_practice]] · [[#KaggleSource.collect]] · [[#KaggleSource.missing_config]] · [[#wevity.parse_list]] · [[#wevity.parse_detail_end]] · [[#wevity.deadline_of]] · [[#WevitySource.collect]] · [[#WevitySource._calibrate]] · [[#WevitySource.missing_config]] · [[#aifactory.extract_payload]] · [[#aifactory.parse_tasks]] · [[#aifactory.parse_page]] · [[#aifactory.group_tasks]] · [[#aifactory.competition_name]] · [[#aifactory.to_competition]] · [[#AiFactorySource.collect]] · [[#AiFactorySource.missing_config]] · [[#contestkorea.parse_list]] · [[#contestkorea.resolve_dates]] · [[#ContestKoreaSource.collect]] · [[#ContestKoreaSource.missing_config]] |
 | 선별 | [[#matching.normalize_title]] · [[#matching.extract_marks]] · [[#matching.normalize_link]] · [[#matching.key_of_competition]] · [[#matching.key_of_entry]] · [[#matching.key_of_history]] · [[#matching.similarity]] · [[#matching.judge_pair]] · [[#matching.group]] · [[#matching.representative_order]] · [[#Bundle.deadline]] · [[#ScreenService.drop_expired]] · [[#ScreenService.bundle]] · [[#ScreenService.build_known]] · [[#KnownSet.add]] · [[#ScreenService.split_known]] · [[#ScreenService._matches]] · [[#ScreenService._record_known]] · [[#screen.entries_for]] · [[#ScreenService.judge]] · [[#ScreenService._ask_all]] · [[#Judge.judge]] · [[#OpenAiJudge.judge]] · [[#openai_judge.build_input]] |
@@ -31,6 +31,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 | 기록 | [[#HistoryRecord.of]] · [[#HistoryRecord.to_dict]] · [[#HistoryRecord.from_dict]] · [[#SourceLine.to_dict]] · [[#RunWarning.to_dict]] · [[#RunLine.fail]] · [[#RunLine.to_dict]] · [[#RecordService.start]] · [[#RecordService.load]] · [[#State.keep_count]] · [[#State.last_keep_count]] · [[#RecordService.history_shrank]] · [[#RecordService.append]] · [[#RecordService.appended_count]] · [[#RecordService.zero_count_warnings]] · [[#RecordService.write_run]] · [[#RecordCrud.read_history]] · [[#RecordCrud.read_runs]] · [[#RecordCrud.prepare]] · [[#RecordCrud.reset_appends]] · [[#RecordCrud.write_history_appends]] · [[#RecordCrud.write_run_append]] · [[#record._atomic_write]] · [[#record.export_main_state]] |
 | 실행의 흐름 | [[#__main__.main]] · [[#__main__.run_batch]] · [[#__main__.run_collect]] · [[#__main__.sources_of]] · [[#Pipeline.run]] · [[#Pipeline._run]] · [[#Pipeline._load]] · [[#Pipeline._finish]] |
 | 마무리 단계 | [[#finish.finish]] · [[#finish.read_additions]] · [[#finish.base_date_of]] · [[#finish.has_run]] · [[#finish.count_keep]] · [[#finish.existing_ids]] · [[#Git.fresh_main]] · [[#Git.commit_and_push]] · [[#finish.append_lines]] · [[#finish.main]] |
+| 페이지 서버 | [[#Mirror.refresh]] · [[#Mirror.read]] · [[#Mirror.write]] · [[#page_server.allowed]] · [[#PageHandler.serve_get]] · [[#PageHandler.serve_put]] · [[#page_server.main]] |
 
 ## 2. 함수
 
@@ -42,23 +43,23 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **근거** [[CCR-UC-001#UC-A1]] 1 · 1b5 · 1b6 · 1b7 · [[CCR-INFRA-001]] 8.1 · [[CCR-SEQ-001#SEQ-8]]
 
-**입력** 환경 변수. `GITHUB_ACTIONS` · `DRY_RUN` · `RUN_STARTED_AT` · `RUN_ID` · `GITHUB_EVENT_NAME` · `GITHUB_REF` · `IGNORE_DISCARDS` · `STATE_DIR` · `APPEND_DIR` · `RUNNER_TEMP`
+**입력** 환경 변수. `BATCH_RUNNER` · `DRY_RUN` · `RUN_STARTED_AT` · `RUN_ID` · `RUN_KIND` · `IGNORE_DISCARDS` · `STATE_DIR` · `APPEND_DIR` · `WORK_DIR`. `STATE_DIR` 말고는 노트북 실행기(`scripts/daily.sh`)가 배치 단계에 넘긴다([[CCR-INFRA-001]] 8.1)
 
 **처리**
-1. `in_actions = GITHUB_ACTIONS == "true"`.
-2. if `in_actions` 이고 `DRY_RUN`이 `true` · `false`가 아님 → `RunModeError` · else → 다음.
-3. `write = in_actions and DRY_RUN == "false"`. Actions 밖은 늘 거짓이다.
+1. `in_runner = BATCH_RUNNER == "laptop"`.
+2. if `in_runner` 이고 `DRY_RUN`이 `true` · `false`가 아님 → `RunModeError` · else → 다음.
+3. `write = in_runner and DRY_RUN == "false"`. 실행기 밖은 늘 거짓이다.
 4. 시작 시각 = `RUN_STARTED_AT`(ISO, `Z` 허용. 시간대가 없으면 UTC로 본다) · 없으면 `now` · 그것도 없으면 지금. `base_date = kst_date_of(시작 시각)`.
-5. `run_id = RUN_ID` · 없으면 `local-YYYYMMDDTHHMMSS`. `kind = schedule` if `GITHUB_EVENT_NAME == schedule` · else `manual`.
+5. `run_id = RUN_ID` · 없으면 시작 시각으로 `local-YYYYMMDDTHHMMSS`(실행기가 넘기는 값도 같은 꼴이다). `kind = schedule` if `RUN_KIND == schedule` · else `manual`.
 6. `ignore_discards_requested = IGNORE_DISCARDS == "true"`, `ignore_discards = requested and not write`.
-7. 상태 폴더: if `STATE_DIR` → 그것(꺼내지 않음) · else if `in_actions` 이고 `GITHUB_REF == refs/heads/main` → `REPO_ROOT/data` · else → 새 임시 폴더, `state_from_main = True`.
-8. 추가분 폴더: `APPEND_DIR` · 없으면 `RUNNER_TEMP/append` · 없으면 시스템 임시 폴더 아래 `competition-crawler-append`.
+7. 상태 폴더: if `STATE_DIR` → 그것(꺼내지 않음) · else if `in_runner` → `REPO_ROOT/data`(실행기가 새로 받은 main) · else → 새 임시 폴더, `state_from_main = True`.
+8. 추가분 폴더: `APPEND_DIR` · 없으면 `WORK_DIR/append` · 없으면 시스템 임시 폴더 아래 `competition-crawler-append`.
 
 **출력** `RunContext`
 
-**예외** Actions 안에서 `DRY_RUN`이 깨짐 → `RunModeError`
+**예외** 실행기 안에서 `DRY_RUN`이 깨짐 → `RunModeError`
 
-**테스트 관점** 08:50 KST(UTC 전날 23:50)의 기준일이 KST 날짜다 · `DRY_RUN`이 `""` · `True` · `1`이면 `RunModeError` · Actions 밖은 `write=False`이고 main 판을 꺼낸다 · 브랜치 실행도 꺼낸다 · 쓰는 실행에서 버림 무시는 꺼진다 · `workflow_dispatch`는 `manual`
+**테스트 관점** 08:50 KST(UTC 전날 23:50)의 기준일이 KST 날짜다 · 실행기 안의 예약 실행은 쓰고, 받은 main(`REPO_ROOT/data`)을 읽고, 추가분은 `WORK_DIR/append` · 실행기 안에서 `DRY_RUN`이 `""` · `True` · `1`이면 `RunModeError` · 실행기 밖은 `write=False`이고 main 판을 꺼낸다 · 옛 표시(`GITHUB_ACTIONS` · `CI`)로는 쓰지 않는다 · 실행기 안의 미리보기는 받은 main을 읽고 쓰지 않는다 · 쓰는 실행에서 버림 무시는 꺼진다 · `RUN_KIND`가 `manual`이거나 비면 `manual`
 
 #### Settings.load 조정값 읽기
 
@@ -74,7 +75,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `from_env(env: Mapping[str, str]) -> Secrets`
 
-**처리** 두 이름(`OPENAI_API_KEY` · `KAGGLE_API_TOKEN`)을 읽고 앞뒤 공백을 뗀다. 빈 문자열은 `None`이다. 등록되지 않은 시크릿은 빈 문자열로 들어오기 때문이다([[CCR-INFRA-001]] 5장).
+**처리** 두 이름(`OPENAI_API_KEY` · `KAGGLE_API_TOKEN`)을 읽고 앞뒤 공백을 뗀다. 빈 문자열은 `None`이다. 설정 파일(`batch.env` · `.env`)에 자리만 있고 값이 비면 빈 문자열로 들어오기 때문이다([[CCR-INFRA-001]] 5장).
 
 **테스트 관점** 빈 값 · 공백만 있는 값이 `None`
 
@@ -82,7 +83,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `values() -> list[str]`
 
-**처리** 두 비밀값 가운데 있는 값만 차례대로 돌려준다. 로그 가리기와 Actions 가릴 값 알리기가 쓴다([[#logging.register_actions_masks]] · [[#SecretFilter.filter]]).
+**처리** 두 비밀값 가운데 있는 값만 차례대로 돌려준다. 로그 가리기가 쓴다([[#SecretFilter.filter]]).
 
 **테스트 관점** [[#Secrets.from_env]]의 테스트가 함께 본다
 
@@ -90,17 +91,9 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `read_dotenv(path: Path) -> dict[str, str]`
 
-**처리** 파일이 없으면 빈 것. 줄마다 `#`로 시작하거나 `=`가 없는 줄은 건너뛰고, `export ` 머리를 떼고, 값의 짝이 맞는 따옴표를 뗀다. 로컬 실행에서만 부르고 이미 있는 환경 변수가 이긴다([[#__main__.main]]).
+**처리** 파일이 없으면 빈 것. 줄마다 `#`로 시작하거나 `=`가 없는 줄은 건너뛰고, `export ` 머리를 떼고, 값의 짝이 맞는 따옴표를 뗀다. 실행기 밖(작업 사본)에서만 부르고 이미 있는 환경 변수가 이긴다([[#__main__.main]]).
 
 **테스트 관점** 주석 · 따옴표 · `export` · 빈 값 · 깨진 줄
-
-#### logging.register_actions_masks Actions에 가릴 값 알리기
-
-**시그니처** `register_actions_masks(values: Iterable[str], emit: Callable[[str], None] | None = None) -> None`
-
-**처리** 값마다 `::add-mask::값`을 표준 출력에 찍는다. 노션 ID의 두 표기를 만들던 `secret_variants`는 노션과 함께 없앴다([[CCR-DOM-002]] 4.9). 어떤 로그보다 먼저 부른다. Actions 안에서만 부른다.
-
-**테스트 관점** 값마다 한 줄
 
 #### SecretFilter.filter 로그 가리기
 
@@ -1054,9 +1047,9 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **근거** [[CCR-INFRA-001]] 6.2 · [[CCR-DOM-002]] 5장 결정 5 · [[CCR-SEQ-001#SEQ-1]]
 
-**처리** `RecordCrud.prepare`(기본 브랜치 밖이면 origin/main의 세 파일을 꺼냄). 그다음 if 목록에 쓰는 실행 → 추가분 두 파일을 빈 파일로 바꿔 쓴다 · else 아무것도 하지 않는다. `Pipeline`이 `ListService.load`보다 먼저 부르므로 목록 파일도 꺼내진 뒤에 읽힌다.
+**처리** `RecordCrud.prepare`(실행기 밖이면 origin/main의 세 파일을 꺼냄). 그다음 if 목록에 쓰는 실행 → 추가분 두 파일을 빈 파일로 바꿔 쓴다 · else 아무것도 하지 않는다. `Pipeline`이 `ListService.load`보다 먼저 부르므로 목록 파일도 꺼내진 뒤에 읽힌다.
 
-**테스트 관점** 미리보기는 추가분 폴더를 만들지 않음 · 브랜치 실행은 main 판을 꺼냄
+**테스트 관점** 미리보기는 추가분 폴더를 만들지 않음 · 실행기 밖의 실행은 main 판을 꺼냄
 
 #### RecordService.load 기록 파일 읽기
 
@@ -1218,15 +1211,14 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **처리**
 1. 인자를 읽는다. 하위 명령 없음 → 하루치 · `collect [--source 이름] [--show]` → 수집만.
-2. 환경 변수를 모은다. if Actions 밖 → 저장소 루트 `.env`의 값을 없는 이름에만 더한다.
-3. if Actions 안 → `register_actions_masks(비밀값)`. 어떤 출력보다 먼저.
-4. `setup_logging(비밀값)` · 신호 처리기(SIGINT · SIGTERM). 처리기는 if 이미 멈춤 표시 → `Stopped`를 낸다 · else 멈춤 표시를 켠다.
-5. `run_collect` 또는 `run_batch`.
-6. if `RunModeError` → 2 · if `Stopped` → 로그를 비우고 판별 스레드를 기다리지 않고 130으로 끝낸다 · if 그 밖의 예외 → 스택을 로그에 남기고 1.
+2. 환경 변수를 모은다. if 실행기 밖(`BATCH_RUNNER`가 `laptop`이 아님) → 저장소 루트 `.env`의 값을 없는 이름에만 더한다. 실행기 안은 `.env`를 읽지 않는다.
+3. `setup_logging(비밀값)` · 신호 처리기(SIGINT · SIGTERM). 처리기는 if 이미 멈춤 표시 → `Stopped`를 낸다 · else 멈춤 표시를 켠다.
+4. `run_collect` 또는 `run_batch`.
+5. if `RunModeError` → 2 · if `Stopped` → 로그를 비우고 판별 스레드를 기다리지 않고 130으로 끝낸다 · if 그 밖의 예외 → 스택을 로그에 남기고 1.
 
 **출력** 종료 코드
 
-**테스트 관점** Actions에서 `DRY_RUN`이 비면 2(실측) · 시크릿이 없어도 설정 누락으로 끝내지 않음
+**테스트 관점** 실행기 안에서 `DRY_RUN`이 깨지면 2(`RunModeError`는 [[#RunContext.from_env]]의 테스트가 본다) · 시크릿이 없어도 설정 누락으로 끝내지 않음 · 손 실행을 Ctrl-C로 끊으면 130(실측, 2026-10-06)
 
 #### __main__.run_batch 하루치
 
@@ -1319,10 +1311,10 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **근거** [[CCR-UC-001#UC-A1]] 9 · 9a · \*a2 · [[CCR-INFRA-001]] 8.2 · [[CCR-SEQ-001#SEQ-7]]
 
-**입력** `RUN_ID` · `RUN_STARTED_AT` · `GITHUB_EVENT_NAME` · `APPEND_DIR`. `Git`(작업 폴더 · 원격 · 토큰)
+**입력** `RUN_ID` · `RUN_STARTED_AT` · `RUN_KIND` · `APPEND_DIR`. `Git`(작업 폴더 · 원격 · 토큰)
 
 **처리**
-1. 기준일(`RUN_STARTED_AT`의 KST 날짜) · 종류를 구하고 `read_additions`. 형식이 맞지 않은 줄이 있으면 실패 표시. if 배치의 줄이 없음 → 중단으로 보고 실패 표시.
+1. 기준일(`RUN_STARTED_AT`의 KST 날짜) · 종류(`RUN_KIND`가 `schedule`이면 `schedule` · else `manual`)를 구하고 `read_additions`. 형식이 맞지 않은 줄이 있으면 실패 표시. if 배치의 줄이 없음 → 중단으로 보고 실패 표시.
 2. 다섯 번까지:
    1. `fresh_main`.
    2. if `runs.jsonl`에 이 실행 식별자의 줄이 있음 → 끝(표시에 따라 0 · 1). 앞선 push가 응답만 끊기고 들어간 것이다.
@@ -1334,7 +1326,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **출력** `Outcome(종료 코드, 설명)`
 
-**테스트 관점** 목록 · 처리 이력과 줄을 붙이고 남김 수를 채움 · 이미 있는 식별자는 건너뜀 · 상태 파일은 건드리지 않음 · 작성자 봇 · 메시지 · 줄이 없으면 중단 줄과 1 · 형식이 틀린 줄은 빼고 1 · 이미 올린 실행은 다시 붙이지 않음 · 그사이 올라온 관리자 커밋 위에 다시 얹고 그 수정이 남음 · 빈 저장소의 첫 실행
+**테스트 관점** 목록 · 처리 이력과 줄을 붙이고 남김 수를 채움 · 이미 있는 식별자는 건너뜀 · 상태 파일은 건드리지 않음 · 작성자 · 커미터 `ccr-batch` · 메시지 · 줄이 없으면 중단 줄과 1 · 형식이 틀린 줄은 빼고 1 · 이미 올린 실행은 다시 붙이지 않음 · 그사이 올라온 관리자 커밋 위에 다시 얹고 그 수정이 남음 · 빈 저장소의 첫 실행
 
 #### finish.read_additions 추가분 읽기
 
@@ -1388,7 +1380,7 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `commit_and_push(message: str) -> None`
 
-**처리** 세 경로(`data/competitions.jsonl` · `data/processed.jsonl` · `data/runs.jsonl`) 가운데 있는 것만 `add`한다(첫 실행에는 목록 파일과 처리 이력 파일이 없을 수 있다). 작성자 `github-actions[bot]`으로 커밋하고 `push origin HEAD:refs/heads/main`(토큰은 이 명령에만).
+**처리** 세 경로(`data/competitions.jsonl` · `data/processed.jsonl` · `data/runs.jsonl`) 가운데 있는 것만 `add`한다(첫 실행에는 목록 파일과 처리 이력 파일이 없을 수 있다). 작성자 · 커미터 `ccr-batch <ccr-batch@localhost>`로 커밋하고 `push origin HEAD:refs/heads/main`(토큰은 이 명령에만). git log에서 사람 · 페이지의 커밋과 갈린다.
 
 **테스트 관점** 빈 저장소의 첫 실행
 
@@ -1404,12 +1396,114 @@ upstream: [CCR-DOM-002, CCR-DOM-003, CCR-SEQ-001, CCR-API-001, CCR-UC-001]
 
 **시그니처** `main() -> int`
 
-**처리** 환경 변수 `RUN_ID` · `APPEND_DIR` · `RUNNER_TEMP` · `GITHUB_REPOSITORY` 가운데 없는 것이 있으면 1. 원격 주소와 `Git(RUNNER_TEMP/finish-main, 원격, GITHUB_TOKEN)`으로 [[#finish.finish]]를 부르고, 설명을 찍은 뒤 종료 코드를 돌려준다.
+**처리** 환경 변수 `RUN_ID` · `APPEND_DIR` · `WORK_DIR` · `REMOTE_URL` 가운데 없는 것이 있으면 `환경 변수 {이름}이 없다`를 찍고 1. `Git(WORK_DIR/finish-main, REMOTE_URL, PUSH_TOKEN)`으로 [[#finish.finish]]를 부르고, 설명을 찍은 뒤 종료 코드를 돌려준다. 원격은 싱크독 git 입구, 토큰은 싱크독 개인 토큰이다. 실행기가 마무리 단계에만 넘긴다([[CCR-INFRA-001]] 5.5 · 8.1).
 
-**테스트 관점** 없음. 흐름은 [[#finish.finish]]의 테스트가 본다
+**테스트 관점** 넷 가운데 하나라도 없으면 1과 그 이름 · 실행기가 넘긴 원격 · 작업 폴더(`WORK_DIR/finish-main`) · 실행 종류로 올리고 토큰은 출력에 찍지 않음. 흐름은 [[#finish.finish]]의 테스트가 본다
+
+### 2.9 페이지 서버
+
+#### Mirror.refresh 원본 main 받기
+
+**시그니처** `refresh(force: bool = False) -> None`
+
+**근거** [[CCR-INFRA-001#C14]] · [[CCR-INFRA-001]] 6.4 · 8.11
+
+**처리** if `force`가 아님 이고 마지막으로 받은 지 1초가 안 됨 → 받지 않는다. else 원본의 `main`을 bare 사본에 얕게 받는다(`fetch --depth=1 원본 +refs/heads/main:refs/heads/main`). 받는 명령에만 `http.extraheader`로 토큰을 준다. 받기는 한 번에 하나다(잠금). 명령마다 60초 제한. 실패하면 `RemoteError`(git의 오류 문구만. 명령은 찍지 않는다).
+
+**테스트 관점** [[#PageHandler.serve_get]] · [[#Mirror.write]]의 테스트가 함께 본다(쓴 판이 곧바로 보임 · 그사이 올라온 배치의 커밋을 받음 · 원본이 사라져도 마지막 판)
+
+#### Mirror.read main의 파일 읽기
+
+**시그니처** `read(file: str) -> Blob | None`
+
+**처리** bare 사본의 `main:{file}`을 찾아 블롭 해시와 내용을 `Blob(sha, data)`로 돌려준다. if `main`이 아직 없거나 그 파일이 없음 → `None`. 블롭 해시가 페이지가 쓰는 판(`sha`)이다. 원본을 받지는 않는다. 부르는 쪽이 먼저 `refresh`한다.
+
+**테스트 관점** [[#PageHandler.serve_get]]의 테스트가 함께 본다(판 읽기의 블롭 해시 · 파일이 없으면 404)
+
+#### Mirror.write 파일 하나를 바꾼 커밋 올리기
+
+**시그니처** `write(file: str, data: bytes, sha: str | None, message: str, author: Person) -> str`
+
+**근거** [[CCR-UC-001#UC-H1]] · [[CCR-INFRA-001]] 5.5 · 8.11 · [[CCR-SEQ-001#SEQ-11]]
+
+**처리** 쓰기는 한 번에 하나다(잠금). 세 번까지:
+1. `refresh(force=True)` → `read(file)`.
+2. if 파일이 있는데 `sha`가 없음 → `ShaRequired` · if 지금 판(파일이 없으면 없음)이 `sha`와 다름 → `Conflict`. 둘 다 아무것도 올리지 않는다.
+3. 사본의 `main` 위에 `file`만 `data`로 바꾼 커밋을 하나 만든다. 작업 트리 없이 임시 색인으로 만든다. 작성자 · 커미터는 `author`, 메시지는 `message`다.
+4. 그 커밋을 원본의 `main`으로 push한다(토큰은 이 명령에만). if 성공 → 사본의 `main`을 그 커밋으로 옮기고 새 블롭 해시를 돌려준다 · if 빨리 감기가 아니라 거절됨(그사이 배치 등이 올렸다) → 처음부터 · else → `RemoteError`.
+5. 세 번 모두 거절되면 `RemoteError`.
+
+**출력** 새 블롭 해시
+
+**예외** 판이 어긋남 → `Conflict` · 파일이 있는데 판이 없음 → `ShaRequired` · 원본에 닿지 못함 · git 실패 → `RemoteError`
+
+**호출하는 것** [[#Mirror.refresh]] · [[#Mirror.read]]
+
+**테스트 관점** 맞는 판이면 그 파일만 바꾼 커밋 하나가 원본에 올라가고 작성자 · 커미터 · 메시지가 본문의 것 · 어긋난 판과 판 없음은 아무것도 올리지 않음 · 파일이 없으면 판 없이 새로 만듦 · 그사이 배치가 push하면 다시 받아 다시 얹음(push 두 번)
+
+#### page_server.allowed 요청을 받을지
+
+**시그니처** `allowed(host: str, origin: str | None, port: int, write: bool) -> bool`
+
+**근거** [[CCR-INFRA-001]] 8.11
+
+**처리** if `host`가 `localhost:{port}` · `127.0.0.1:{port}`가 아님 → 거짓. 다른 이름을 127.0.0.1로 돌린 요청(DNS rebinding)을 막는다. if `write` 이고 `origin`이 `http://localhost:{port}` · `http://127.0.0.1:{port}`가 아님(없음 포함) → 거짓. 다른 사이트의 쓰기(CSRF)를 막는다. else 참.
+
+**테스트 관점** 두 이름은 받음 · 다른 포트는 거절 · 쓰기는 같은 출처의 `Origin`만(다른 출처 · 없음은 거절)
+
+#### PageHandler.serve_get 읽기 요청
+
+**시그니처** `serve_get() -> None`
+
+**근거** [[CCR-UC-001#UC-A2]] · [[CCR-API-001]] 3.3 · [[CCR-INFRA-001]] 6.4 · 8.11 · [[CCR-SEQ-001#SEQ-11]]
+
+**처리** `http.server`의 훅 `do_GET`이 이것만 부른다.
+1. if `allowed(Host, Origin, 포트, 쓰기 아님)`이 거짓 → 403.
+2. 경로(쿼리는 뗀다)가 `/data/competitions.jsonl` · `/data/status.json` · `/api/contents/data/status.json` 가운데 하나면:
+   1. `refresh()`. 실패하면 로그만 남기고 마지막으로 받은 판을 쓴다. 쓰기는 502로 드러난다.
+   2. `read`. if 없음 → 404(첫 실행 전).
+   3. 데이터 파일 둘은 그 내용을, 판 읽기는 `{"sha": 블롭 해시, "content": Base64}`를 200으로 낸다. `Cache-Control: no-store`.
+3. 그 밖은 빌드된 정적 파일(`PAGE_DIST`)이다. `/`는 `index.html`. if 그 폴더 밖이거나 없는 파일 → 404. `Cache-Control: no-cache`.
+
+**호출하는 것** [[#page_server.allowed]] · [[#Mirror.refresh]] · [[#Mirror.read]]
+
+**테스트 관점** 두 데이터 파일을 `no-store`로 내고 `?t=`는 무시 · 판 읽기는 원본의 블롭 해시와 Base64 · 파일이 없으면 404 · `/`와 정적 파일 · 폴더 밖(`..`)과 없는 파일은 404 · 다른 `Host`는 403 · 원본이 사라져도 마지막 판을 냄
+
+#### PageHandler.serve_put 상태 파일 쓰기 요청
+
+**시그니처** `serve_put() -> None`
+
+**근거** [[CCR-UC-001#UC-H1]] · [[CCR-API-001]] 3.3 · [[CCR-INFRA-001]] 8.11 · [[CCR-SEQ-001#SEQ-11]]
+
+**처리** `http.server`의 훅 `do_PUT`이 이것만 부른다.
+1. if `allowed(Host, Origin, 포트, 쓰기)`가 거짓 → 403.
+2. if 경로가 `/api/contents/data/status.json`이 아님 → 404. 쓰는 파일은 `data/status.json` 하나뿐이다.
+3. 본문(1 MiB까지)을 JSON으로 읽는다. `message`(빈 글이 아님) · `content`(Base64, 줄바꿈 허용) · `sha`(없거나 글) · `author`(없으면 `committer`)의 `name` · `email`. if 없거나 모양이 틀림 → 400.
+4. `Mirror.write(data/status.json, 내용, sha, message, Person(name, email))`. if `Conflict` → 409 · if `ShaRequired` → 422 · if `RemoteError` → 로그를 남기고 502. 응답에 토큰을 싣지 않는다.
+5. `{"content": {"sha": 새 블롭 해시}}`를 `sha`가 없었으면 201(새 파일) · else 200으로 낸다.
+
+**호출하는 것** [[#page_server.allowed]] · [[#Mirror.write]]
+
+**테스트 관점** 맞는 판이면 200과 새 블롭 해시 · 새 파일은 201 · 어긋난 판 409 · 판 없음 422 · 다른 경로 404 · Base64가 아니거나 `message`가 없으면 400 · `Origin`이 다르거나 없으면 403 · 원본이 사라지면 502이고 응답에 토큰이 없음
+
+#### page_server.main 페이지 서버 입구
+
+**시그니처** `main() -> int`
+
+**근거** [[CCR-INFRA-001#C14]] · [[CCR-INFRA-001]] 4.1 · 8.11
+
+**처리**
+1. if 환경 변수 `CCR_REMOTE`가 없음 → `환경 변수 CCR_REMOTE가 없다`를 찍고 1.
+2. 포트 `PAGE_PORT`(기본 8090) · 정적 파일 `PAGE_DIST`(기본 저장소의 `frontend/dist`) · 사본 `PAGE_MIRROR`(기본 `~/.local/share/ccr/page.git`. 없으면 bare로 만든다) · 토큰 `CCR_TOKEN`으로 사본을 연다. `scripts/page.sh`가 `batch.env`에서 넘긴다.
+3. `refresh(force=True)`. 실패하면 찍고 그래도 띄운다.
+4. `127.0.0.1:{포트}`에만 연다(요청마다 스레드). 노트북 밖에서는 닿지 않는다. Ctrl-C면 닫고 0.
+
+**호출하는 것** [[#Mirror.refresh]]
+
+**테스트 관점** 없음. 띄우기는 `scripts/page.sh`가 하고, 요청은 [[#PageHandler.serve_get]] · [[#PageHandler.serve_put]]의 테스트가 같은 서버를 띄워 본다
 
 ## 3. 미결사항
 
 2026-10-01에 Kaggle의 필드 이름 · 연습용 표기 · 쪽 크기를 실측해 닫았다([[#kaggle.parse_page]] · [[#KaggleSource.collect]] · [[#http.new_client]]).
 
-- [ ] 페이지의 순수 함수(`parseListFile` · `mergeChange` · `commitMessage` 등)를 이 문서에 둘지. 지금은 [[CCR-DOM-002]] 4.11의 시그니처만 있다
+- [ ] 페이지(TypeScript)의 순수 함수(`parseListFile` · `mergeChange` · `commitMessage` 등)를 이 문서에 둘지. 지금은 [[CCR-DOM-002]] 4.11의 시그니처만 있다. 페이지를 내는 페이지 서버(파이썬)는 2026-10-06에 이 문서에 넣었다(2.9)

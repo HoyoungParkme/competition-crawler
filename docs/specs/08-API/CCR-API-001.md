@@ -2,7 +2,7 @@
 doc_id: CCR-API-001
 type: API
 title: 대회 수집 배치 API 명세 REST
-status: approved
+status: draft
 upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001, CCR-UI-001]
 ---
 
@@ -10,14 +10,14 @@ upstream: [CCR-RFQ-001, CCR-PRD-001, CCR-UC-001, CCR-INFRA-001, CCR-DOM-001, CCR
 
 ## 0. 이 문서가 다루는 것
 
-배치와 대회 목록 페이지가 부르는 바깥 엔드포인트를 적는다. 배치는 대회 소스 여섯(event-us · DACON · Kaggle · wevity · AI팩토리 · 콘테스트코리아)과 관련도 판별에 쓰는 OpenAI를 부르고, 페이지는 저장소 파일을 읽고 쓰는 GitHub를 부른다. 배치도 페이지도 서버가 없어 자기 엔드포인트가 없다([[CCR-INFRA-001#C1]] · [[CCR-INFRA-001#C14]]). 2026-09-29까지 있던 노션 항목 넷은 노션을 쓰지 않기로 하면서 지웠다.
+배치와 대회 목록 페이지가 부르는 엔드포인트를 적는다. 배치는 대회 소스 여섯(event-us · DACON · Kaggle · wevity · AI팩토리 · 콘테스트코리아)과 관련도 판별에 쓰는 OpenAI를 부르고, 페이지는 저장소 파일을 읽고 쓰는 노트북 페이지 서버를 부른다. 배치는 서버가 없어 자기 엔드포인트가 없다([[CCR-INFRA-001#C1]]). 페이지 서버는 이 프로젝트의 것이고 페이지만 부르므로 그 엔드포인트도 여기 적는다([[CCR-INFRA-001#C14]]). 2026-09-29까지 있던 노션 항목 넷은 노션을 쓰지 않기로 하면서 지웠다. 2026-10-06까지 페이지가 부르던 GitHub 항목 셋은 제목만 남겼다(3.3).
 
-항목 하나가 엔드포인트 하나다. 헤딩은 `메서드/호스트/경로`다. 호스트가 여럿이라 경로만으로는 가를 수 없어 호스트를 넣는다. 항목 ID는 50자까지라 긴 경로는 줄여 적는다. Kaggle의 서비스 이름과 GitHub의 `{owner}/{repo}`는 `…`로 줄였다. 온전한 경로는 그 항목의 yaml에 있다. 블록마다 한 줄 요약, 유스케이스와 도메인 개념, 받은 값을 공통 형식으로 옮기는 법, 그 엔드포인트의 yaml을 둔다. yaml은 OpenAPI의 모양을 빌리되 배치가 보내고 읽는 것만 적는다. 응답에는 쓰지 않는 필드가 훨씬 많다.
+항목 하나가 엔드포인트 하나다. 헤딩은 `메서드/호스트/경로`다. 호스트가 여럿이라 경로만으로는 가를 수 없어 호스트를 넣는다. 페이지 서버의 호스트는 `localhost:8090`이다. 항목 ID는 50자까지라 긴 경로는 줄여 적는다. Kaggle의 서비스 이름과 옛 GitHub 항목의 `{owner}/{repo}`는 `…`로 줄였다. 온전한 경로는 그 항목의 yaml에 있다. 블록마다 한 줄 요약, 유스케이스와 도메인 개념, 받은 값을 공통 형식으로 옮기는 법, 그 엔드포인트의 yaml을 둔다. yaml은 OpenAPI의 모양을 빌리되 배치가 보내고 읽는 것만 적는다. 응답에는 쓰지 않는 필드가 훨씬 많다.
 
 확인한 방법은 셋이다.
 - **실측:** 소스 다섯은 2026-09-23에 직접 불러 봤다. wevity · 콘테스트코리아는 2026-09-27에 다시 불렀고, wevity는 2026-09-28 아침에 한 번 더 불렀다. Kaggle은 2026-10-01에 사용자의 토큰으로 불렀다.
 - **공식 클라이언트 코드:** Kaggle의 엔드포인트와 요청 모양은 공식 클라이언트(`kagglesdk`) 코드에서 찾았다. 쪽 넘김은 코드와 달라 실측을 따랐다(3.1 Kaggle).
-- **공식 문서:** OpenAI와 GitHub는 공식 문서로 확인했다. GitHub Contents API는 2026-09-29에 이 저장소의 파일 하나를 읽어 응답 모양을 봤다.
+- **공식 문서:** OpenAI는 공식 문서로 확인했다. 2026-10-06까지 부르던 GitHub도 공식 문서로 확인했고, Contents API는 2026-09-29에 이 저장소의 파일 하나를 읽어 응답 모양을 봤다. 페이지 서버(3.3)의 판 읽기 · 쓰기는 그 모양을 따랐다.
 
 event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 문서가 없다. wevity · AI팩토리 · 콘테스트코리아는 페이지를 읽는다. 어느 것이든 예고 없이 바뀔 수 있다([[CCR-PRD-001#R9]]).
 
@@ -28,7 +28,7 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 | AI팩토리 과제를 대회로 합치는 법과 대회명([[CCR-PRD-001]] 6장 · [[CCR-DOM-001]] 6장) | 페이지 이름과 접수시작일로 합치고, 대회명은 네 차례로 정한다 | 3.1 AI팩토리 |
 | 소스마다 채우는 날짜와 부가 정보(같은 두 곳) | 소스별 필드. Kaggle은 2026-10-01 실측으로 확정했다 | 4.1 |
 | Kaggle 호출 방식([[CCR-INFRA-001]] 3장) | 공식 API의 대회 목록을 일반 탭만 `page`로 넘겨 받는다. 커뮤니티 탭은 받지 않는다 | 3.1 Kaggle |
-| 페이지가 저장소를 읽고 쓰는 모양([[CCR-INFRA-001]] 8.11) | 목록 파일은 raw로 읽는다. 상태 파일은 토큰이 있으면 Contents API로, 없으면 raw로 읽는다. 쓰기 직전의 판 읽기와 쓰기는 Contents API로 한다 | 1.4 · 3.3 |
+| 페이지가 저장소를 읽고 쓰는 모양([[CCR-INFRA-001]] 8.11) | 두 파일은 페이지 서버의 `/data/…`로 읽는다. 쓰기 직전의 판 읽기와 쓰기는 페이지 서버의 `/api/contents/data/status.json`으로 하고, GitHub Contents API와 같은 모양이다. 2026-10-06까지는 raw와 GitHub Contents API였다 | 1.4 · 3.3 |
 | 판이 어긋난 쓰기를 어떻게 다시 보낼지([[CCR-UC-001#UC-H1]] 4a) | 최신 판을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다 | 2.3 |
 
 여기서 정하지 않는 것도 있다. 클래스와 메서드는 클래스 명세가, 데이터 파일 한 줄의 필드 이름과 형식은 ERD([[CCR-DOM-003]])가 정한다. 타임아웃 · 재시도 횟수 · 시간 예산의 수치는 [[CCR-INFRA-001]] 8.5가 정했다. 이 문서는 어느 응답을 다시 보낼지를 가른다(2장).
@@ -37,13 +37,13 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 
 ### 1.1 모든 요청
 
-- **User-Agent**는 `competition-crawler/0.1 (+https://github.com/HoyoungParkme/competition-crawler)`다. 앞은 이름과 버전이고, 괄호 안은 연락처 삼아 적은 저장소 주소다. 누가 보냈는지 알 수 있게 한다([[CCR-PRD-001#N4]]). 2026-09-23 실측은 모두 이 문자열로 했고 소스 다섯이 200을 줬다.
+- **User-Agent**는 `competition-crawler/<버전>`이다(지금 `competition-crawler/0.1`). 이름과 버전으로 누가 보냈는지 알 수 있게 한다([[CCR-PRD-001#N4]]). 2026-10-06까지는 뒤에 연락처 삼아 GitHub 저장소 주소(`(+https://github.com/HoyoungParkme/competition-crawler)`)를 붙였고, GitHub를 빼면서 뗐다. 2026-09-23 실측은 모두 그 옛 문자열로 했고 소스 다섯이 200을 줬다.
 - **요청 간격**은 같은 소스 안에서 요청 사이 1초다. `robots.txt` 요청도 센다([[CCR-INFRA-001]] 8.5).
 - **쿠키**는 남기지 않는다. 응답이 심은 쿠키를 다음 요청에 싣지 않는다. Kaggle은 응답마다 익명 세션 쿠키(`ka_sessionid`)를 심는데, 그 쿠키가 실린 요청은 토큰이 있어도 401로 거절한다. `robots.txt`의 404 응답도 이 쿠키를 심는다(2026-10-01 실측). 같은 날 나머지 다섯 소스도 쿠키 없이 불러 예약 실행과 같은 건수를 받았다.
 - **비밀값**은 환경 변수로만 받는다([[CCR-INFRA-001]] 5장). 요청 헤더와 요청 객체는 로그에 찍지 않는다([[CCR-UC-001#UC-S7]] 7 · [[CCR-INFRA-001]] 5.4).
 - **시간대.** 시간대가 붙은 시각은 KST로 바꾼 뒤 날짜만 쓴다. 시간대 표기가 없는 값은 KST로 보고 바꾸지 않는다([[CCR-UC-001#UC-S2]] 2 · 2b). 기준일 00:00 KST는 UTC로 전날 15:00이다. 기준일이 2026-09-23이면 `2026-09-22T15:00:00+00:00`이다.
 - **빈 값.** 알 수 없는 날짜는 빈 값으로 둔다. 파일에는 빈 문자열이 아니라 `null`로 적는다([[CCR-DOM-003]]).
-- **페이지의 요청**은 브라우저의 `fetch`다. User-Agent는 브라우저가 보내고, 배치의 것을 흉내 내지 않는다. `Authorization` 헤더는 `api.github.com`에만 보내고 raw 읽기에는 보내지 않는다. 토큰은 주소·콘솔에 싣지 않는다([[CCR-INFRA-001]] 5.8).
+- **페이지의 요청**은 브라우저의 `fetch`다. User-Agent는 브라우저가 보내고, 배치의 것을 흉내 내지 않는다. 같은 출처의 페이지 서버만 부르고 `Authorization` 헤더를 보내지 않는다. 브라우저는 토큰을 갖지 않는다(1.4).
 
 ### 1.2 대회 소스
 
@@ -105,22 +105,25 @@ event-us와 DACON의 JSON API는 사이트가 스스로 쓰는 것이라 공개 
 | `gpt-6-luna` | 0.10달러 · 0.50달러 | 2026-09-22에 나왔다 |
 | `gpt-5.6-luna` | 0.20달러 · 1.20달러 | [[CCR-INFRA-001]] 8.9의 비용 예시 |
 
-기본값은 싼 쪽인 `gpt-6-luna`로 했다(`batch/settings.toml`). 저장소 변수 `OPENAI_MODEL`이 있으면 그것을 쓴다.
+기본값은 싼 쪽인 `gpt-6-luna`로 했다(`batch/settings.toml`). 노트북의 `~/.config/ccr/batch.env`에 `OPENAI_MODEL`이 있으면 그것을 쓴다. 2026-10-06까지는 저장소 변수 `OPENAI_MODEL`이 그 자리였다.
 
 ### 1.4 저장소 파일 — 페이지가 읽고 쓰는 법
 
-페이지는 서버 없이 GitHub의 공개 파일 주소와 REST API만 쓴다([[CCR-INFRA-001]] 8.11). 저장소는 `HoyoungParkme/competition-crawler`, 브랜치는 `main`이고, 둘 다 페이지 설정 파일의 상수다([[CCR-INFRA-001]] 4.1).
+페이지는 노트북 페이지 서버(`batch/page_server.py`)만 부른다([[CCR-INFRA-001]] 8.11). 페이지를 낸 바로 그 서버(`http://localhost:8090`)라 같은 출처이고, 페이지는 주소에 경로만 쓴다. 페이지 서버는 원본 `main`을 bare 사본(`~/.local/share/ccr/page.git`)으로 받아 두고 거기서 읽는다. 쓰기는 그 위에 커밋을 만들어 원본(싱크독 git 입구)에 push한다. 2026-10-06까지는 GitHub의 raw 주소와 Contents API를 불렀다.
 
-- **읽는 길은 둘이다.** 목록 파일은 `raw.githubusercontent.com`에서 인증 없이 받는다([[#GET/raw.githubusercontent.com/…/data/{file}]]). 상태 파일은 토큰이 있으면 Contents API로 읽고([[#GET/api.github.com/…/contents/data/status.json]]), 토큰이 없거나 API로 읽지 못하면 raw로 받는다. 쓰기 직전에도 Contents API로 다시 읽어 판(`sha`)을 얻는다. raw는 CDN이 5분 캐시하므로 쓰기의 기준으로 쓰지 않고, 사용자가 방금 바꾼 상태를 보여 주는 데도 쓰지 않는다([[CCR-INFRA-001]] 6.4).
-- **캐시를 피하는 쿼리.** raw 주소에는 `?t=<현재 시각 ms>`를 붙인다. 같은 주소가 반복되지 않아 브라우저 캐시를 피한다. CDN 캐시는 피하지 못한다. 응답은 `cache-control: max-age=300`이고, 2026-09-30 실측에서 새 커밋이 raw에 보이기까지 58초 · 267초가 걸렸으며 쿼리를 붙인 주소와 붙이지 않은 주소가 같은 때 바뀌었다([[CCR-INFRA-001]] 6.4).
-- **API 헤더.** `Accept: application/vnd.github+json` · `X-GitHub-Api-Version: 2022-11-28` · `Authorization: Bearer <페이지 토큰>`. 토큰은 fine-grained personal access token이고 이 저장소의 Contents 읽기·쓰기만 있다([[CCR-INFRA-001]] 5.8).
-- **쓰기는 파일 하나를 한 커밋으로 올린다**([[#PUT/api.github.com/…/contents/data/status.json]]). 본문에 새 내용(UTF-8 JSON을 Base64로), 읽어 둔 `sha`, 커밋 메시지, `branch: main`, 커밋 작성자(`author`·`committer`)를 넣는다. 파일이 아직 없으면 `sha` 없이 보내 만든다.
-- **커밋 작성자.** `author`와 `committer`에 같은 값, 저장소 주인의 이름과 noreply 주소(`<id>+<login>@users.noreply.github.com`)를 넣는다. 페이지 설정 파일의 상수다([[CCR-INFRA-001]] 4.1 · 8.11). GitHub 문서대로 `committer`를 빼면 인증한 사용자(토큰 주인)가, `author`를 빼면 `committer`가 그 자리에 들어간다. 인증한 사용자의 정보에는 계정의 기본 이메일이 쓰여, 이메일 비공개 설정이 꺼진 계정이면 개인 주소가 공개 커밋에 남는다. 그래서 둘 다 보낸다. 둘 다 `name`과 `email`이 있어야 하고, 빠지면 422다.
+- **읽는 길은 둘이다.** 두 파일은 `GET /data/{파일}`로 받는다([[#GET/localhost:8090/data/competitions.jsonl]] · [[#GET/localhost:8090/data/status.json]]). 쓰기 직전에는 `GET /api/contents/data/status.json`으로 판(`sha`)과 내용을 다시 읽는다([[#GET/localhost:8090/api/contents/data/status.json]]). 화면에 보인 상태 파일은 표시용이고 쓰기의 기준이 아니다.
+- **캐시가 없다.** 페이지 서버는 읽을 때마다 원본을 받는다(1초에 한 번까지). 응답은 `Cache-Control: no-store`다. 그래서 배치가 막 올린 목록과 방금 바꾼 상태가 곧바로 보인다([[CCR-INFRA-001]] 6.4). 원본에 닿지 못하면 마지막으로 받은 판을 그대로 낸다. 2026-10-06까지는 raw의 CDN 캐시(5분) 때문에 상태 파일을 토큰이 있으면 Contents API로 읽었다.
+- **캐시를 피하는 쿼리.** `/data/…` 주소에는 지금처럼 `?t=<현재 시각 ms>`를 붙여 브라우저 캐시를 피한다. 페이지 서버는 쿼리를 보지 않는다.
+- **GitHub Contents API와 같은 모양이다.** 판 읽기는 `{sha, content}`를 돌려준다. 쓰기는 `{message, content, sha, author, committer}`를 받아 `{content: {sha}}`를 돌려준다. 판이 어긋나면 409, 파일이 있는데 `sha`가 없으면 422다. `sha`는 git 블롭 해시라 GitHub가 주던 값과 같다. 그래서 페이지의 판 읽기 · 쓰기 흐름은 GitHub 때 그대로다. 빠진 것만 있다. 헤더(`Accept` · `X-GitHub-Api-Version` · `Authorization`)와 `ref` · `branch`가 없고(늘 `main`이다), 응답에 `size` · `encoding` · `commit`이 없으며, `content`의 Base64에 줄바꿈이 없다.
+- **토큰이 없다.** 브라우저는 토큰을 갖지 않고 `Authorization`을 보내지 않는다. 원본에 닿는 자격(싱크독 개인 토큰 「CCR 노트북 — 배치·페이지」)은 페이지 서버가 `~/.config/ccr/batch.env`의 `CCR_TOKEN`으로 갖고, 원본을 받고 올리는 git 명령에만 준다([[CCR-INFRA-001]] 8.11).
+- **지킴.** 페이지 서버는 127.0.0.1에만 연다. 요청의 `Host`가 `localhost:8090` · `127.0.0.1:8090`이 아니면 403이다. 쓰기(`PUT`)는 `Origin`도 `http://localhost:8090` · `http://127.0.0.1:8090`이어야 한다. 다른 사이트가 이름을 127.0.0.1로 돌리거나(DNS rebinding) 폼으로 쓰는 것(CSRF)을 막는다. 싱크독 폐쇄망판 가드와 같은 꼴이다.
+- **쓰기는 파일 하나를 한 커밋으로 올린다**([[#PUT/localhost:8090/api/contents/data/status.json]]). 본문에 새 내용(UTF-8 JSON을 Base64로), 읽어 둔 `sha`, 커밋 메시지, 커밋 작성자(`author` · `committer`)를 넣는다. 파일이 아직 없으면 `sha` 없이 보내 만든다. 페이지 서버는 원본 `main` 위에 그 파일만 바꾼 커밋을 하나 만들어 push한다. 그사이 배치가 push해 거절되면 원본을 다시 받고 `sha`를 다시 견준 뒤 다시 얹는다. 세 번까지다. 쓰는 파일은 `data/status.json` 하나뿐이고, 다른 경로에 `PUT`하면 404다.
+- **커밋 작성자.** `author`와 `committer`에 같은 값, 저장소 주인의 이름과 noreply 주소(`<id>+<login>@users.noreply.github.com`)를 넣는다. 페이지 설정 파일의 상수다([[CCR-INFRA-001]] 4.1 · 8.11). 페이지 서버는 `author`(없으면 `committer`)를 커밋의 작성자와 커미터로 쓴다. `name`이나 `email`이 빠지면 400이다. git log에서 배치의 커밋(`ccr-batch`)과 갈린다.
 - **커밋 메시지**는 페이지가 만든다. 상태를 바꾸면 `status: <대회명> → <상태 이름>`, 지우면 `status: <대회명> 지움`, 되살리면 `status: <대회명> 되살림`, 별표를 붙이면 `status: <대회명> 별표`, 떼면 `status: <대회명> 별표 뗌`이다. 대회명은 60자에서 자른다.
 - **한 번에 요청 하나.** 앞 쓰기의 응답이 오기 전에 다음 바꿈이 생기면 줄 세워 차례로 보낸다. 같은 `sha`로 두 번 보내면 둘째가 409로 거절되기 때문이다. 화면은 먼저 바뀐다([[CCR-UC-001#UC-H1]] 2).
-- **판이 어긋나면**(409 · 422) 최신 판을 다시 읽고, 이번 바꿈만 그 위에 얹어 한 번 더 쓴다. 다른 기기가 바꾼 다른 대회의 값은 남는다(2.3).
-- **크기.** Contents API의 `GET`은 1MB까지 내용을 돌려준다. 상태 파일은 항목 하나가 100바이트 안팎이라 수천 건이어도 그 안이다. 목록 파일은 raw로만 읽으므로 이 한도와 상관없다.
-- **한도.** 인증한 요청은 시간당 5,000회다. 페이지를 열고 새로 고칠 때의 읽기와 사람이 누르는 쓰기를 합쳐도 닿지 않는다. raw 읽기는 별도이고 한도가 공개되지 않았다.
+- **판이 어긋나면**(409 · 422) 최신 판을 다시 읽고, 이번 바꿈만 그 위에 얹어 한 번 더 쓴다. 다른 탭이나 브라우저가 바꾼 다른 대회의 값은 남는다(2.3).
+- **크기.** 페이지 서버는 쓰기 본문을 1MB까지 받고, 비었거나 넘으면 400이다. 상태 파일은 항목 하나가 100바이트 안팎이라 Base64로 늘어도 수천 건까지 그 안이다. 읽기에는 크기 한도가 없다.
+- **한도.** 요청 수의 한도는 없다. 2026-10-06까지는 GitHub API의 시간당 5,000회 한도가 있었다.
 - **목록 파일 읽기.** 줄마다 JSON으로 읽는다. 읽히지 않는 줄은 건너뛴다. 식별자가 같은 줄이 여럿이면 앞의 것을 쓴다. 상태 파일에 있고 목록에 없는 식별자는 무시한다([[CCR-INFRA-001]] 6.2).
 - **필드 이름**은 ERD가 정한다([[CCR-DOM-003]]). 4.2에 페이지가 읽고 쓰는 값만 적는다.
 
@@ -165,26 +168,25 @@ wevity의 날수 맞춰 보기(상세 페이지 한 쪽)는 실패해도 소스�
 
 ### 2.3 저장소(페이지)
 
-읽기는 다시 보내도 결과가 같다. 쓰기는 GitHub가 `sha`로 판을 견주므로 같은 요청을 두 번 보내도 둘째는 409로 거절될 뿐 두 번 들어가지 않는다. 그래서 응답 없이 끊긴 쓰기는 「다시 시도」로 최신 판을 다시 읽고 같은 바꿈을 다시 보내면 된다. 이미 들어갔으면 다시 읽은 판에 그 값이 있어 같은 값을 다시 쓰는 것이 된다. 페이지는 스스로 되풀이하지 않고, 판이 어긋난 경우 한 번만 다시 쓴다([[CCR-INFRA-001]] 8.5).
+읽기는 다시 보내도 결과가 같다. 쓰기는 페이지 서버가 `sha`로 판을 견주므로 같은 요청을 두 번 보내도 둘째는 409로 거절될 뿐 두 번 들어가지 않는다. 그래서 응답 없이 끊긴 쓰기는 「다시 시도」로 최신 판을 다시 읽고 같은 바꿈을 다시 보내면 된다. 이미 들어갔으면 다시 읽은 판에 그 값이 있어 같은 값을 다시 쓰는 것이 된다. 페이지는 스스로 되풀이하지 않고, 판이 어긋난 경우 한 번만 다시 쓴다([[CCR-INFRA-001]] 8.5). 페이지 서버의 오류 응답은 본문이 `{"message": "…"}`이고, 페이지는 응답 코드만 본다.
 
 | 요청 | 응답 | 처리 |
 |---|---|---|
-| raw 읽기 | 200 | 표시한다 |
-| raw 읽기 | 404 | 목록 파일이면 빈 목록(첫 실행 전, [[CCR-UI-001#UI-1]] 10). 상태 파일이면 빈 객체로 본다 |
-| raw 읽기 | 5xx · 연결 오류 · 타임아웃 | 한 번 다시 받는다. 그래도 실패하면 읽지 못했다고 알린다([[CCR-UC-001#UC-A2]] 1b) |
-| 표시용 판 읽기(토큰이 있을 때) | 200 | 내용을 표시한다 |
-| 표시용 판 읽기(토큰이 있을 때) | 404 | 상태 파일이 아직 없다. 빈 객체로 본다 |
-| 표시용 판 읽기(토큰이 있을 때) | 401 · 403 · 5xx · 연결 오류 · 타임아웃 | 다시 보내지 않고 상태 파일을 raw로 읽는다. 토큰 문제는 저장할 때 드러난다 |
+| 파일 읽기 | 200 | 표시한다 |
+| 파일 읽기 | 404 | 목록 파일이면 빈 목록(첫 실행 전, [[CCR-UI-001#UI-1]] 10). 상태 파일이면 빈 객체로 본다 |
+| 파일 읽기 | 5xx · 연결 오류 · 타임아웃 | 한 번 다시 받는다. 그래도 실패하면 읽지 못했다고 알린다([[CCR-UC-001#UC-A2]] 1b). 페이지 서버가 떠 있지 않으면 연결 오류다 |
+| 파일 읽기 | 403 | 주소가 `localhost:8090` · `127.0.0.1:8090`이 아니다(1.4). 다시 받지 않고 읽지 못했다고 알린다 |
 | 판 읽기 | 200 | `sha`와 내용을 쓰기의 기준으로 삼는다 |
 | 판 읽기 | 404 | 상태 파일이 아직 없다. `sha` 없이 새 파일로 쓴다 |
-| 판 읽기 · 쓰기 | 401 · 403 | 토큰이 없거나 틀리거나 권한이 모자란다. 값을 되돌리고 토큰을 다시 넣으라고 알린다([[CCR-UC-001#UC-H1]] 4b2 · [[CCR-UI-001#UI-1]] 12). 403에 `x-ratelimit-remaining: 0`이 있으면 한도다. 같은 알림에 그 사실을 적는다 |
-| 쓰기 | 404 | 토큰이 이 저장소에 쓸 수 없다. 공개 저장소라 판 읽기는 되는 토큰이다. 401 · 403과 같이 값을 되돌리고 알린다([[CCR-UC-001#UC-H2]] 4b) |
+| 판 읽기 · 쓰기 | 403 | 주소나 쓰기의 `Origin`이 `localhost:8090` · `127.0.0.1:8090`이 아니다(1.4). 값을 되돌리고 알린다 |
 | 쓰기 | 200 · 201 | 성공. 응답의 `content.sha`는 기억하지 않는다. 다음 쓰기도 판 읽기부터 한다 |
-| 쓰기 | 409 | 판이 어긋났다. 최신 판을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다. 다시 409면 값을 되돌리고 알린다([[CCR-UC-001#UC-H1]] 4a) |
-| 쓰기 | 422 | `sha`가 맞지 않으면 409와 같다. 본문이 잘못됐다는 뜻이면(빈 내용 · Base64 아님) 값을 되돌리고 알린다. 페이지 코드의 문제다 |
-| 쓰기 | 5xx · 연결 오류 · 타임아웃 | 커밋이 들어갔을 수 있다. 스스로 다시 보내지 않고 값을 되돌리고 알린다. 사용자가 「다시 시도」를 누르면 최신 판을 읽어 같은 바꿈을 다시 보낸다 |
+| 쓰기 | 409 | 판이 어긋났다(다른 탭이나 브라우저가 먼저 썼다). 최신 판을 다시 읽고 이번 바꿈만 얹어 한 번 더 쓴다. 다시 409면 값을 되돌리고 알린다([[CCR-UC-001#UC-H1]] 4a) |
+| 쓰기 | 422 | 파일이 있는데 `sha` 없이 보냈다. 판을 읽은 뒤 다른 탭이나 브라우저가 파일을 처음 만든 것이다. 409와 같다 |
+| 쓰기 | 400 | 본문이 잘못됐다(비었거나 1MB를 넘음 · 빈 메시지 · Base64 아님 · 작성자 없음). 값을 되돌리고 알린다. 페이지 코드의 문제다 |
+| 쓰기 | 502 | 페이지 서버가 원본(싱크독)에 쓰지 못했다. 싱크독이 꺼져 있거나 토큰이 거절됐거나, 배치의 push와 세 번 겹쳤다. 드물게 push의 응답만 끊겼으면 들어갔을 수도 있다. 값을 되돌리고 「페이지 서버·싱크독에 닿지 못했다」고 알린다([[CCR-UC-001#UC-H1]] 4b). 「다시 시도」는 아래 줄과 같다 |
+| 판 읽기 · 쓰기 | 그 밖의 5xx · 연결 오류 · 타임아웃 | 쓰기면 커밋이 들어갔을 수 있다. 스스로 다시 보내지 않고 값을 되돌리고 알린다. 페이지 서버가 떠 있지 않으면 연결 오류다. 사용자가 「다시 시도」를 누르면 최신 판을 읽어 같은 바꿈을 다시 보낸다 |
 
-토큰 검증([[CCR-UC-001#UC-H2]] 4)은 판 읽기와 같은 요청이다. 200이나 404(상태 파일이 아직 없음)면 저장하고, 401 · 403이면 저장하지 않고 이유를 보인다. 이 저장소는 공개이고 fine-grained 토큰은 늘 모든 공개 저장소를 읽을 수 있으므로, 404는 파일이 없다는 뜻뿐이고 이 요청으로는 쓰기 권한을 가르지 못한다. 쓰기 권한이 모자란 토큰은 첫 쓰기가 거절되어(403 · 404) 드러난다([[CCR-UC-001#UC-H2]] 4b).
+2026-10-06까지는 토큰 검증([[CCR-UC-001#UC-H2]])도 판 읽기와 같은 요청이었다. 페이지 토큰을 없애면서 함께 없어졌고, 토큰 · 권한 · 만료 · 요청 한도를 알리던 응답도 없다. 지금 403은 지킴(1.4)뿐이다.
 
 ## 3. 엔드포인트
 
@@ -665,7 +667,7 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
       content:
         application/json:
           example:
-            model: "<판별 모델 이름>"            # settings.toml 기본값, 저장소 변수 OPENAI_MODEL이 덮는다
+            model: "<판별 모델 이름>"            # settings.toml 기본값, batch.env의 OPENAI_MODEL이 덮는다
             instructions: "<판별 기준>"
             input: "대회명: 2026 국립공원 위성 모니터링 AI 챌린지\n출처: AI팩토리\n부가 정보: 2026 국립공원 위성 모니터링 AI 챌린지, 주제 1: 구상나무 고사 탐지 및 분포 분석, 주제 2: 산사태 붕괴지 탐지 및 위험도 분석, 주제 3: 국립공원 내 시설물 변화 탐지, 주제 4: 해안 쓰레기 탐지 및 규모 추정"
             text:
@@ -704,92 +706,119 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 
 ### 3.3 저장소 — 목록 경계(페이지)
 
-세 엔드포인트 모두 페이지만 부른다. 배치는 git으로 저장소를 읽고 마무리 단계가 push하므로 REST API를 부르지 않는다([[CCR-INFRA-001]] 8.2). `{owner}/{repo}`는 `HoyoungParkme/competition-crawler`이고 항목 ID에서는 `…`로 줄였다.
+노트북 페이지 서버(`batch/page_server.py`)의 엔드포인트 넷이다. 페이지만 부른다. 배치는 git으로 원본을 받고 마무리 단계가 git 입구로 push하므로 이 엔드포인트를 부르지 않는다([[CCR-INFRA-001]] 8.2). 호스트는 `localhost:8090`이고 `127.0.0.1:8090`도 받는다. 페이지와 같은 출처라 페이지는 경로만 쓴다. 이 넷 밖의 `GET`은 빌드된 정적 파일이다(`/`는 `index.html`, 없으면 404).
 
-#### GET/raw.githubusercontent.com/…/data/{file} 목록·상태 파일 읽기
+2026-10-06까지 페이지가 부르던 GitHub 엔드포인트 셋은 이 절 끝에 제목만 남긴다. 그 항목 ID는 다시 쓰지 않는다.
 
-기본 브랜치의 목록 파일과, 토큰이 없을 때의 상태 파일을 인증 없이 받아 화면에 보여 준다.
+#### GET/localhost:8090/data/competitions.jsonl 목록 파일 읽기
 
-유스케이스 [[CCR-UC-001#UC-A2]] 1 · 개념 [[CCR-DOM-001#ListEntry]] · [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
+원본 `main`의 목록 파일을 그대로 받아 화면에 보여 준다.
 
-**요청.** 페이지를 열 때와 새로 고침(2)을 누를 때 목록 파일을 받는다. 상태 파일은 토큰이 없거나 표시용 판 읽기가 실패했을 때만 여기서 받는다(1.4). 주소에 `?t=<현재 시각 ms>`를 붙여 브라우저 캐시를 피한다. CDN 캐시(5분)는 피하지 못한다(1.4). `Authorization`을 보내지 않는다.
+유스케이스 [[CCR-UC-001#UC-A2]] 1 · 개념 [[CCR-DOM-001#ListEntry]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
 
-**응답 읽기.** 목록 파일은 JSON Lines라 줄마다 읽고, 상태 파일은 JSON 객체 하나다(4.2). 파일이 없으면 404가 온다. 응답의 `Content-Type`은 `text/plain`이라 페이지가 직접 파싱한다.
+**요청.** 페이지를 열 때와 새로 고침(2)을 누를 때 받는다. 주소에 `?t=<현재 시각 ms>`를 붙인다(1.4). `Authorization`을 보내지 않는다.
+
+**응답 읽기.** JSON Lines라 줄마다 읽는다(4.2). 파일이 없으면 404다. 첫 실행 전이다. 페이지 서버는 받을 때마다 원본을 받고(1초에 한 번까지), 원본에 닿지 못하면 마지막으로 받은 판을 낸다.
 
 ```yaml
-/{owner}/{repo}/main/data/{file}:
+/data/competitions.jsonl:
   get:
-    servers: [{url: "https://raw.githubusercontent.com"}]
+    servers: [{url: "http://localhost:8090"}]
     parameters:
-      - {name: file, in: path, required: true, schema: {type: string, enum: [competitions.jsonl, status.json]}}
-      - {name: t, in: query, schema: {type: integer}, description: "현재 시각(ms). 브라우저 캐시를 피하는 값. CDN 캐시는 피하지 못한다"}
+      - {name: t, in: query, schema: {type: integer}, description: "현재 시각(ms). 브라우저 캐시를 피하는 값. 페이지 서버는 보지 않는다"}
     responses:
       "200":
-        description: "파일 내용 그대로. competitions.jsonl은 한 줄이 목록 항목 하나, status.json은 객체 하나(4.2)"
+        description: "원본 main의 파일 그대로. 한 줄이 목록 항목 하나(4.2). Cache-Control: no-store"
         content:
-          text/plain:
+          application/x-ndjson:
             example: |
               {"id":"AI팩토리:9304","source":"AI팩토리","source_id":"9304","title":"2026 국립공원 위성 모니터링 AI 챌린지","link":"https://aifactory.space/competitions/9304","start_date":"2026-07-31","deadline":"2026-10-06","collected_on":"2026-09-29","reason":"위성 영상 AI 분석 경진대회"}
+      "403":
+        description: 'Host가 localhost:8090 · 127.0.0.1:8090이 아니다(1.4). 본문 {"message": "…"}'
       "404":
-        description: "파일이 없다. 목록 파일이면 첫 실행 전, 상태 파일이면 아직 아무것도 바꾸지 않은 것이다"
+        description: "파일이 없다. 첫 실행 전이다"
 ```
 
-#### GET/api.github.com/…/contents/data/status.json 상태 파일의 판 읽기
+#### GET/localhost:8090/data/status.json 상태 파일 읽기
 
-쓰기 직전에 상태 파일의 최신 판(`sha`)과 내용을 읽는다. 토큰이 있으면 화면에 보일 상태 파일도 이 요청으로 읽고, 토큰을 넣을 때의 검증에도 같은 요청을 쓴다.
+원본 `main`의 상태 파일을 받아 화면에 보여 준다. 표시용이고 쓰기의 기준이 아니다.
 
-유스케이스 [[CCR-UC-001#UC-A2]] 1 · [[CCR-UC-001#UC-H1]] 3 · 4a · [[CCR-UC-001#UC-H2]] 4 · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]] · [[CCR-UI-001#UI-2]]
+유스케이스 [[CCR-UC-001#UC-A2]] 1 · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
 
-**요청.** `ref=main`을 붙이고 1.4의 헤더 셋을 보낸다. 캐시되지 않는다.
+**요청.** 목록 파일과 같은 때 받는다. `?t=`도 같다(1.4).
 
-**응답 읽기.** `sha`가 판이고, `content`는 Base64로 인코딩된 파일 내용이다(`encoding`이 `base64`). 줄바꿈이 섞인 Base64라 디코딩 전에 공백을 뗀다. 디코딩한 UTF-8을 JSON으로 읽는다. 404면 파일이 아직 없는 것이다(2.3).
+**응답 읽기.** JSON 객체 하나다(4.2). 없으면 404이고, 아직 아무것도 바꾸지 않은 것이라 빈 객체로 본다. 캐시가 없어 방금 바꾼 값이 새로 고친 뒤에도 그대로 보인다. 2026-10-06까지는 raw가 5분 캐시해 토큰이 있으면 상태 파일을 Contents API로 읽었다.
 
 ```yaml
-/repos/{owner}/{repo}/contents/data/status.json:
+/data/status.json:
   get:
-    servers: [{url: "https://api.github.com"}]
-    security: [{bearer: []}]                 # 페이지 토큰
+    servers: [{url: "http://localhost:8090"}]
     parameters:
-      - {name: ref, in: query, required: true, schema: {type: string, enum: [main]}}
-      - {name: Accept, in: header, required: true, schema: {type: string, enum: ["application/vnd.github+json"]}}
-      - {name: X-GitHub-Api-Version, in: header, required: true, schema: {type: string, enum: ["2022-11-28"]}}
+      - {name: t, in: query, schema: {type: integer}, description: "목록 파일과 같다"}
     responses:
       "200":
+        description: "원본 main의 파일 그대로. 객체 하나(4.2). Cache-Control: no-store"
+        content:
+          application/json:
+            example: {"AI팩토리:9304": {"status": "in_progress", "hidden": false, "starred": true, "updated_at": "2026-10-01T00:12:41Z"}}
+      "403":
+        description: "목록 파일과 같다"
+      "404":
+        description: "파일이 없다. 아직 아무것도 바꾸지 않은 것이다"
+```
+
+#### GET/localhost:8090/api/contents/data/status.json 상태 파일의 판 읽기
+
+쓰기 직전에 상태 파일의 최신 판(`sha`)과 내용을 읽는다. GitHub Contents API의 같은 요청과 같은 모양이다(1.4).
+
+유스케이스 [[CCR-UC-001#UC-H1]] 3 · 4a · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
+
+**요청.** 헤더도 쿼리도 없다. 페이지 서버가 원본을 받은 뒤(1초에 한 번까지) 읽는다. 캐시되지 않는다.
+
+**응답 읽기.** `sha`가 판이고, `content`는 파일 내용의 Base64다. 페이지는 공백을 뗀 뒤 디코딩하고, 디코딩한 UTF-8을 JSON으로 읽는다. 404면 파일이 아직 없는 것이다(2.3).
+
+```yaml
+/api/contents/data/status.json:
+  get:
+    servers: [{url: "http://localhost:8090"}]
+    responses:
+      "200":
+        description: "Cache-Control: no-store"
         content:
           application/json:
             schema:
               type: object
               properties:
-                sha: {type: string, example: "3d21e0e4a7f0c2b3c1e6a8f9d4b2c1a0e5f6d7c8"}
-                size: {type: integer}
-                encoding: {type: string, enum: [base64]}
-                content: {type: string, description: "Base64. 76자마다 줄바꿈이 있다"}
-      "401":
-        description: "토큰이 없거나 틀렸다"
+                sha: {type: string, example: "3d21e0e4a7f0c2b3c1e6a8f9d4b2c1a0e5f6d7c8", description: "git 블롭 해시. GitHub Contents API의 sha와 같은 값이다"}
+                content: {type: string, description: "파일 내용의 Base64. 줄바꿈이 없다"}
       "403":
-        description: "권한이 모자라거나 한도에 닿았다. 한도면 x-ratelimit-remaining 헤더가 0이다"
+        description: "Host가 localhost:8090 · 127.0.0.1:8090이 아니다(1.4)"
       "404":
-        description: "파일이 없다. 공개 저장소라 토큰이 이 저장소를 고르지 않았어도 읽기는 되므로 다른 뜻은 없다"
+        description: "파일이 없다. 아직 아무것도 바꾸지 않은 것이다"
 ```
 
-#### PUT/api.github.com/…/contents/data/status.json 상태 파일 쓰기
+#### PUT/localhost:8090/api/contents/data/status.json 상태 파일 쓰기
 
-상태 파일 전체를 새 내용으로 바꿔 `main`에 한 커밋으로 올린다.
+상태 파일 전체를 새 내용으로 바꿔 원본 `main`에 한 커밋으로 올린다. GitHub Contents API의 같은 요청과 같은 모양이다(1.4).
 
 유스케이스 [[CCR-UC-001#UC-H1]] 4 · 개념 [[CCR-DOM-001#Status]] · 경계 목록 · 화면 [[CCR-UI-001#UI-1]]
 
-**요청.** 읽어 둔 내용에 이번 바꿈을 얹어 만든 객체를 JSON 문자열로 만들고(키는 식별자 순으로 정렬, 두 칸 들여쓰기, 끝에 줄바꿈), UTF-8 바이트를 Base64로 넣는다. `sha`는 읽어 둔 판이다. 파일이 없으면 `sha`를 빼 새로 만든다. `branch`는 `main`이다. 커밋 메시지는 1.4의 꼴이다. `author`와 `committer`는 저장소 주인의 이름과 noreply 주소다(1.4).
+**요청.** 읽어 둔 내용에 이번 바꿈을 얹어 만든 객체를 JSON 문자열로 만들고(키는 식별자 순으로 정렬, 두 칸 들여쓰기, 끝에 줄바꿈), UTF-8 바이트를 Base64로 넣는다. `sha`는 읽어 둔 판이다. 파일이 없으면 `sha`를 빼 새로 만든다. 커밋 메시지는 1.4의 꼴이다. `author`와 `committer`는 저장소 주인의 이름과 noreply 주소다(1.4). `Origin`은 브라우저가 붙인다. GitHub 때의 `branch`는 보내지 않는다. 늘 `main`이다.
 
-**응답 읽기.** 201(새 파일)이나 200(고침)이 오면 성공이다. 응답의 `content.sha`는 기억하지 않는다. 다음 쓰기도 판 읽기부터 하기 때문이다([[CCR-DOM-002#StatusStore]]). `commit.sha`는 로그에도 남기지 않는다. 409 · 422 · 401 · 403 · 404 · 5xx는 2.3대로 다룬다.
+**페이지 서버가 하는 일.** 한 번에 하나씩 한다(잠금).
+1. 원본 `main`을 받고 상태 파일의 지금 판을 본다. 파일이 있는데 `sha`가 없으면 422로, `sha`가 지금 판과 다르면 409로 끝낸다. 파일이 없는데 `sha`가 있어도 409다.
+2. `main` 위에 그 파일만 바꾼 커밋을 만든다. 작성자와 커미터는 본문의 `author`다.
+3. 그 커밋을 원본(싱크독 git 입구)에 push한다. 그사이 배치가 push해 거절되면 1부터 다시 한다. 세 번까지다. 1에서 판이 바뀌었으면(다른 탭이나 브라우저가 썼다) 409다.
+4. 원본에 닿지 못했거나 세 번 모두 거절되면 502다.
+
+**응답 읽기.** 201(`sha` 없이 보내 새로 만듦)이나 200(고침)이 오면 성공이다. 응답의 `content.sha`(새 블롭 해시)는 기억하지 않는다. 다음 쓰기도 판 읽기부터 하기 때문이다([[CCR-DOM-002#StatusStore]]). 409 · 422 · 400 · 403 · 502는 2.3대로 다룬다.
 
 ```yaml
-/repos/{owner}/{repo}/contents/data/status.json:
+/api/contents/data/status.json:
   put:
-    servers: [{url: "https://api.github.com"}]
-    security: [{bearer: []}]                 # 페이지 토큰
+    servers: [{url: "http://localhost:8090"}]
     parameters:
-      - {name: Accept, in: header, required: true, schema: {type: string, enum: ["application/vnd.github+json"]}}
-      - {name: X-GitHub-Api-Version, in: header, required: true, schema: {type: string, enum: ["2022-11-28"]}}
+      - {name: Origin, in: header, required: true, schema: {type: string, enum: ["http://localhost:8090", "http://127.0.0.1:8090"]}, description: "브라우저가 붙인다"}
     requestBody:
       content:
         application/json:
@@ -797,9 +826,8 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
             message: "status: 2026 국립공원 위성 모니터링 AI 챌린지 → 진행 중"
             content: "<UTF-8 JSON의 Base64>"
             sha: "3d21e0e4a7f0c2b3c1e6a8f9d4b2c1a0e5f6d7c8"   # 파일이 없으면 뺀다
-            branch: "main"
             author: {name: "<저장소 주인 이름>", email: "<id>+<login>@users.noreply.github.com"}   # 페이지 설정 파일의 상수(1.4)
-            committer: {name: "<저장소 주인 이름>", email: "<id>+<login>@users.noreply.github.com"}   # author와 같다
+            committer: {name: "<저장소 주인 이름>", email: "<id>+<login>@users.noreply.github.com"}   # author와 같다. author가 없을 때만 쓰인다
     responses:
       "200":
         description: "고쳤다. content.sha가 새 판이다"
@@ -809,14 +837,31 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
               type: object
               properties:
                 content: {type: object, properties: {sha: {type: string}}}
-                commit: {type: object, properties: {sha: {type: string}}}
       "201":
-        description: "새로 만들었다. 모양은 200과 같다"
+        description: "sha 없이 보내 새로 만들었다. 모양은 200과 같다"
+      "400":
+        description: "본문이 잘못됐다. 비었거나 1MB를 넘음 · 빈 메시지 · Base64 아님 · 작성자의 name · email 없음(2.3)"
+      "403":
+        description: "Host나 Origin이 localhost:8090 · 127.0.0.1:8090이 아니다(1.4)"
       "409":
-        description: "sha가 최신 판이 아니다. 최신 판을 다시 읽고 한 번 더 쓴다(2.3)"
+        description: "sha가 지금 판이 아니다. 최신 판을 다시 읽고 한 번 더 쓴다(2.3)"
       "422":
-        description: "sha가 없거나 맞지 않거나, 본문이 잘못됐다(2.3)"
+        description: "파일이 있는데 sha가 없다. 409와 같이 다룬다(2.3)"
+      "502":
+        description: "원본(싱크독)에 쓰지 못했다. 닿지 못했거나 push가 세 번 모두 거절됐다(2.3)"
 ```
+
+#### GET/raw.githubusercontent.com/…/data/{file} 목록·상태 파일 읽기
+
+2026-10-06부터 없다 — 페이지가 GitHub를 부르지 않는다. 목록 파일은 [[#GET/localhost:8090/data/competitions.jsonl]], 상태 파일은 [[#GET/localhost:8090/data/status.json]]으로 받는다. raw의 CDN 캐시(5분)도 함께 없어졌다.
+
+#### GET/api.github.com/…/contents/data/status.json 상태 파일의 판 읽기
+
+2026-10-06부터 없다 — 같은 모양의 [[#GET/localhost:8090/api/contents/data/status.json]]이 대신한다. 페이지 토큰과 토큰 검증도 함께 없어졌다.
+
+#### PUT/api.github.com/…/contents/data/status.json 상태 파일 쓰기
+
+2026-10-06부터 없다 — 같은 모양의 [[#PUT/localhost:8090/api/contents/data/status.json]]이 대신한다. 커밋은 페이지 서버가 만들어 원본에 push한다.
 
 ## 4. 스키마
 
@@ -895,4 +940,5 @@ AI팩토리의 경진대회 과제 목록을 받아 같은 대회의 과제를 �
 
 - [ ] 콘테스트코리아는 목록에 발표일을 준다. 이 소스만이라도 `결과날`을 채울지 정한다([[CCR-PRD-001]] 6장)
 - [ ] Kaggle 새 토큰의 만료와 범위. 설정 화면에서 만든 토큰은 공식 문서가 다루지 않는다([[CCR-INFRA-001]] 5.2)
-- [ ] **[[CCR-RFQ-001]]은 사람이 쓴 문서라 맞추지 않았다.** 2026-09-29의 v9는 노션을 페이지로 바꾼 것만 고쳤다. 이 문서와 다른 곳은 여전히 셋이다. Q2(분야로 좁히지 않는다 — wevity · 콘테스트코리아는 분야로 좁힌다), Q4(DACON은 서버 렌더링 페이로드가 아니라 JSON API, AI팩토리는 보이는 마크업이 아니라 페이지 안의 페이로드, Kaggle의 `category` 값은 `gettingStarted`가 아니라 `Getting Started`), 6장(`결과날` — 콘테스트코리아에는 발표일이 있다). 나머지 상위 문서는 맞췄다([[CCR-PRD-001]] · [[CCR-SCN-001]] · [[CCR-UC-001]] · [[CCR-INFRA-001]] · [[CCR-DOM-001]] · [[CCR-UI-001]])
+- [ ] 저장소 주소를 뗀 User-Agent(`competition-crawler/0.1`)로도 소스 여섯이 그대로 받는지. 첫 노트북 실행의 소스별 건수로 본다(1.1)
+- [ ] **[[CCR-RFQ-001]]은 사람이 쓴 문서라 맞추지 않았다.** 2026-09-29의 v9는 노션을 페이지로 바꾼 것만, 2026-10-06의 고침은 GitHub를 빼고 노트북으로 옮긴 것만 고쳤다. 이 문서와 다른 곳은 여전히 셋이다. Q2(분야로 좁히지 않는다 — wevity · 콘테스트코리아는 분야로 좁힌다), Q4(DACON은 서버 렌더링 페이로드가 아니라 JSON API, AI팩토리는 보이는 마크업이 아니라 페이지 안의 페이로드, Kaggle의 `category` 값은 `gettingStarted`가 아니라 `Getting Started`), 6장(`결과날` — 콘테스트코리아에는 발표일이 있다). 나머지 상위 문서는 맞췄다([[CCR-PRD-001]] · [[CCR-SCN-001]] · [[CCR-UC-001]] · [[CCR-INFRA-001]] · [[CCR-DOM-001]] · [[CCR-UI-001]])
