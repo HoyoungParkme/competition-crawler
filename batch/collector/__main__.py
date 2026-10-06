@@ -2,8 +2,8 @@
 
 `python -m collector`로 하루치를 돌리고, `python -m collector collect`로 수집만 해 본다.
 
-워크플로는 가상환경의 파이썬을 `exec`로 띄워 끊을 때 오는 신호를 이 프로세스가 받게 한다
-(CCR-INFRA-001 8.1). 첫 신호에는 새 요청을 멈추고, 두 번째 신호에는 하던 호출도 끊는다.
+노트북 실행기는 가상환경의 파이썬을 시간 한도(`timeout`) 아래 띄워 끊을 때 오는 신호를 이 프로세스가
+받게 한다(CCR-INFRA-001 8.1). 첫 신호에는 새 요청을 멈추고, 두 번째 신호에는 하던 호출도 끊는다.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import sys
 import threading
 from datetime import UTC, datetime
 
-from collector.core.logging import register_actions_masks, setup_logging
+from collector.core.logging import setup_logging
 from collector.core.settings import (
     REPO_ROOT,
     RunContext,
@@ -53,8 +53,8 @@ EXIT_STOPPED = 130
 
 def _environment() -> dict[str, str]:
     env = dict(os.environ)
-    if env.get("GITHUB_ACTIONS") != "true":
-        # 로컬 실행만 `.env`를 읽는다. 이미 있는 환경 변수가 이긴다(CCR-INFRA-001 4.1)
+    if env.get("BATCH_RUNNER") != "laptop":
+        # 실행기 밖(개발 PC)만 `.env`를 읽는다. 이미 있는 환경 변수가 이긴다(CCR-INFRA-001 4.1)
         for name, value in read_dotenv(REPO_ROOT / ".env").items():
             env.setdefault(name, value)
     return env
@@ -160,9 +160,7 @@ def main(argv: list[str] | None = None) -> int:
 
     env = _environment()
     secrets = Secrets.from_env(env)
-    if env.get("GITHUB_ACTIONS") == "true":
-        register_actions_masks(secrets.values())  # 어떤 출력보다 먼저(CCR-INFRA-001 5.4)
-    setup_logging(secrets.values())
+    setup_logging(secrets.values())  # 로그에 섞인 비밀값을 가린다(CCR-INFRA-001 5.4)
     stop = threading.Event()
     _install_signals(stop)
     try:
