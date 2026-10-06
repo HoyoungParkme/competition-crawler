@@ -63,7 +63,7 @@ class RecordService:
     def start(self) -> None:
         """CCR-MS-001#RecordService.start
 
-        데이터 폴더를 준비하고(실행기 밖이면 origin/main의 세 파일을 꺼낸다), 목록에 쓰는
+        데이터 폴더를 준비하고(기본 브랜치 밖이면 origin/main의 세 파일을 꺼낸다), 목록에 쓰는
         실행이면 추가분 파일을 비워 둔다. 목록 경계가 읽기 전에 불려야 한다(CCR-DOM-002 5장 결정 5).
         """
         self._crud.prepare()

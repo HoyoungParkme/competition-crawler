@@ -57,7 +57,7 @@ def export_main_state(repo_root: Path, dest: Path) -> Path:
 
     기본 브랜치 최신 판의 세 파일을 `dest`에 꺼낸다. 받지 못하면 HistoryReadFailed.
 
-    실행기 밖(개발 PC)에서 도는 실행은 작업 트리의 사본이 아니라 이것을 읽는다
+    기본 브랜치가 아닌 곳이나 Actions 밖에서 도는 실행은 작업 트리의 사본이 아니라 이것을 읽는다
     (CCR-UC-001 UC-A1 1b7 · CCR-INFRA-001 4.1).
     """
 
@@ -69,7 +69,7 @@ def export_main_state(repo_root: Path, dest: Path) -> Path:
         except (OSError, subprocess.TimeoutExpired) as exc:  # git이 없거나 60초 안에 끝나지 않았다
             raise HistoryReadFailed(f"git {args[0]}을 돌리지 못했다: {type(exc).__name__}") from exc
 
-    # 얕게 받은 저장소만 얕게 받는다. 개발자 PC의 저장소를 얕게 만들지 않는다
+    # 얕게 받은 저장소(Actions의 브랜치 실행)만 얕게 받는다. 개발자 PC의 저장소를 얕게 만들지 않는다
     shallow = git("rev-parse", "--is-shallow-repository").stdout.strip() == b"true"
     depth = ["--depth=1"] if shallow else []
     fetched = git(

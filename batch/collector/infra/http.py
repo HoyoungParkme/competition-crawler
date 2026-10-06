@@ -22,7 +22,7 @@ import httpx
 
 from collector.core.settings import SourceSettings
 
-USER_AGENT = "competition-crawler/0.1"
+USER_AGENT = "competition-crawler/0.1 (+https://github.com/HoyoungParkme/competition-crawler)"
 # 본문을 풀어서 받으므로 다시 만드는 응답에서는 전송 방식을 뜻하는 머리말을 뺀다
 _DECODED_HEADERS = {"content-encoding", "content-length", "transfer-encoding"}
 

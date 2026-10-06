@@ -27,17 +27,18 @@
 
 ## 지킬 것
 
-- **비밀값을 저장소 파일 · 로그 · 대화에 남기지 않습니다.** 비밀값은 노트북의 `~/.config/ccr/batch.env`(600)에만 둡니다. 저장소는 비공개지만 원본·백업·이력에 남으니 섞이면 그 값을 바꿉니다. `data/*.jsonl`에는 정해진 값만 쓰고 예외 메시지 · URL · 응답 본문을 넣지 않습니다.
+- **비밀값을 저장소 파일 · 로그 · 대화에 남기지 않습니다.** 저장소가 공개입니다. `data/*.jsonl`에는 정해진 값만 쓰고 예외 메시지 · URL · 응답 본문을 넣지 않습니다.
 - 페이지가 쓰는 GitHub 토큰은 사용자의 브라우저에만 있습니다. Actions 시크릿 · 저장소 파일 · 로그에 두지 않습니다.
 - 대회 소스에 요청할 때는 robots.txt를 지키고, 같은 소스 안에서 요청 사이 1초를 둡니다. 개발 중 실측도 같습니다.
-- 커밋 메시지에 에이전트 표시(Co-Authored-By · Claude-Session · "Generated with …")를 넣지 않습니다. 작성자는 사람의 계정입니다.
-- 의존성은 lock 파일(`batch/uv.lock` · `frontend/package-lock.json`)로 고정합니다. 실행기는 `uv sync --frozen`으로만 받습니다.
+- 커밋 메시지와 PR 본문에 에이전트 표시(Co-Authored-By · Claude-Session · "Generated with …")를 넣지 않습니다. 작성자는 사람의 계정입니다.
+- 스케줄을 살려 두려는 빈 커밋(keepalive)을 만들지 않습니다.
+- 워크플로의 `uses:`는 40자 커밋 SHA로 고정하고 태그를 주석으로 답니다.
 
 ## 코드 규약(SYNC-STD-004)
 
 - 공개 함수의 docstring 첫 줄은 클래스 명세 항목 ID 하나입니다(`CCR-MS-001#ListService.append`). 싱크독 `tools/check_code.py --specs docs/specs --backend <collector와 finish.py를 모은 폴더>`가 시그니처까지 대조합니다. 새 함수는 MS 문서에 항목을 먼저 두고 만듭니다.
 - `uv run ruff format` · `uv run ruff check`가 0건이어야 합니다. 설정은 `batch/pyproject.toml`에 있습니다(줄 길이 100 · E F I UP B). 한글은 두 칸으로 셉니다.
-- 커밋은 `spec(DOC): …` · `fix(#이슈): …` · `code(카드): 함수 — 요약`. 카드마다 브랜치 하나 — 끝나면 `--no-ff`로 `main`에 합쳐 원본(싱크독 서버 저장소)에 push합니다. 서버 저장소라 PR이 없습니다. 이력을 다시 쓰지 않습니다.
+- 커밋은 `spec(DOC): …` · `fix(#이슈): …` · `code(카드): 함수 — 요약`. 카드마다 브랜치와 PR 하나. 이력을 다시 쓰지 않습니다.
 
 ## 확인
 
@@ -47,7 +48,7 @@ uv sync
 uv run pytest                                 # 네트워크를 쓰지 않는다
 uv run ruff format --check && uv run ruff check
 uv run python -m collector collect --show     # 실제 소스에 수집만(OpenAI 없음)
-uv run python -m collector                    # 하루치 미리보기. 실행기 밖은 목록에 쓰지 않는다
+uv run python -m collector                    # 하루치 미리보기. 로컬은 목록에 쓰지 않는다
 
 cd ../frontend
 npm ci
