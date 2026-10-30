@@ -2,9 +2,9 @@
 
 싱크독 명세 체인 11단계 + STD. 쓰는 법은 아래 셋이다.
 
-- [명세 작성 규약 SYNC-STD-001](https://github.com/HoyoungParkme/syncdoc/blob/main/docs/specs/STD/SYNC-STD-001.md) — 필수 절과 항목 ID 형식은 그 2장
-- [개발 규약 SYNC-STD-004](https://github.com/HoyoungParkme/syncdoc/blob/main/docs/specs/STD/SYNC-STD-004.md)
-- [타입별 뼈대 `_templates/`](https://github.com/HoyoungParkme/syncdoc/blob/main/docs/specs/_templates)
+- [명세 작성 규약 SYNC-STD-001](https://syncdoc.dpdns.org/specs/STD/SYNC-STD-001.md) — 필수 절과 항목 ID 형식은 그 2장
+- [개발 규약 SYNC-STD-004](https://syncdoc.dpdns.org/specs/STD/SYNC-STD-004.md)
+- [타입별 뼈대 `_templates/`](https://syncdoc.dpdns.org/specs/_templates)
 
 **이 저장소에는 규약·템플릿 사본을 두지 않는다.** 규약이 바뀌면 위 링크 끝이 바뀐다.
 에이전트는 싱크독 MCP의 `get_template`으로 타입별 뼈대와 규약을 받는다.
